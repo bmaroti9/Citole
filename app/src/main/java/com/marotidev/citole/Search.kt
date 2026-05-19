@@ -152,7 +152,8 @@ fun TopBar(
 fun FixedTopBar(
     libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    onPrimaryClick : () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
@@ -227,14 +228,14 @@ fun FixedTopBar(
         },
         actions = {
             FilledTonalIconButton (
-                onClick = {  },
+                onClick = { onPrimaryClick() },
                 shapes = IconButtonDefaults.shapes(
                     shape = CircleShape,
                     pressedShape = MaterialTheme.shapes.medium // Morphs to rounded square
                 )
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_shuffle),
+                    painter = painterResource(id = R.drawable.ic_page_info),
                     contentDescription = "Search",
                     tint = MaterialTheme.colorScheme.onSurface
                 )

@@ -111,7 +111,6 @@ class PlayerViewModel(context: Context) : ViewModel() {
     var currentIndex by mutableIntStateOf(0)
 
     var progress by mutableLongStateOf(0L)
-    var duration by mutableLongStateOf(0L)
 
     val player = ExoPlayer.Builder(context).build()
 
@@ -159,9 +158,6 @@ class PlayerViewModel(context: Context) : ViewModel() {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
                     Player.STATE_READY -> {
-                        duration = player.duration.coerceAtLeast(0L)
-                    }
-                    Player.STATE_BUFFERING -> {
 
                     }
                     Player.STATE_ENDED -> {
@@ -321,7 +317,7 @@ fun PlayerScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (openAlertDialog.value) {
-            MinimalDialog (
+            QueueDialog (
                 onDismissRequest = {openAlertDialog.value = false},
                 playerViewModel
             )
@@ -396,10 +392,11 @@ fun TitleAndArtist(
 
 @Composable
 fun CustomWavySlider(
+    playerViewModel: PlayerViewModel,
+    currentlyPlaying: AudioHelper.AudioData,
     sliderDragGlobal: Float,
     onSliderDragChanged: (Float) -> Unit,
-    playerViewModel: PlayerViewModel,
-    sliderInteractionSource: MutableInteractionSource
+    sliderInteractionSource: MutableInteractionSource,
 )  {
 
     val haptic = LocalHapticFeedback.current
@@ -427,7 +424,7 @@ fun CustomWavySlider(
     )
 
     val animatedPlayerProgress by animateFloatAsState(
-        targetValue = if (isDragged) sliderDragGlobal else playerViewModel.progress.toFloat() / playerViewModel.duration,
+        targetValue = if (isDragged) sliderDragGlobal else playerViewModel.progress.toFloat() / currentlyPlaying.duration,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
     )
 
@@ -441,7 +438,7 @@ fun CustomWavySlider(
             onSliderDragChanged(it)
         },
         onValueChangeFinished = {
-            playerViewModel.seekTo((playerViewModel.duration * sliderDragLocal).toLong())
+            playerViewModel.seekTo((currentlyPlaying.duration * sliderDragLocal).toLong())
             haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
         },
         interactionSource = sliderInteractionSource,
@@ -523,7 +520,7 @@ fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: Aud
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            durationToString(if (isDragged) {(sliderDrag * playerViewModel.duration).toLong()} else {playerViewModel.progress}),
+            durationToString(if (isDragged) {(sliderDrag * currentlyPlaying.duration).toLong()} else {playerViewModel.progress}),
             style = timerTextStyle,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -531,11 +528,13 @@ fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: Aud
         Box(
             modifier = Modifier.weight(1f)
         ) {
-            CustomWavySlider(sliderDrag,
+            CustomWavySlider(
+                playerViewModel,
+                currentlyPlaying,
+                sliderDrag,
                 onSliderDragChanged = { it ->
                     sliderDrag = it
                 },
-                playerViewModel,
                 sliderInteractionSource
             )
         }
@@ -601,7 +600,7 @@ fun PlayPauseRow(
                         )
                     }
                 },
-                menuContent = {}
+                menuContent = {},
             )
             customItem(
                 buttonGroupContent = {
@@ -709,7 +708,7 @@ fun PlayerBottomBar(onOpenDialog: () -> Unit) {
 }
 
 @Composable
-fun MinimalDialog(
+fun QueueDialog(
     onDismissRequest: () -> Unit,
     playerViewModel: PlayerViewModel
 ) {
