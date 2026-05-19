@@ -55,7 +55,31 @@ import kotlinx.coroutines.launch
 
 class LibraryViewModel : ViewModel() {
 
+    var showSongs by mutableStateOf(false)
+    var showPodcasts by mutableStateOf(false)
+    var showAudiobooks by mutableStateOf(false)
+    var showOther by mutableStateOf(false)
+
+    fun onShowSongsChanged() {
+        showSongs = !showSongs
+    }
+
+    fun onShowPodcastsChanged() {
+        showPodcasts = !showPodcasts
+    }
+
+    fun onShowAudiobooksChanged() {
+        showAudiobooks = !showAudiobooks
+    }
+
+    fun onShowOtherChanged() {
+        showOther = !showOther
+    }
+
     var allSongs by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
+        private set
+
+    var filteredSongs by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
         private set
 
     var artists by mutableStateOf<Map<String, List<AudioHelper.AudioData>>>(emptyMap())
@@ -64,8 +88,6 @@ class LibraryViewModel : ViewModel() {
     var albums by mutableStateOf<Map<String, List<AudioHelper.AudioData>>>(emptyMap())
         private set
 
-    var filteredSongs by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
-        private set
 
     var searchQuery by mutableStateOf("")
         private set
