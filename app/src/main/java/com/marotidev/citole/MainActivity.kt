@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
 }
 
 enum class Page {
-    Songs,
+    Tracks,
     Albums,
 }
 
@@ -166,7 +166,7 @@ fun CitoleScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var openAlertDialog by remember { mutableStateOf(false) }
 
-    var selectedPage by remember { mutableStateOf(Page.Songs) }
+    var selectedPage by remember { mutableStateOf(Page.Tracks) }
 
     val scope = rememberCoroutineScope()
 
@@ -182,7 +182,7 @@ fun CitoleScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            scope.launch { libraryViewModel.loadAudio(context) }
+            scope.launch { libraryViewModel.loadTracks(context) }
         } else {
             Log.e("Permissions", "Permission Denied")
         }
@@ -191,7 +191,7 @@ fun CitoleScreen(
     LaunchedEffect(Unit) {
         val check = ContextCompat.checkSelfPermission(context, permission)
         if (check == PackageManager.PERMISSION_GRANTED) {
-            libraryViewModel.loadAudio(context)
+            libraryViewModel.loadTracks(context)
         } else {
             launcher.launch(permission)
         }
@@ -200,14 +200,13 @@ fun CitoleScreen(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            // 2. This is what shows up inside the drawer
             ModalDrawerSheet {
                 Spacer(modifier = Modifier.height(30.dp))
                 CustomNavigationDrawerItem(
-                    selected = selectedPage == Page.Songs,
-                    onSelected =  {selectedPage = Page.Songs},
-                    iconId = R.drawable.ic_music,
-                    text = "Songs"
+                    selected = selectedPage == Page.Tracks,
+                    onSelected =  {selectedPage = Page.Tracks},
+                    iconId = R.drawable.ic_graphic_eq,
+                    text = "Tracks"
                 )
                 CustomNavigationDrawerItem(
                     selected = selectedPage == Page.Albums,
@@ -248,7 +247,7 @@ fun CitoleScreen(
                     }
                 ) { targetPage ->
                     when (targetPage) {
-                        Page.Songs -> SongsPage(libraryViewModel, playerViewModel, paddingValues)
+                        Page.Tracks -> TracksPage(libraryViewModel, playerViewModel, paddingValues)
                         Page.Albums -> AlbumsPage(libraryViewModel, playerViewModel, paddingValues)
                     }
                 }

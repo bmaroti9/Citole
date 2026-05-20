@@ -130,12 +130,12 @@ fun TopBar(
                 .fillMaxSize()
                 .padding(vertical = 10.dp)
         ) {
-            items(libraryViewModel.filteredAudio) { audio ->
-                AudioItem(
-                    audio,
+            items(libraryViewModel.filteredTracks) { track ->
+                TrackItem(
+                    track,
                     playerViewModel
                 ) {
-                    playerViewModel.addToQueue(audio)
+                    playerViewModel.addToQueue(track)
                     scope.launch {
                         libraryViewModel.onSearchQueryChanged("")
                         searchBarState.animateToCollapsed()
@@ -202,9 +202,9 @@ fun FixedTopBar(
                 },
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        if (libraryViewModel.filteredAudio.isNotEmpty()) {
-                            val topSong = libraryViewModel.filteredAudio.first()
-                            playerViewModel.addToQueue(topSong)
+                        if (libraryViewModel.filteredTracks.isNotEmpty()) {
+                            val topTrack = libraryViewModel.filteredTracks.first()
+                            playerViewModel.addToQueue(topTrack)
                         }
                         libraryViewModel.onSearchQueryChanged("")
                         focusManager.clearFocus()

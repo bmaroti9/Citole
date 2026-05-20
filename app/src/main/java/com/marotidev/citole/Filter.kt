@@ -3,6 +3,7 @@ package com.marotidev.citole
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,64 +43,118 @@ fun FilterDialog(
                 modifier = Modifier.background(MaterialTheme.colorScheme.secondaryContainer, shape = CircleShape).padding(8.dp)
             )
         },
-        title = {
-            Text(text = "Filter", style = MaterialTheme.typography.titleMedium)
-        },
         text = {
-            FlowRow(
-                Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                ToggleButton(
-                    checked = libraryViewModel.showSongs,
-                    onCheckedChange = { libraryViewModel.onShowSongsChanged() },
-                    shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
-                    colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+            Column() {
+                Text("Filter", style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+                FlowRow(
+                    Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Icon(painterResource(R.drawable.ic_music), contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                    Text("Songs", style = MaterialTheme.typography.labelSmall)
+                    ToggleButton(
+                        checked = libraryViewModel.showSongs,
+                        onCheckedChange = { libraryViewModel.onShowSongsChanged() },
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_music), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Songs", style = MaterialTheme.typography.labelSmall)
+                    }
+                    ToggleButton(
+                        checked = libraryViewModel.showPodcasts,
+                        onCheckedChange = { libraryViewModel.onShowPodcastsChanged() },
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_podcast), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Podcasts", style = MaterialTheme.typography.labelSmall)
+                    }
+                    ToggleButton(
+                        checked = libraryViewModel.showAudiobooks,
+                        onCheckedChange = { libraryViewModel.onShowAudiobooksChanged() },
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_book), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Audiobooks", style = MaterialTheme.typography.labelSmall)
+                    }
+                    ToggleButton(
+                        checked = libraryViewModel.showOther,
+                        onCheckedChange = { libraryViewModel.onShowOtherChanged() },
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_unknown_document), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Other", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
-                ToggleButton(
-                    checked = libraryViewModel.showPodcasts,
-                    onCheckedChange = { libraryViewModel.onShowPodcastsChanged() },
-                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
-                    colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+
+                Text("Sort by", style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 30.dp, bottom = 8.dp, start = 10.dp, end = 10.dp), color = MaterialTheme.colorScheme.onSurface)
+                FlowRow(
+                    Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Icon(painterResource(R.drawable.ic_podcast), contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                    Text("Podcasts", style = MaterialTheme.typography.labelSmall)
-                }
-                ToggleButton(
-                    checked = libraryViewModel.showAudiobooks,
-                    onCheckedChange = { libraryViewModel.onShowAudiobooksChanged() },
-                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
-                    colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
-                ) {
-                    Icon(painterResource(R.drawable.ic_book), contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                    Text("Audiobooks", style = MaterialTheme.typography.labelSmall)
-                }
-                ToggleButton(
-                    checked = libraryViewModel.showOther,
-                    onCheckedChange = { libraryViewModel.onShowOtherChanged() },
-                    shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                    colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
-                ) {
-                    Icon(painterResource(R.drawable.ic_document_unknown), contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                    Text("Other", style = MaterialTheme.typography.labelSmall)
+                    ToggleButton(
+                        checked = false,
+                        onCheckedChange = {  },
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_sort_by_alpha), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Name", style = MaterialTheme.typography.labelSmall)
+                    }
+                    ToggleButton(
+                        checked = false,
+                        onCheckedChange = {  },
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_album), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Album", style = MaterialTheme.typography.labelSmall)
+                    }
+                    ToggleButton(
+                        checked = false,
+                        onCheckedChange = {  },
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_today), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Date added", style = MaterialTheme.typography.labelSmall)
+                    }
+                    ToggleButton(
+                        checked = false,
+                        onCheckedChange = {  },
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_today), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
+                        Text("Date added", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = {}
+                onClick = {onDismissRequest()}
             ) {
                 Text("Done", style = MaterialTheme.typography.labelLarge)
             }

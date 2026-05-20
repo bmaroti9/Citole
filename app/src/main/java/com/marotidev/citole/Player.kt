@@ -1,7 +1,6 @@
 package com.marotidev.citole
 import android.content.ContentUris
 import android.content.Context
-import android.util.Log
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -104,7 +103,7 @@ class PlayerViewModel(context: Context) : ViewModel() {
     var playing by mutableStateOf<Boolean>(false)
         private set
 
-    var currentQueue by mutableStateOf<List< AudioHelper.AudioData>>(emptyList())
+    var currentQueue by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
         private set
 
     var currentlyPlaying by mutableStateOf<AudioHelper.AudioData?>(null)
@@ -221,31 +220,30 @@ class PlayerViewModel(context: Context) : ViewModel() {
 //        player.play()
 //    }
 
-    fun playQueue(songs: List<AudioHelper.AudioData>, startIndex: Int = 0) {
-        currentQueue = songs
+    fun playQueue(tracks: List<AudioHelper.AudioData>, startIndex: Int = 0) {
+        currentQueue = tracks
         currentIndex = startIndex
 
-        val mediaItems = songs.map { MediaItem.fromUri(it.uri) }
+        val mediaItems = tracks.map { MediaItem.fromUri(it.uri) }
 
         player.setMediaItems(mediaItems, startIndex, 0L)
         player.prepare()
         player.play()
     }
 
-    fun addToQueue(song: AudioHelper.AudioData) {
-        Log.i("ADD SONG", "song: ${song.uri}")
-        val mediaItem = MediaItem.fromUri(song.uri)
+    fun addToQueue(track: AudioHelper.AudioData) {
+        val mediaItem = MediaItem.fromUri(track.uri)
         if (currentQueue.isEmpty()) {
-            currentQueue += song
+            currentQueue += track
             currentIndex = 0
-            currentlyPlaying = song
+            currentlyPlaying = track
 
             player.setMediaItem(mediaItem)
             player.prepare()
             player.play()
             playing = true
         } else {
-            currentQueue += song
+            currentQueue += track
             player.addMediaItem(mediaItem)
         }
     }
@@ -736,7 +734,7 @@ fun QueueDialog(
                     .padding(vertical = 10.dp)
             ) {
                 items(playerViewModel.currentQueue.size) { index ->
-                    AudioItem (
+                    TrackItem (
                         playerViewModel.currentQueue[index],
                         playerViewModel
                     ) {

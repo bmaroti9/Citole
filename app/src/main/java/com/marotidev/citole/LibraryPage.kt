@@ -56,9 +56,9 @@ import kotlinx.coroutines.launch
 class LibraryViewModel : ViewModel() {
 
     var showSongs by mutableStateOf(true)
-    var showPodcasts by mutableStateOf(true)
-    var showAudiobooks by mutableStateOf(true)
-    var showOther by mutableStateOf(true)
+    var showPodcasts by mutableStateOf(false)
+    var showAudiobooks by mutableStateOf(false)
+    var showOther by mutableStateOf(false)
 
     fun onShowSongsChanged() {
         showSongs = !showSongs
@@ -80,10 +80,10 @@ class LibraryViewModel : ViewModel() {
         onFilterChipsChanged()
     }
 
-    var allAudio by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
+    var allTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
         private set
 
-    var filteredAudio by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
+    var filteredTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
         private set
 
     var artists by mutableStateOf<Map<String, List<AudioHelper.AudioData>>>(emptyMap())
@@ -97,26 +97,26 @@ class LibraryViewModel : ViewModel() {
         private set
 
     fun onFilterChipsChanged() {
-        filteredAudio = allAudio.filterAudioByQuery(searchQuery).filterAudioByFilterChips()
+        filteredTracks = allTracks.filterTracksByQuery(searchQuery).filterTracksByFilterChips()
     }
 
     fun onSearchQueryChanged(newQuery: String) {
         searchQuery = newQuery
 
-        filteredAudio = allAudio.filterAudioByQuery(newQuery)
+        filteredTracks = allTracks.filterTracksByQuery(newQuery).filterTracksByFilterChips()
     }
 
-    fun List<AudioHelper.AudioData>.filterAudioByQuery(query: String) : List<AudioHelper.AudioData> {
-        return this.filter { audio ->
-            audio.name.contains(query, ignoreCase = true)
-                    || audio.artist.contains(query, ignoreCase = true)
-                    || audio.albumName.contains(query, ignoreCase = true)
+    fun List<AudioHelper.AudioData>.filterTracksByQuery(query: String) : List<AudioHelper.AudioData> {
+        return this.filter { track ->
+            track.name.contains(query, ignoreCase = true)
+                    || track.artist.contains(query, ignoreCase = true)
+                    || track.albumName.contains(query, ignoreCase = true)
         }
     }
 
-    fun List<AudioHelper.AudioData>.filterAudioByFilterChips() : List<AudioHelper.AudioData> {
-        return this.filter { audio ->
-            when (audio.type) {
+    fun List<AudioHelper.AudioData>.filterTracksByFilterChips() : List<AudioHelper.AudioData> {
+        return this.filter { track ->
+            when (track.type) {
                 AudioType.Song -> showSongs
                 AudioType.Podcast -> showPodcasts
                 AudioType.Audiobook -> showAudiobooks
@@ -125,19 +125,19 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
-    fun loadAudio(context: Context) {
+    fun loadTracks(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            val audios = AudioHelper.fetchAudioFiles(context)
-            allAudio = audios
-            filteredAudio = audios
-            artists = audios.groupBy { it.artist }
-            albums = audios.groupBy { it.albumName }
+            val tracks = AudioHelper.fetchAudioFiles(context)
+            allTracks = tracks
+            filteredTracks = tracks
+            artists = tracks.groupBy { it.artist }
+            albums = tracks.groupBy { it.albumName }
         }
     }
 }
 
 @Composable
-fun SongsPage(
+fun TracksPage(
     libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues
@@ -150,11 +150,11 @@ fun SongsPage(
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
     ) {
         items(
-            items = libraryViewModel.filteredAudio,
-            key = { audio -> audio.uri }
-        ) { audio ->
-            AudioItem (
-                audio = audio,
+            items = libraryViewModel.filteredTracks,
+            key = { track -> track.uri }
+        ) { track ->
+            TrackItem (
+                track = track,
                 modifier = Modifier.animateItem(
                     fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
                     fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
@@ -162,21 +162,21 @@ fun SongsPage(
                 ),
                 playerViewModel = playerViewModel
             ) {
-                playerViewModel.addToQueue(audio)
+                playerViewModel.addToQueue(track)
             }
         }
     }
 }
 
 @Composable
-fun AudioItem(
-    audio: AudioHelper.AudioData,
+fun TrackItem(
+    track: AudioHelper.AudioData,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
     onClicked: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val isSelected = playerViewModel.currentlyPlaying?.uri == audio.uri
+    val isSelected = playerViewModel.currentlyPlaying?.uri == track.uri
 
     Row(
         modifier = modifier
@@ -197,7 +197,7 @@ fun AudioItem(
 
         val artworkUri = ContentUris.withAppendedId(
             "content://media/external/audio/albumart".toUri(),
-            audio.albumId
+            track.albumId
         )
 
         AsyncImage(
@@ -214,11 +214,11 @@ fun AudioItem(
 
         Column() {
             Text(
-                text = audio.title,
+                text = track.title,
                 style = MaterialTheme.typography.titleSmall,
             )
             Text(
-                text = audio.artist,
+                text = track.artist,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -244,21 +244,21 @@ fun AlbumsPage(
         val albumList = libraryViewModel.albums.keys.sorted()
 
         items(albumList) { albumName ->
-            val songList : List<AudioHelper.AudioData>? = libraryViewModel.albums[albumName]
-            AlbumItem(songList)
+            val trackList : List<AudioHelper.AudioData>? = libraryViewModel.albums[albumName]
+            AlbumItem(trackList)
         }
     }
 }
 
 @Composable
-fun AlbumItem(songs: List<AudioHelper.AudioData>?) {
-    if (songs.isNullOrEmpty()) return
-    val firstSong = songs.first()
-    val albumName = firstSong.albumName
+fun AlbumItem(tracks: List<AudioHelper.AudioData>?) {
+    if (tracks.isNullOrEmpty()) return
+    val firstTrack = tracks.first()
+    val albumName = firstTrack.albumName
 
     val artworkUri = ContentUris.withAppendedId(
         "content://media/external/audio/albumart".toUri(),
-        firstSong.albumId
+        firstTrack.albumId
     )
 
     Column(
