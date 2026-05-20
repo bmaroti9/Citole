@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import java.time.LocalTime
 
 enum class AudioType {
     Song,
@@ -37,6 +38,8 @@ object AudioHelper {
 
         val duration: Long,
         val size: Int,
+        val dateAdded: Int,
+
         val type: AudioType
     )
 
@@ -62,6 +65,7 @@ object AudioHelper {
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.DATE_ADDED,
 
             MediaStore.Audio.Media.IS_MUSIC,
             MediaStore.Audio.Media.IS_PODCAST,
@@ -90,6 +94,7 @@ object AudioHelper {
             val albumNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
             val isMusicRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)
             val isPodcastRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)
@@ -104,6 +109,7 @@ object AudioHelper {
                 val albumName = cursor.getString(albumNameColumn)
                 val duration = cursor.getLong(durationColumn)
                 val size = cursor.getInt(sizeColumn)
+                val dateAdded = cursor.getInt(dateAddedColumn)
 
                 val isMusic = cursor.getInt(isMusicRow)
                 val isPodcast = cursor.getInt(isPodcastRow)
@@ -116,7 +122,7 @@ object AudioHelper {
                     id
                 )
 
-                audioList += AudioData(contentUri, name, title, artist, albumId, albumName, duration, size, audioType)
+                audioList += AudioData(contentUri, name, title, artist, albumId, albumName, duration, size, dateAdded, audioType)
             }
         }
 

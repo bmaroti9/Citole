@@ -27,6 +27,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
+enum class SortChip {
+    Name,
+    Album,
+    Artist,
+    DateAdded,
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FilterDialog(
@@ -106,8 +113,8 @@ fun FilterDialog(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     ToggleButton(
-                        checked = false,
-                        onCheckedChange = {  },
+                        checked = libraryViewModel.selectedSortChip == SortChip.Name,
+                        onCheckedChange = { libraryViewModel.onSelectedSortChipChanged(SortChip.Name) },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -117,8 +124,8 @@ fun FilterDialog(
                         Text("Name", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = false,
-                        onCheckedChange = {  },
+                        checked = libraryViewModel.selectedSortChip == SortChip.Album,
+                        onCheckedChange = { libraryViewModel.onSelectedSortChipChanged(SortChip.Album) },
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -128,19 +135,19 @@ fun FilterDialog(
                         Text("Album", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = false,
-                        onCheckedChange = {  },
+                        checked = libraryViewModel.selectedSortChip == SortChip.Artist,
+                        onCheckedChange = { libraryViewModel.onSelectedSortChipChanged(SortChip.Artist) },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
                     ) {
-                        Icon(painterResource(R.drawable.ic_today), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                        Text("Date added", style = MaterialTheme.typography.labelSmall)
+                        Text("Artist", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = false,
-                        onCheckedChange = {  },
+                        checked = libraryViewModel.selectedSortChip == SortChip.DateAdded,
+                        onCheckedChange = { libraryViewModel.onSelectedSortChipChanged(SortChip.DateAdded) },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)

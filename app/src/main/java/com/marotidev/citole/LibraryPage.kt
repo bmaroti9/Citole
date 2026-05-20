@@ -53,6 +53,7 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+
 class LibraryViewModel : ViewModel() {
 
     var showSongs by mutableStateOf(true)
@@ -60,24 +61,31 @@ class LibraryViewModel : ViewModel() {
     var showAudiobooks by mutableStateOf(false)
     var showOther by mutableStateOf(false)
 
+    var selectedSortChip by mutableStateOf(SortChip.Name)
+
     fun onShowSongsChanged() {
         showSongs = !showSongs
-        onFilterChipsChanged()
+        updateFilteredTracks()
     }
 
     fun onShowPodcastsChanged() {
         showPodcasts = !showPodcasts
-        onFilterChipsChanged()
+        updateFilteredTracks()
     }
 
     fun onShowAudiobooksChanged() {
         showAudiobooks = !showAudiobooks
-        onFilterChipsChanged()
+        updateFilteredTracks()
     }
 
     fun onShowOtherChanged() {
         showOther = !showOther
-        onFilterChipsChanged()
+        updateFilteredTracks()
+    }
+
+    fun onSelectedSortChipChanged(to: SortChip) {
+        selectedSortChip = to
+        updateFilteredTracks()
     }
 
     var allTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
@@ -96,21 +104,33 @@ class LibraryViewModel : ViewModel() {
     var searchQuery by mutableStateOf("")
         private set
 
-    fun onFilterChipsChanged() {
-        filteredTracks = allTracks.filterTracksByQuery(searchQuery).filterTracksByFilterChips()
-    }
 
     fun onSearchQueryChanged(newQuery: String) {
         searchQuery = newQuery
 
-        filteredTracks = allTracks.filterTracksByQuery(newQuery).filterTracksByFilterChips()
+        updateFilteredTracks()
     }
 
-    fun List<AudioHelper.AudioData>.filterTracksByQuery(query: String) : List<AudioHelper.AudioData> {
+    fun updateFilteredTracks() {
+        filteredTracks = allTracks.filterTracksByQuery().filterTracksByFilterChips().sortTracksBySortChip()
+    }
+
+    fun List<AudioHelper.AudioData>.filterTracksByQuery() : List<AudioHelper.AudioData> {
         return this.filter { track ->
-            track.name.contains(query, ignoreCase = true)
-                    || track.artist.contains(query, ignoreCase = true)
-                    || track.albumName.contains(query, ignoreCase = true)
+            track.name.contains(searchQuery, ignoreCase = true)
+                    || track.artist.contains(searchQuery, ignoreCase = true)
+                    || track.albumName.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    fun List<AudioHelper.AudioData>.sortTracksBySortChip() : List<AudioHelper.AudioData> {
+        return this.sortedBy { track ->
+            when (selectedSortChip) {
+                SortChip.Name -> track.name
+                SortChip.Album -> track.albumName
+                SortChip.Artist -> track.artist
+                SortChip.DateAdded -> track.dateAdded.toString()
+            }
         }
     }
 
