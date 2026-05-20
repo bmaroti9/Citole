@@ -736,7 +736,7 @@ fun QueueDialog(
                     .padding(vertical = 10.dp)
             ) {
                 items(playerViewModel.currentQueue.size) { index ->
-                    SongItem(
+                    AudioItem (
                         playerViewModel.currentQueue[index],
                         playerViewModel
                     ) {

@@ -7,6 +7,21 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 
+enum class AudioType {
+    Song,
+    Podcast,
+    Audiobook,
+    Other
+}
+
+fun getAudioType(isSong : Int, isPodcast: Int, isAudiobook: Int) : AudioType {
+    return when {
+        isSong == 1-> AudioType.Song
+        isPodcast == 1 -> AudioType.Podcast
+        isAudiobook == 1 -> AudioType.Audiobook
+        else -> AudioType.Other
+    }
+}
 
 object AudioHelper {
 
@@ -21,7 +36,8 @@ object AudioHelper {
         val albumName : String,
 
         val duration: Long,
-        val size: Int
+        val size: Int,
+        val type: AudioType
     )
 
     fun fetchAudioFiles(context: Context): List<AudioData> {
@@ -37,7 +53,7 @@ object AudioHelper {
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             }
 
-        val projection = arrayOf(
+        val projection = mutableListOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.TITLE,
@@ -46,7 +62,14 @@ object AudioHelper {
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.SIZE,
-        )
+
+            MediaStore.Audio.Media.IS_MUSIC,
+            MediaStore.Audio.Media.IS_PODCAST,
+        ).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                add(MediaStore.Audio.Media.IS_AUDIOBOOK)
+            }
+        }.toTypedArray()
 
         val sortOrder = "${MediaStore.Audio.Media.DISPLAY_NAME} ASC"
 
@@ -68,6 +91,10 @@ object AudioHelper {
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
 
+            val isMusicRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)
+            val isPodcastRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)
+            val isAudiobookRow = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_AUDIOBOOK)} else {0}
+
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
                 val name = cursor.getString(nameColumn)
@@ -78,12 +105,18 @@ object AudioHelper {
                 val duration = cursor.getLong(durationColumn)
                 val size = cursor.getInt(sizeColumn)
 
+                val isMusic = cursor.getInt(isMusicRow)
+                val isPodcast = cursor.getInt(isPodcastRow)
+                val isAudiobook = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {cursor.getInt(isAudiobookRow)} else {0}
+
+                val audioType = getAudioType(isMusic, isPodcast, isAudiobook)
+
                 val contentUri: Uri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
 
-                audioList += AudioData(contentUri, name, title, artist, albumId, albumName, duration, size)
+                audioList += AudioData(contentUri, name, title, artist, albumId, albumName, duration, size, audioType)
             }
         }
 

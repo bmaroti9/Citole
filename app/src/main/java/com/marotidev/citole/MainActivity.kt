@@ -182,7 +182,7 @@ fun CitoleScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            scope.launch { libraryViewModel.loadSongs(context) }
+            scope.launch { libraryViewModel.loadAudio(context) }
         } else {
             Log.e("Permissions", "Permission Denied")
         }
@@ -191,7 +191,7 @@ fun CitoleScreen(
     LaunchedEffect(Unit) {
         val check = ContextCompat.checkSelfPermission(context, permission)
         if (check == PackageManager.PERMISSION_GRANTED) {
-            libraryViewModel.loadSongs(context)
+            libraryViewModel.loadAudio(context)
         } else {
             launcher.launch(permission)
         }
