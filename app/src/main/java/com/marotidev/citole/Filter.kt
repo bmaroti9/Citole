@@ -52,7 +52,7 @@ fun FilterDialog(
         },
         text = {
             Column() {
-                Text("Filter", style = MaterialTheme.typography.titleSmall,
+                Text("Filter", style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface)
                 FlowRow(
                     Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
@@ -105,7 +105,7 @@ fun FilterDialog(
                     }
                 }
 
-                Text("Sort by", style = MaterialTheme.typography.titleSmall,
+                Text("Sort", style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(top = 30.dp, bottom = 8.dp, start = 10.dp, end = 10.dp), color = MaterialTheme.colorScheme.onSurface)
                 FlowRow(
                     Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
@@ -137,7 +137,7 @@ fun FilterDialog(
                     ToggleButton(
                         checked = libraryViewModel.selectedSortChip == SortChip.Artist,
                         onCheckedChange = { libraryViewModel.onSelectedSortChipChanged(SortChip.Artist) },
-                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
                     ) {
@@ -155,6 +155,33 @@ fun FilterDialog(
                         Icon(painterResource(R.drawable.ic_today), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
                         Text("Date added", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+
+                Text("Order", style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(top = 30.dp, bottom = 8.dp, start = 10.dp, end = 10.dp), color = MaterialTheme.colorScheme.onSurface)
+                FlowRow(
+                    Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    ToggleButton(
+                        checked = !libraryViewModel.reverseSortOrder,
+                        onCheckedChange = { libraryViewModel.onReverseSortOrderChanged(false) },
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_arrow_down), contentDescription = null, modifier = Modifier.size(18.dp))
+                    }
+                    ToggleButton(
+                        checked = libraryViewModel.reverseSortOrder,
+                        onCheckedChange = { libraryViewModel.onReverseSortOrderChanged(true) },
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(painterResource(R.drawable.ic_arrow_up), contentDescription = null, modifier = Modifier.size(18.dp))
                     }
                 }
             }

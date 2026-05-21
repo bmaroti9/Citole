@@ -63,6 +63,8 @@ class LibraryViewModel : ViewModel() {
 
     var selectedSortChip by mutableStateOf(SortChip.Name)
 
+    var reverseSortOrder by mutableStateOf(false)
+
     fun onShowSongsChanged() {
         showSongs = !showSongs
         updateFilteredTracks()
@@ -85,6 +87,11 @@ class LibraryViewModel : ViewModel() {
 
     fun onSelectedSortChipChanged(to: SortChip) {
         selectedSortChip = to
+        updateFilteredTracks()
+    }
+
+    fun onReverseSortOrderChanged(to: Boolean) {
+        reverseSortOrder = to
         updateFilteredTracks()
     }
 
@@ -112,7 +119,7 @@ class LibraryViewModel : ViewModel() {
     }
 
     fun updateFilteredTracks() {
-        filteredTracks = allTracks.filterTracksByQuery().filterTracksByFilterChips().sortTracksBySortChip()
+        filteredTracks = allTracks.filterTracksByQuery().filterTracksByFilterChips().sortTracksBySortChip().sortBySortOrder()
     }
 
     fun List<AudioHelper.AudioData>.filterTracksByQuery() : List<AudioHelper.AudioData> {
@@ -145,13 +152,21 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
+    fun List<AudioHelper.AudioData>.sortBySortOrder() : List<AudioHelper.AudioData> {
+        return when (reverseSortOrder) {
+            true -> this.reversed()
+            false -> this
+        }
+    }
+
     fun loadTracks(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val tracks = AudioHelper.fetchAudioFiles(context)
             allTracks = tracks
-            filteredTracks = tracks
             artists = tracks.groupBy { it.artist }
             albums = tracks.groupBy { it.albumName }
+
+            updateFilteredTracks()
         }
     }
 }
