@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -62,6 +63,8 @@ dependencies {
     //plugins
     implementation(libs.coil.compose)
     implementation(libs.material.kolor)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     //testing
     testImplementation(libs.junit)

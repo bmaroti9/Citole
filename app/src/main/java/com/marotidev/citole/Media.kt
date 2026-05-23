@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import androidx.core.net.toUri
 import java.time.LocalTime
 
 enum class AudioType {
@@ -28,6 +29,7 @@ object AudioHelper {
 
     data class AudioData(
         val uri: Uri,
+        val artworkUri : Uri,
         val name: String,
 
         val title: String,
@@ -39,6 +41,19 @@ object AudioHelper {
         val duration: Long,
         val size: Int,
         val dateAdded: Int,
+
+        val type: AudioType
+    )
+
+    data class AlbumData(
+        val albumId: Long,
+
+        val artworkUri : Uri?,
+
+        val albumName: String,
+        val artist: String,
+
+        val tracks : List<AudioData>,
 
         val type: AudioType
     )
@@ -122,7 +137,12 @@ object AudioHelper {
                     id
                 )
 
-                audioList += AudioData(contentUri, name, title, artist, albumId, albumName, duration, size, dateAdded, audioType)
+                val artworkUri : Uri = ContentUris.withAppendedId(
+                "content://media/external/audio/albumart".toUri(),
+                    albumId
+                )
+
+                audioList += AudioData(contentUri, artworkUri, name, title, artist, albumId, albumName, duration, size, dateAdded, audioType)
             }
         }
 

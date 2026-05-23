@@ -1,6 +1,7 @@
 package com.marotidev.citole
 import android.content.ContentUris
 import android.content.Context
+import android.net.Uri
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -121,16 +122,11 @@ class PlayerViewModel(context: Context) : ViewModel() {
 
     private val imageLoader = ImageLoader(context)
 
-    private suspend fun updateColorFromAlbumArt(albumId: Long?, context: Context) {
-        if (albumId == null) {
+    private suspend fun updateColorFromAlbumArt(artworkUri: Uri?, context: Context) {
+        if (artworkUri == null) {
             _themeColor.value = systemPrimaryColor
             return
         }
-
-        val artworkUri = ContentUris.withAppendedId(
-            "content://media/external/audio/albumart".toUri(),
-            albumId
-        )
 
         val request = ImageRequest.Builder(context)
             .data(artworkUri)
@@ -185,8 +181,8 @@ class PlayerViewModel(context: Context) : ViewModel() {
         })
 
         viewModelScope.launch {
-            snapshotFlow { currentlyPlaying?.albumId }.collect { albumId ->
-                updateColorFromAlbumArt(albumId, context)
+            snapshotFlow { currentlyPlaying?.artworkUri }.collect { artworkUri ->
+                updateColorFromAlbumArt(artworkUri, context)
             }
         }
     }
@@ -341,10 +337,6 @@ fun PlayerScreen(
 fun ThumbnailCard(
     currentlyPlaying : AudioHelper.AudioData
 ) {
-    val artworkUri = ContentUris.withAppendedId(
-        "content://media/external/audio/albumart".toUri(),
-        currentlyPlaying.albumId
-    )
     Card(
         modifier = Modifier
             .padding(start = 40.dp, end = 40.dp, bottom = 30.dp, top = 80.dp)
@@ -354,7 +346,7 @@ fun ThumbnailCard(
     ) {
         AsyncImage(
             modifier = Modifier.fillMaxSize(),
-            model = artworkUri,
+            model = currentlyPlaying.artworkUri,
             contentDescription = "Album Art",
             error = painterResource(R.drawable.ic_library),
             contentScale = ContentScale.Crop

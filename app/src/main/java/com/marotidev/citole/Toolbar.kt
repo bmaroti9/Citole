@@ -268,11 +268,6 @@ fun ToolbarCollapsedState(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    val artworkUri = ContentUris.withAppendedId(
-        "content://media/external/audio/albumart".toUri(),
-        currentlyPlaying.albumId
-    )
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -290,7 +285,7 @@ fun ToolbarCollapsedState(
                 .padding(start = 10.dp, end = 10.dp)
                 .size(44.dp)
                 .clip(RoundedCornerShape(30.dp)),
-            model = artworkUri,
+            model = currentlyPlaying.artworkUri,
             contentDescription = "Album Art",
             error = painterResource(R.drawable.ic_library),
             contentScale = ContentScale.Crop

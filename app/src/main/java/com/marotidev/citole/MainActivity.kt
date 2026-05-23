@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -82,8 +83,17 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.marotidev.citole.ui.theme.DynamicAppTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class,
@@ -152,6 +162,14 @@ fun CustomNavigationDrawerItem(
     }
 }
 
+@Serializable
+object LibraryViewDestination
+
+@Serializable
+data class AlbumViewDestination(
+    val albumId: String,
+)
+
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3Api::class
 )
@@ -163,6 +181,7 @@ fun CitoleScreen(
     val context = LocalContext.current
 
     val focusManager = LocalFocusManager.current
+    val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var openAlertDialog by remember { mutableStateOf(false) }
 
@@ -170,7 +189,13 @@ fun CitoleScreen(
 
     val scope = rememberCoroutineScope()
 
-    val libraryViewModel = remember { LibraryViewModel() }
+    val libraryViewModel: LibraryViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                LibraryViewModel()
+            }
+        }
+    )
 
     val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
@@ -204,13 +229,25 @@ fun CitoleScreen(
                 Spacer(modifier = Modifier.height(30.dp))
                 CustomNavigationDrawerItem(
                     selected = selectedPage == Page.Tracks,
-                    onSelected =  {selectedPage = Page.Tracks},
+                    onSelected =  {
+                        selectedPage = Page.Tracks
+                        scope.launch {
+                            delay(200)
+                            drawerState.close()
+                        }
+                    },
                     iconId = R.drawable.ic_graphic_eq,
                     text = "Tracks"
                 )
                 CustomNavigationDrawerItem(
                     selected = selectedPage == Page.Albums,
-                    onSelected =  {selectedPage = Page.Albums},
+                    onSelected =  {
+                        selectedPage = Page.Albums
+                        scope.launch {
+                            delay(200)
+                            drawerState.close()
+                        }
+                    },
                     iconId = R.drawable.ic_album,
                     text = "Albums"
                 )
@@ -237,18 +274,30 @@ fun CitoleScreen(
                     )
                 },
             ) { paddingValues ->
-                AnimatedContent(
-                    modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
-                    targetState = selectedPage,
-                    label = "ScreenTransition",
-                    transitionSpec = {
-                        fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium)) togetherWith
-                                fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+                NavHost(
+                    navController = navController,
+                    startDestination = LibraryViewDestination
+                ) {
+                    composable<LibraryViewDestination> {
+                        AnimatedContent(
+                            modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
+                            targetState = selectedPage,
+                            label = "ScreenTransition",
+                            transitionSpec = {
+                                fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium)) togetherWith
+                                        fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMedium))
+                            }
+                        ) { targetPage ->
+                            when (targetPage) {
+                                Page.Tracks -> TracksPage(libraryViewModel, playerViewModel, paddingValues)
+                                Page.Albums -> AlbumsPage(libraryViewModel, playerViewModel, paddingValues, navController)
+                            }
+                        }
                     }
-                ) { targetPage ->
-                    when (targetPage) {
-                        Page.Tracks -> TracksPage(libraryViewModel, playerViewModel, paddingValues)
-                        Page.Albums -> AlbumsPage(libraryViewModel, playerViewModel, paddingValues)
+
+                    composable <AlbumViewDestination> { backStackEntry ->
+                        val args = backStackEntry.toRoute<AlbumViewDestination>()
+                        AlbumPageScreen(args.albumId)
                     }
                 }
             }

@@ -2,6 +2,7 @@ package com.marotidev.citole
 
 import android.content.ContentUris
 import android.content.Context
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -49,9 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType
 
 
 class LibraryViewModel : ViewModel() {
@@ -101,10 +104,10 @@ class LibraryViewModel : ViewModel() {
     var filteredTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
         private set
 
-    var artists by mutableStateOf<Map<String, List<AudioHelper.AudioData>>>(emptyMap())
+    var filteredArtists by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
         private set
 
-    var albums by mutableStateOf<Map<String, List<AudioHelper.AudioData>>>(emptyMap())
+    var filteredAlbums by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
         private set
 
 
@@ -120,6 +123,21 @@ class LibraryViewModel : ViewModel() {
 
     fun updateFilteredTracks() {
         filteredTracks = allTracks.filterTracksByQuery().filterTracksByFilterChips().sortTracksBySortChip().sortBySortOrder()
+
+        filteredAlbums = filteredTracks.groupBy { it.albumId }
+            .map { (albumId, tracksInAlbum) ->
+                AudioHelper.AlbumData(
+                    albumId = albumId,
+                    albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
+                    artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
+                    tracks = tracksInAlbum,
+                    type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
+                    artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
+                )
+            }
+
+        //filteredAlbums = filteredTracks.groupBy { it.albumId.toString() }
+        //filteredArtists = filteredTracks.groupBy { it.artist }
     }
 
     fun List<AudioHelper.AudioData>.filterTracksByQuery() : List<AudioHelper.AudioData> {
@@ -163,9 +181,6 @@ class LibraryViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val tracks = AudioHelper.fetchAudioFiles(context)
             allTracks = tracks
-            artists = tracks.groupBy { it.artist }
-            albums = tracks.groupBy { it.albumName }
-
             updateFilteredTracks()
         }
     }
@@ -229,14 +244,8 @@ fun TrackItem(
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        val artworkUri = ContentUris.withAppendedId(
-            "content://media/external/audio/albumart".toUri(),
-            track.albumId
-        )
-
         AsyncImage(
-            model = artworkUri,
+            model = track.artworkUri,
             contentDescription = "Album Art",
             modifier = Modifier
                 .size(50.dp)
@@ -258,8 +267,6 @@ fun TrackItem(
                 color = MaterialTheme.colorScheme.outline
             )
         }
-
-
     }
 }
 
@@ -267,7 +274,8 @@ fun TrackItem(
 fun AlbumsPage(
     libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    navController: NavController
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 180.dp),
@@ -276,31 +284,25 @@ fun AlbumsPage(
             .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
     ) {
-        val albumList = libraryViewModel.albums.keys.sorted()
-
-        items(albumList) { albumName ->
-            val trackList : List<AudioHelper.AudioData>? = libraryViewModel.albums[albumName]
-            AlbumItem(trackList)
+        items(libraryViewModel.filteredAlbums) { album ->
+            AlbumItem(album, onClicked = {
+                navController.navigate(AlbumViewDestination(albumId = "1"))
+            })
         }
     }
 }
 
 @Composable
-fun AlbumItem(tracks: List<AudioHelper.AudioData>?) {
-    if (tracks.isNullOrEmpty()) return
-    val firstTrack = tracks.first()
-    val albumName = firstTrack.albumName
-
-    val artworkUri = ContentUris.withAppendedId(
-        "content://media/external/audio/albumart".toUri(),
-        firstTrack.albumId
-    )
-
+fun AlbumItem(album: AudioHelper.AlbumData, onClicked: () -> Unit) {
     Column(
-        modifier = Modifier.padding(10.dp),
+        modifier = Modifier
+            .padding(10.dp)
+            .clickable(
+                onClick = {onClicked()}
+            ),
     ) {
         AsyncImage(
-            model = artworkUri,
+            model = album.artworkUri,
             contentDescription = "Album Art",
             modifier = Modifier
                 .fillMaxWidth()
@@ -310,7 +312,7 @@ fun AlbumItem(tracks: List<AudioHelper.AudioData>?) {
             contentScale = ContentScale.Crop
         )
         Text(
-            text = albumName,
+            text = album.albumName,
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 5.dp, start = 1.dp)
         )
