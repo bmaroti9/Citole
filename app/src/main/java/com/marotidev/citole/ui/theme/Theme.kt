@@ -44,7 +44,7 @@ object M3ExpressiveTransitions {
 
     private val SpatialSpring = spring(
         stiffness = Spring.StiffnessMediumLow,
-        dampingRatio = Spring.DampingRatioLowBouncy,
+        dampingRatio = 0.85f,
         visibilityThreshold = IntOffset.VisibilityThreshold
     )
 

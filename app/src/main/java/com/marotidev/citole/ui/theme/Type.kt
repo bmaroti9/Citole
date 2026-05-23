@@ -34,7 +34,7 @@ val Typography = Typography(
         fontFamily = GoogleSansFlexFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
-        lineHeight = 24.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.5.sp
     ),
     titleLarge = TextStyle(

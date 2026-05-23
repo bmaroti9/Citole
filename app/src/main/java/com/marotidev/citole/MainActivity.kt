@@ -262,7 +262,7 @@ fun CitoleScreen(
                     text = "Albums"
                 )
             }
-        }
+        },
     ) {
         Box (
             modifier = Modifier.pointerInput(Unit) {
@@ -270,29 +270,29 @@ fun CitoleScreen(
             }
         ){
 
-            Scaffold(
-                topBar = {
-                    FixedTopBar(
-                        libraryViewModel,
-                        playerViewModel,
-                        onMenuClick = {
-                            scope.launch { drawerState.open() }
+            NavHost(
+                navController = navController,
+                startDestination = LibraryViewDestination,
+                enterTransition = M3ExpressiveTransitions.enter,
+                exitTransition = M3ExpressiveTransitions.exit,
+                popEnterTransition = M3ExpressiveTransitions.popEnter,
+                popExitTransition = M3ExpressiveTransitions.popExit
+            ) {
+                composable<LibraryViewDestination> {
+                    Scaffold(
+                        topBar = {
+                            FixedTopBar(
+                                libraryViewModel,
+                                playerViewModel,
+                                onMenuClick = {
+                                    scope.launch { drawerState.open() }
+                                },
+                                onPrimaryClick = {
+                                    openAlertDialog = true
+                                }
+                            )
                         },
-                        onPrimaryClick = {
-                            openAlertDialog = true
-                        }
-                    )
-                },
-            ) { paddingValues ->
-                NavHost(
-                    navController = navController,
-                    startDestination = LibraryViewDestination,
-                    enterTransition = M3ExpressiveTransitions.enter,
-                    exitTransition = M3ExpressiveTransitions.exit,
-                    popEnterTransition = M3ExpressiveTransitions.popEnter,
-                    popExitTransition = M3ExpressiveTransitions.popExit
-                ) {
-                    composable<LibraryViewDestination> {
+                    ) { paddingValues ->
                         AnimatedContent(
                             modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
                             targetState = selectedPage,
@@ -308,11 +308,11 @@ fun CitoleScreen(
                             }
                         }
                     }
+                }
 
-                    composable <AlbumViewDestination> { backStackEntry ->
-                        val args = backStackEntry.toRoute<AlbumViewDestination>()
-                        AlbumPageScreen(args.albumId, libraryViewModel)
-                    }
+                composable <AlbumViewDestination> { backStackEntry ->
+                    val args = backStackEntry.toRoute<AlbumViewDestination>()
+                    AlbumPageScreen(args.albumId, libraryViewModel, navController)
                 }
             }
             CustomFloatingToolbar(playerViewModel)

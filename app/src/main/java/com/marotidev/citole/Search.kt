@@ -50,103 +50,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun TopBar(
-    libraryViewModel: LibraryViewModel,
-    playerViewModel: PlayerViewModel
-) {
-
-    val slowSpring = spring<Float>(
-        dampingRatio = Spring.DampingRatioLowBouncy,
-        stiffness = Spring.StiffnessLow
-    )
-
-    val searchBarState = rememberContainedSearchBarState(
-        animationSpecForExpand = slowSpring,
-        animationSpecForCollapse = slowSpring
-    )
-    val scope = rememberCoroutineScope()
-
-    val inputField = @Composable {
-        CompositionLocalProvider(
-            LocalTextStyle provides MaterialTheme.typography.titleSmall
-        ) {
-            SearchBarDefaults.InputField(
-                query = libraryViewModel.searchQuery,
-                onQueryChange = { query -> libraryViewModel.onSearchQueryChanged(query)},
-                onSearch = { /* handle search */ },
-                expanded = searchBarState.currentValue == SearchBarValue.Expanded,
-                onExpandedChange = { scope.launch { searchBarState.animateToExpanded() }},
-                placeholder = { Text("Search...", style = MaterialTheme.typography.titleSmall) },
-            )
-        }
-    }
-
-    TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            scrolledContainerColor = Color.Transparent,
-        ),
-        title = {
-            SearchBar(
-                state = searchBarState,
-                inputField = inputField,
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = {  }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_menu),
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
-        actions = {
-            FilledTonalIconButton (
-                onClick = {  },
-                shapes = IconButtonDefaults.shapes(
-                    shape = CircleShape,
-                    pressedShape = MaterialTheme.shapes.medium // Morphs to rounded square
-                )
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_shuffle),
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
-        contentPadding = PaddingValues(start = 4.dp, end = 4.dp, bottom = 6.dp)
-    )
-
-    ExpandedFullScreenSearchBar(
-        state = searchBarState,
-        inputField = inputField,
-    ) {
-        LazyColumn(
-            Modifier
-                .fillMaxSize()
-                .padding(vertical = 10.dp)
-        ) {
-            items(libraryViewModel.filteredTracks) { track ->
-                TrackItem(
-                    track,
-                    playerViewModel
-                ) {
-                    playerViewModel.addToQueue(track)
-                    scope.launch {
-                        libraryViewModel.onSearchQueryChanged("")
-                        searchBarState.animateToCollapsed()
-                    }
-                }
-            }
-        }
-    }
-
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FixedTopBar(
@@ -231,7 +134,7 @@ fun FixedTopBar(
                 onClick = { onPrimaryClick() },
                 shapes = IconButtonDefaults.shapes(
                     shape = CircleShape,
-                    pressedShape = MaterialTheme.shapes.medium // Morphs to rounded square
+                    pressedShape = MaterialTheme.shapes.medium
                 )
             ) {
                 Icon(
