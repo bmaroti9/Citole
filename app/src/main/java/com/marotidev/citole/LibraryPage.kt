@@ -104,10 +104,13 @@ class LibraryViewModel : ViewModel() {
     var filteredTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
         private set
 
-    var filteredArtists by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
+    var allAlbums by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
         private set
 
     var filteredAlbums by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
+        private set
+
+    var filteredArtists by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
         private set
 
 
@@ -124,20 +127,7 @@ class LibraryViewModel : ViewModel() {
     fun updateFilteredTracks() {
         filteredTracks = allTracks.filterTracksByQuery().filterTracksByFilterChips().sortTracksBySortChip().sortBySortOrder()
 
-        filteredAlbums = filteredTracks.groupBy { it.albumId }
-            .map { (albumId, tracksInAlbum) ->
-                AudioHelper.AlbumData(
-                    albumId = albumId,
-                    albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
-                    artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
-                    tracks = tracksInAlbum,
-                    type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
-                    artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
-                )
-            }
-
-        //filteredAlbums = filteredTracks.groupBy { it.albumId.toString() }
-        //filteredArtists = filteredTracks.groupBy { it.artist }
+        filteredAlbums = filteredTracks.groupToAlbum()
     }
 
     fun List<AudioHelper.AudioData>.filterTracksByQuery() : List<AudioHelper.AudioData> {
@@ -177,10 +167,29 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
+    fun List<AudioHelper.AudioData>.groupToAlbum() : List<AudioHelper.AlbumData> {
+        return this.groupBy { it.albumId }
+            .map { (albumId, tracksInAlbum) ->
+                AudioHelper.AlbumData(
+                    albumId = albumId,
+                    albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
+                    artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
+                    tracks = tracksInAlbum,
+                    type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
+                    artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
+                )
+            }
+    }
+
+    fun findAlbumById(albumId: Long) : AudioHelper.AlbumData? {
+        return allAlbums.find { it.albumId == albumId }
+    }
+
     fun loadTracks(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val tracks = AudioHelper.fetchAudioFiles(context)
             allTracks = tracks
+            allAlbums = tracks.groupToAlbum()
             updateFilteredTracks()
         }
     }
@@ -286,7 +295,7 @@ fun AlbumsPage(
     ) {
         items(libraryViewModel.filteredAlbums) { album ->
             AlbumItem(album, onClicked = {
-                navController.navigate(AlbumViewDestination(albumId = "1"))
+                navController.navigate(AlbumViewDestination(albumId = album.albumId))
             })
         }
     }

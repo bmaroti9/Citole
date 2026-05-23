@@ -11,12 +11,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -78,6 +84,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -86,11 +93,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marotidev.citole.ui.theme.DynamicAppTheme
+import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -167,8 +176,9 @@ object LibraryViewDestination
 
 @Serializable
 data class AlbumViewDestination(
-    val albumId: String,
+    val albumId: Long,
 )
+
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3Api::class
@@ -276,7 +286,11 @@ fun CitoleScreen(
             ) { paddingValues ->
                 NavHost(
                     navController = navController,
-                    startDestination = LibraryViewDestination
+                    startDestination = LibraryViewDestination,
+                    enterTransition = M3ExpressiveTransitions.enter,
+                    exitTransition = M3ExpressiveTransitions.exit,
+                    popEnterTransition = M3ExpressiveTransitions.popEnter,
+                    popExitTransition = M3ExpressiveTransitions.popExit
                 ) {
                     composable<LibraryViewDestination> {
                         AnimatedContent(
@@ -297,7 +311,7 @@ fun CitoleScreen(
 
                     composable <AlbumViewDestination> { backStackEntry ->
                         val args = backStackEntry.toRoute<AlbumViewDestination>()
-                        AlbumPageScreen(args.albumId)
+                        AlbumPageScreen(args.albumId, libraryViewModel)
                     }
                 }
             }
