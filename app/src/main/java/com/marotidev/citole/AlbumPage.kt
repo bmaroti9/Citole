@@ -1,14 +1,9 @@
 package com.marotidev.citole
 
-import android.content.ContentUris
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,47 +14,40 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
 @Composable
-fun AlbumPageScreen(albumId: Long, libraryViewModel: LibraryViewModel, navController: NavController) {
+fun AlbumPageScreen(
+    albumId: Long,
+    libraryViewModel: LibraryViewModel,
+    playerViewModel: PlayerViewModel,
+    navController: NavController
+) {
     val album: AudioHelper.AlbumData = libraryViewModel.findAlbumById(albumId)
         ?: return Box(modifier = Modifier.fillMaxSize()) {
             Text("Album not found", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Center))
@@ -108,7 +96,7 @@ fun AlbumPageScreen(albumId: Long, libraryViewModel: LibraryViewModel, navContro
                             .weight(1f)
                             .padding(top = collapsedHeight + 20.dp, bottom = 30.dp)
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(33.dp)),
+                            .clip(RoundedCornerShape(33.dp * (1f - collapsedFraction))),
                         error = painterResource(R.drawable.ic_library),
                         contentScale = ContentScale.Crop
                     )
@@ -157,33 +145,39 @@ fun AlbumPageScreen(albumId: Long, libraryViewModel: LibraryViewModel, navContro
         }
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
             contentPadding = innerPadding // Crucial: passes down the structural top spacing!
         ) {
-            items(50) { index ->
-                Text(
-                    text = "Track listing number $index",
-                    modifier = Modifier.padding(16.dp).fillMaxWidth()
-                )
+            item {
+                Spacer(modifier = Modifier.height(30.dp))
+            }
+            items(album.tracks.size) { index ->
+                AlbumTrackItem(playerViewModel, libraryViewModel, album.tracks, index)
             }
         }
     }
 }
 
 @Composable
-fun AlbumTrackItem(track: AudioHelper.AudioData, index: Int) {
+fun AlbumTrackItem(
+    playerViewModel: PlayerViewModel,
+    libraryViewModel: LibraryViewModel,
+    tracks: List<AudioHelper.AudioData>,
+    index: Int,
+) {
+    val track = tracks[index]
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
+            .padding(vertical = 2.dp)
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = {
-
+                playerViewModel.playQueue(tracks, index)
             })
-            .padding(10.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("$index.", style = MaterialTheme.typography.labelLarge)
+        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(30.dp))
 
         Spacer(Modifier.width(12.dp))
 
@@ -197,49 +191,6 @@ fun AlbumTrackItem(track: AudioHelper.AudioData, index: Int) {
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CollapsingAppBarExample() {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        state = rememberTopAppBarState()
-    )
-
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                title = {
-                    Text(
-                        text = "Collapsing Top Bar",
-                        style = MaterialTheme.typography.headlineLarge
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            items(100) { index ->
-                Text(
-                    text = "Item #$index",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
         }
     }
 }

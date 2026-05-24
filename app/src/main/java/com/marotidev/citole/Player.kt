@@ -1,5 +1,4 @@
 package com.marotidev.citole
-import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import androidx.compose.animation.core.LinearEasing
@@ -77,7 +76,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -219,12 +217,15 @@ class PlayerViewModel(context: Context) : ViewModel() {
     fun playQueue(tracks: List<AudioHelper.AudioData>, startIndex: Int = 0) {
         currentQueue = tracks
         currentIndex = startIndex
+        currentlyPlaying = tracks[startIndex]
 
         val mediaItems = tracks.map { MediaItem.fromUri(it.uri) }
 
         player.setMediaItems(mediaItems, startIndex, 0L)
         player.prepare()
         player.play()
+
+        playing = true
     }
 
     fun addToQueue(track: AudioHelper.AudioData) {
@@ -389,8 +390,6 @@ fun CustomWavySlider(
     sliderInteractionSource: MutableInteractionSource,
 )  {
 
-    val haptic = LocalHapticFeedback.current
-
     val getPrimaryColor = rememberUpdatedState(MaterialTheme.colorScheme.primary)
     val getInactiveColor = rememberUpdatedState(MaterialTheme.colorScheme.surfaceContainer)
 
@@ -429,7 +428,6 @@ fun CustomWavySlider(
         },
         onValueChangeFinished = {
             playerViewModel.seekTo((currentlyPlaying.duration * sliderDragLocal).toLong())
-            haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
         },
         interactionSource = sliderInteractionSource,
         track = { sliderState ->

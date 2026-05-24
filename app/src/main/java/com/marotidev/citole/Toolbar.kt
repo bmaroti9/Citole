@@ -1,6 +1,5 @@
 package com.marotidev.citole
 
-import android.content.ContentUris
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -60,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -133,8 +131,6 @@ fun CustomFloatingToolbar(
         LaunchedEffect(state.currentValue) {
             if (state.currentValue == SheetState.Dismissed) {
                 haptic.performHapticFeedback(HapticFeedbackType.Reject)
-            } else {
-                haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
             }
         }
 
