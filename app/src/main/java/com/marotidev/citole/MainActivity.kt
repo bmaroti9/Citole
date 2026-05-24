@@ -201,6 +201,7 @@ fun CitoleScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = drawerState.isOpen, //don't want the drawer to randomly open on different screens
         drawerContent = {
             ModalDrawerSheet {
                 Spacer(modifier = Modifier.height(30.dp))
@@ -233,7 +234,9 @@ fun CitoleScreen(
     ) {
         Box (
             modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures(onTap = { focusManager.clearFocus() })
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
             }
         ){
 

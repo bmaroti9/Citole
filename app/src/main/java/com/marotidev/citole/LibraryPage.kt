@@ -170,11 +170,12 @@ class LibraryViewModel : ViewModel() {
     fun List<AudioHelper.AudioData>.groupToAlbum() : List<AudioHelper.AlbumData> {
         return this.groupBy { it.albumId }
             .map { (albumId, tracksInAlbum) ->
+                val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
                 AudioHelper.AlbumData(
                     albumId = albumId,
                     albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
                     artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
-                    tracks = tracksInAlbum,
+                    tracks = sequentialTracks,
                     type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
                     artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
                 )
@@ -235,7 +236,7 @@ fun TrackItem(
     onClicked: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val isSelected = playerViewModel.currentlyPlaying?.uri == track.uri
+    val isCurrentlyPlaying = playerViewModel.currentlyPlaying?.uri == track.uri
 
     Row(
         modifier = modifier
@@ -247,7 +248,7 @@ fun TrackItem(
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             })
             .background(
-                if (isSelected) {MaterialTheme.colorScheme.secondaryContainer}
+                if (isCurrentlyPlaying) {MaterialTheme.colorScheme.secondaryContainer}
                 else {Color.Transparent}
             )
             .padding(10.dp),
@@ -293,18 +294,28 @@ fun AlbumsPage(
             .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
     ) {
-        items(libraryViewModel.filteredAlbums) { album ->
-            AlbumItem(album, onClicked = {
+        items(
+            libraryViewModel.filteredAlbums,
+            key = { album -> album.albumId }
+        ) { album ->
+            AlbumItem(album,
+                onClicked = {
                 navController.navigate(AlbumViewDestination(albumId = album.albumId))
-            })
+                },
+                modifier = Modifier.animateItem(
+                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                ),
+            )
         }
     }
 }
 
 @Composable
-fun AlbumItem(album: AudioHelper.AlbumData, onClicked: () -> Unit) {
+fun AlbumItem(album: AudioHelper.AlbumData, onClicked: () -> Unit, modifier: Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(10.dp)
             .clickable(
                 onClick = {onClicked()}

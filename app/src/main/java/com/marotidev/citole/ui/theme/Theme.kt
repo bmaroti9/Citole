@@ -34,7 +34,6 @@ fun DynamicAppTheme(seedColor: Color, content: @Composable () -> Unit) {
         content = content,
         specVersion = ColorSpec.SpecVersion.SPEC_2025,
         typography = Typography,
-        motionScheme = MotionScheme.expressive()
     )
 }
 
@@ -44,7 +43,7 @@ object M3ExpressiveTransitions {
 
     private val SpatialSpring = spring(
         stiffness = Spring.StiffnessMediumLow,
-        dampingRatio = 0.85f,
+        dampingRatio = 0.82f,
         visibilityThreshold = IntOffset.VisibilityThreshold
     )
 

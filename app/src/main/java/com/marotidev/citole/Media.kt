@@ -30,6 +30,7 @@ object AudioHelper {
     data class AudioData(
         val uri: Uri,
         val artworkUri : Uri,
+
         val name: String,
 
         val title: String,
@@ -41,6 +42,7 @@ object AudioHelper {
         val duration: Long,
         val size: Int,
         val dateAdded: Int,
+        val trackNumber: Int,
 
         val type: AudioType
     )
@@ -81,6 +83,7 @@ object AudioHelper {
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.SIZE,
             MediaStore.Audio.Media.DATE_ADDED,
+            MediaStore.Audio.Media.TRACK,
 
             MediaStore.Audio.Media.IS_MUSIC,
             MediaStore.Audio.Media.IS_PODCAST,
@@ -110,6 +113,7 @@ object AudioHelper {
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
             val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
+            val trackNumberColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
 
             val isMusicRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)
             val isPodcastRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)
@@ -125,6 +129,7 @@ object AudioHelper {
                 val duration = cursor.getLong(durationColumn)
                 val size = cursor.getInt(sizeColumn)
                 val dateAdded = cursor.getInt(dateAddedColumn)
+                val trackNumber = cursor.getInt(trackNumberColumn) % 1000
 
                 val isMusic = cursor.getInt(isMusicRow)
                 val isPodcast = cursor.getInt(isPodcastRow)
@@ -142,7 +147,8 @@ object AudioHelper {
                     albumId
                 )
 
-                audioList += AudioData(contentUri, artworkUri, name, title, artist, albumId, albumName, duration, size, dateAdded, audioType)
+                audioList += AudioData(contentUri, artworkUri, name, title, artist, albumId, albumName,
+                    duration, size, dateAdded, trackNumber, audioType)
             }
         }
 

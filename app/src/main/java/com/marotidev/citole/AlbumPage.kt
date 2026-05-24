@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -86,7 +87,9 @@ fun AlbumPageScreen(
             ) {
 
                 Column(
-                    modifier = Modifier.fillMaxHeight().fillMaxWidth().graphicsLayer(alpha = (1f - collapsedFraction * 1.5f).coerceIn(0f, 1f)),
+                    modifier = Modifier.fillMaxSize()
+                        .padding(horizontal = 40.dp)
+                        .graphicsLayer(alpha = (1f - collapsedFraction * 1.5f).coerceIn(0f, 1f)),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     AsyncImage(
@@ -107,10 +110,8 @@ fun AlbumPageScreen(
 
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .statusBarsPadding()
-                        .height(collapsedHeight)
-                        .align(Alignment.TopStart)
                         .padding(start = 70.dp, end = 16.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
@@ -119,7 +120,7 @@ fun AlbumPageScreen(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.graphicsLayer {
-                            alpha = ((collapsedFraction - 0.7f) / 0.3f).coerceIn(0f, 1f)
+                            alpha = ((collapsedFraction - 0.65f) / 0.35f).coerceIn(0f, 1f)
                         }
                     )
                 }
@@ -146,13 +147,13 @@ fun AlbumPageScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
-            contentPadding = innerPadding // Crucial: passes down the structural top spacing!
+            contentPadding = innerPadding
         ) {
             item {
                 Spacer(modifier = Modifier.height(30.dp))
             }
             items(album.tracks.size) { index ->
-                AlbumTrackItem(playerViewModel, libraryViewModel, album.tracks, index)
+                AlbumTrackItem(playerViewModel, album.tracks, index)
             }
         }
     }
@@ -161,23 +162,25 @@ fun AlbumPageScreen(
 @Composable
 fun AlbumTrackItem(
     playerViewModel: PlayerViewModel,
-    libraryViewModel: LibraryViewModel,
     tracks: List<AudioHelper.AudioData>,
     index: Int,
 ) {
     val track = tracks[index]
+    val isCurrentlyPlaying = playerViewModel.currentlyPlaying?.uri == track.uri
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp)
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = {
                 playerViewModel.playQueue(tracks, index)
             })
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .background(if (isCurrentlyPlaying) { MaterialTheme.colorScheme.secondaryContainer} else {Color.Transparent})
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(30.dp))
+        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.width(20.dp), color = MaterialTheme.colorScheme.secondary)
 
         Spacer(Modifier.width(12.dp))
 
