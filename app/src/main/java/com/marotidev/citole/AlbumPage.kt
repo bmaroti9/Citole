@@ -58,7 +58,7 @@ fun AlbumPageScreen(
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
 
     val density = LocalDensity.current
-    val expandedHeight = 400.dp + statusBarTopDp
+    val expandedHeight = 420.dp + statusBarTopDp
     val collapsedHeight = 64.dp + statusBarTopDp
 
     val expandedHeightPx = with(density) { expandedHeight.toPx() }
@@ -89,7 +89,7 @@ fun AlbumPageScreen(
                 Column(
                     modifier = Modifier.fillMaxSize()
                         .padding(horizontal = 40.dp)
-                        .graphicsLayer(alpha = (1f - collapsedFraction * 1.5f).coerceIn(0f, 1f)),
+                        .graphicsLayer(alpha = (1f - collapsedFraction * 1.6f).coerceIn(0f, 1f)),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     AsyncImage(
@@ -106,13 +106,14 @@ fun AlbumPageScreen(
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(album.artist, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
 
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
-                        .padding(start = 70.dp, end = 16.dp),
+                        .padding(start = 76.dp, end = 16.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
@@ -127,7 +128,10 @@ fun AlbumPageScreen(
 
                 FilledIconButton(
                     onClick = { navController.popBackStack() },
-                    shape = CircleShape,
+                    shapes = IconButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = MaterialTheme.shapes.medium
+                    ),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.secondary
@@ -135,7 +139,7 @@ fun AlbumPageScreen(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .statusBarsPadding()
-                        .padding(start = 12.dp, top = 8.dp)
+                        .padding(start = 18.dp, top = 8.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
@@ -149,9 +153,6 @@ fun AlbumPageScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
             contentPadding = innerPadding
         ) {
-            item {
-                Spacer(modifier = Modifier.height(30.dp))
-            }
             items(album.tracks.size) { index ->
                 AlbumTrackItem(playerViewModel, album.tracks, index)
             }
@@ -176,13 +177,12 @@ fun AlbumTrackItem(
                 playerViewModel.playQueue(tracks, index)
             })
             .background(if (isCurrentlyPlaying) { MaterialTheme.colorScheme.secondaryContainer} else {Color.Transparent})
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.width(20.dp), color = MaterialTheme.colorScheme.secondary)
+            modifier = Modifier.width(32.dp), color = MaterialTheme.colorScheme.secondary)
 
-        Spacer(Modifier.width(12.dp))
 
         Column() {
             Text(

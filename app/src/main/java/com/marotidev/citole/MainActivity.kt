@@ -285,7 +285,7 @@ fun CitoleScreen(
                     AlbumPageScreen(args.albumId, libraryViewModel, playerViewModel, navController)
                 }
             }
-            CustomFloatingToolbar(playerViewModel)
+            CustomFloatingToolbar(playerViewModel, navController)
             if (openAlertDialog) {
                 FilterDialog (
                     onDismissRequest = {openAlertDialog = false},

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -25,6 +26,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -46,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -59,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -73,6 +78,7 @@ enum class SheetState { Dismissed, Collapsed, Expanded }
 @Composable
 fun CustomFloatingToolbar(
     playerViewModel: PlayerViewModel,
+    navController: NavController
 ) {
     playerViewModel.currentlyPlaying?.let { playing ->
 
@@ -250,7 +256,11 @@ fun CustomFloatingToolbar(
                     .drawBehind { drawRect(getContainerColor.value) }
             ) {
                 ToolbarCollapsedState(collapsedAlpha, scope, state, playing, playerViewModel)
-                ToolbarExpandedState(playerViewModel, expandedAlpha, fraction, playing)
+                ToolbarExpandedState(playerViewModel, expandedAlpha, fraction, playing,
+                    navController, onPlayerClose = {scope.launch {
+                        state.animateTo(SheetState.Collapsed,
+                            animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = 0.9f))
+                    }})
             }
         }
     }
@@ -325,7 +335,9 @@ fun ToolbarExpandedState(
     playerViewModel: PlayerViewModel,
     expandedAlpha: Float,
     fraction: Float,
-    currentlyPlaying: AudioHelper.AudioData
+    currentlyPlaying: AudioHelper.AudioData,
+    navController: NavController,
+    onPlayerClose: () -> Unit
 ) {
     if (fraction < 0.5) {
         Box(
@@ -337,7 +349,40 @@ fun ToolbarExpandedState(
             }
             .padding(24.dp)
         ) {
-            PlayerScreen(playerViewModel, currentlyPlaying)
+            PlayerScreen(playerViewModel, currentlyPlaying, navController, onPlayerClose)
+        }
+    }
+}
+
+@Composable
+fun CustomCarouselDemo() {
+    val colors = listOf(
+        Color(0xFFE57373),
+        Color(0xFF81C784),
+        Color(0xFF64B5F6),
+        Color(0xFFFFB74D),
+        Color(0xFFBA68C8)
+    )
+
+    val pagerState = rememberPagerState(pageCount = { colors.size })
+
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp),
+    ) { page ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors[page]),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Page ${page + 1}",
+                fontSize = 24.sp,
+            )
         }
     }
 }

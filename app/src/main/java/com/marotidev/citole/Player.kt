@@ -43,6 +43,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -81,6 +82,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -303,7 +305,9 @@ class PlayerViewModel(context: Context) : ViewModel() {
 @Composable
 fun PlayerScreen(
     playerViewModel: PlayerViewModel,
-    currentlyPlaying : AudioHelper.AudioData
+    currentlyPlaying : AudioHelper.AudioData,
+    navController: NavController,
+    onPlayerClose: () -> Unit
 ) {
 
     val openAlertDialog = remember { mutableStateOf(false) }
@@ -320,7 +324,7 @@ fun PlayerScreen(
 
         ThumbnailCard(currentlyPlaying)
 
-        TitleAndArtist(currentlyPlaying)
+        TitleAndArtist(currentlyPlaying, navController, onPlayerClose)
 
         ExpressiveWavySlider(playerViewModel, currentlyPlaying)
 
@@ -357,8 +361,11 @@ fun ThumbnailCard(
 
 @Composable
 fun TitleAndArtist(
-    currentlyPlaying : AudioHelper.AudioData
+    currentlyPlaying : AudioHelper.AudioData,
+    navController: NavController,
+    onPlayerClose: () -> Unit,
 ) {
+
     Text(
         currentlyPlaying.title,
         style = MaterialTheme.typography.titleLarge,
@@ -368,8 +375,17 @@ fun TitleAndArtist(
         lineHeight = 26.sp,
         modifier = Modifier
             .basicMarquee()
-            .padding(horizontal = 25.dp),
+            .padding(horizontal = 25.dp)
+            .clickable(
+                onClick = {
+                    navController.navigate(AlbumViewDestination(albumId = currentlyPlaying.albumId))
+                    onPlayerClose()
+                },
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ),
     )
+
     Text(
         currentlyPlaying.artist,
         style = MaterialTheme.typography.labelMedium,
@@ -379,6 +395,7 @@ fun TitleAndArtist(
         modifier = Modifier
             .padding(horizontal = 25.dp)
     )
+
 }
 
 @Composable

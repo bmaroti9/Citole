@@ -171,6 +171,7 @@ class LibraryViewModel : ViewModel() {
         return this.groupBy { it.albumId }
             .map { (albumId, tracksInAlbum) ->
                 val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
+                tracksInAlbum
                 AudioHelper.AlbumData(
                     albumId = albumId,
                     albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
@@ -300,7 +301,7 @@ fun AlbumsPage(
         ) { album ->
             AlbumItem(album,
                 onClicked = {
-                navController.navigate(AlbumViewDestination(albumId = album.albumId))
+                    navController.navigate(AlbumViewDestination(albumId = album.albumId))
                 },
                 modifier = Modifier.animateItem(
                     fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
