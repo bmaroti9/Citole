@@ -85,6 +85,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
+import com.marotidev.citole.viewmodels.LibraryViewModel
+import com.marotidev.citole.viewmodels.PlayerViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable

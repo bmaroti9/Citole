@@ -1,3 +1,21 @@
+/*
+Copyright (C) <2026>  <Balint Maroti>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+*/
+
 package com.marotidev.citole
 
 import androidx.compose.foundation.background
@@ -46,6 +64,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.viewmodels.LibraryViewModel
+import com.marotidev.citole.viewmodels.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -113,11 +133,11 @@ fun AlbumPageScreen(
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(album.artist, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
                     Row(
-                        modifier = Modifier.padding(top = 22.dp, bottom = 22.dp)
+                        modifier = Modifier.padding(top = 18.dp, bottom = 26.dp)
                     ) {
                         Button(
                             onClick = {
-                                playerViewModel.playQueue(album.tracks, 0)
+                                playerViewModel.playQueue(album.tracks, 0, false)
                             },
                             contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
                             shapes = ButtonDefaults.shapes(
@@ -131,7 +151,7 @@ fun AlbumPageScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Play", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.width(2.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                         }
                         FilledTonalIconButton(
                             onClick = {},
