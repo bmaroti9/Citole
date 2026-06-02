@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,7 +21,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AlbumPageScreen(
     albumId: Long,
@@ -58,7 +64,7 @@ fun AlbumPageScreen(
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
 
     val density = LocalDensity.current
-    val expandedHeight = 420.dp + statusBarTopDp
+    val expandedHeight = 465.dp + statusBarTopDp
     val collapsedHeight = 64.dp + statusBarTopDp
 
     val expandedHeightPx = with(density) { expandedHeight.toPx() }
@@ -89,7 +95,7 @@ fun AlbumPageScreen(
                 Column(
                     modifier = Modifier.fillMaxSize()
                         .padding(horizontal = 40.dp)
-                        .graphicsLayer(alpha = (1f - collapsedFraction * 1.6f).coerceIn(0f, 1f)),
+                        .graphicsLayer(alpha = (1f - collapsedFraction * 1.9f).coerceIn(0f, 1f)),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     AsyncImage(
@@ -97,7 +103,7 @@ fun AlbumPageScreen(
                         contentDescription = "Album Art",
                         modifier = Modifier
                             .weight(1f)
-                            .padding(top = collapsedHeight + 20.dp, bottom = 30.dp)
+                            .padding(top = collapsedHeight + 20.dp, bottom = 25.dp)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(33.dp * (1f - collapsedFraction))),
                         error = painterResource(R.drawable.ic_library),
@@ -105,8 +111,42 @@ fun AlbumPageScreen(
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
                     Spacer(modifier = Modifier.height(3.dp))
-                    Text(album.artist, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(album.artist, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Row(
+                        modifier = Modifier.padding(top = 22.dp, bottom = 22.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                playerViewModel.playQueue(album.tracks, 0)
+                            },
+                            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
+                            shapes = ButtonDefaults.shapes(
+                                shape = CircleShape,
+                                pressedShape = MaterialTheme.shapes.medium
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_play),
+                                contentDescription = "Play",
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Play", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.width(2.dp))
+                        }
+                        FilledTonalIconButton(
+                            onClick = {},
+                            shapes = IconButtonDefaults.shapes(
+                                shape = CircleShape,
+                                pressedShape = MaterialTheme.shapes.medium
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_shuffle),
+                                contentDescription = "Shuffle",
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
                 }
 
                 Box(
@@ -177,7 +217,7 @@ fun AlbumTrackItem(
                 playerViewModel.playQueue(tracks, index)
             })
             .background(if (isCurrentlyPlaying) { MaterialTheme.colorScheme.secondaryContainer} else {Color.Transparent})
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,

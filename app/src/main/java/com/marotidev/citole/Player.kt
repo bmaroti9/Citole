@@ -396,7 +396,9 @@ fun TitleAndArtist(
             .padding(horizontal = 25.dp)
             .clickable(
                 onClick = {
-                    navController.navigate(AlbumViewDestination(albumId = currentlyPlaying.albumId))
+                    navController.navigate(AlbumViewDestination(albumId = currentlyPlaying.albumId)) {
+                        launchSingleTop = true
+                    }
                     onPlayerClose()
                 },
                 indication = null,
