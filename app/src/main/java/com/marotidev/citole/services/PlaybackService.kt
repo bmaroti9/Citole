@@ -40,6 +40,7 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 
+    //this always accepts connection requests
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =
         mediaSession
 }

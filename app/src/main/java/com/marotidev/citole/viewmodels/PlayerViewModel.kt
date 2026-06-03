@@ -18,6 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.viewmodels
 
+import android.app.Application
+import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
@@ -29,15 +31,21 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.google.common.util.concurrent.MoreExecutors
 import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.services.PlaybackService
 import com.materialkolor.ktx.themeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -50,7 +58,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.collections.plus
 
-class PlayerViewModel(context: Context) : ViewModel() {
+class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     var playing by mutableStateOf<Boolean>(false)
         private set
 
@@ -62,7 +70,7 @@ class PlayerViewModel(context: Context) : ViewModel() {
 
     var progress by mutableLongStateOf(0L)
 
-    val player = ExoPlayer.Builder(context).build()
+    private var player : MediaController? = null
 
     private var progressJob: Job? = null
 
@@ -70,7 +78,7 @@ class PlayerViewModel(context: Context) : ViewModel() {
     private val _themeColor = MutableStateFlow(Color.Gray)
     val themeColor: StateFlow<Color> = _themeColor.asStateFlow()
 
-    private val imageLoader = ImageLoader(context)
+    private val imageLoader = ImageLoader(application)
 
     private suspend fun updateColorFromAlbumArt(artworkUri: Uri?, context: Context) {
         if (artworkUri == null) {
@@ -99,12 +107,22 @@ class PlayerViewModel(context: Context) : ViewModel() {
     }
 
     init {
-        player.addListener(object : Player.Listener {
+        val sessionToken = SessionToken(application,
+            ComponentName(application, PlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
+        controllerFuture.addListener(
+            {
+                player = controllerFuture.get()
+                setupListeners()
+            },
+            MoreExecutors.directExecutor()
+        )
+    }
+
+    private fun setupListeners() {
+        player?.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
-                    Player.STATE_READY -> {
-
-                    }
                     Player.STATE_ENDED -> {
                         stopProgressUpdate()
                     }
@@ -120,22 +138,22 @@ class PlayerViewModel(context: Context) : ViewModel() {
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                currentIndex = player.currentMediaItemIndex
+                currentIndex = player?.currentMediaItemIndex ?: 0
                 currentlyPlaying = if (currentQueue.isNotEmpty() and (currentIndex >= 0) and (currentIndex < currentQueue.size)) {
                     currentQueue[currentIndex]
                 } else {
                     null
                 }
-
             }
         })
 
         viewModelScope.launch {
             snapshotFlow { currentlyPlaying?.artworkUri }.collect { artworkUri ->
-                updateColorFromAlbumArt(artworkUri, context)
+                updateColorFromAlbumArt(artworkUri, application)
             }
         }
     }
+
 
     fun updateDefaultColor(color: Color) {
         if (currentlyPlaying == null) {
@@ -148,7 +166,7 @@ class PlayerViewModel(context: Context) : ViewModel() {
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
             while (isActive) {
-                progress = player.currentPosition
+                progress = player?.currentPosition ?: 0
                 delay(500)
             }
         }
@@ -165,9 +183,9 @@ class PlayerViewModel(context: Context) : ViewModel() {
 
         val mediaItems = tracks.map { MediaItem.fromUri(it.uri) }
 
-        player.setMediaItems(mediaItems, startIndex, 0L)
-        player.prepare()
-        player.play()
+        player?.setMediaItems(mediaItems, startIndex, 0L)
+        player?.prepare()
+        player?.play()
 
         playing = true
     }
@@ -179,13 +197,13 @@ class PlayerViewModel(context: Context) : ViewModel() {
             currentIndex = 0
             currentlyPlaying = track
 
-            player.setMediaItem(mediaItem)
-            player.prepare()
-            player.play()
+            player?.setMediaItem(mediaItem)
+            player?.prepare()
+            player?.play()
             playing = true
         } else {
             currentQueue += track
-            player.addMediaItem(mediaItem)
+            player?.addMediaItem(mediaItem)
         }
     }
 
@@ -196,41 +214,41 @@ class PlayerViewModel(context: Context) : ViewModel() {
         } else {
             null
         }
-        player.seekTo(newIndex, 0L)
-        player.play()
+        player?.seekTo(newIndex, 0L)
+        player?.play()
         playing = true
     }
 
     fun togglePlayPause() {
         if (playing) {
-            player.pause()
+            player?.pause()
         }
         else {
-            player.play()
+            player?.play()
         }
         playing = !playing
     }
 
     fun seekTo(position: Long) {
-        player.seekTo(position)
+        player?.seekTo(position)
         progress = position
     }
 
     fun skipNext() {
-        if (player.hasNextMediaItem()) {
-            player.seekToNext()
+        if (player?.hasNextMediaItem() ?: false) {
+            player?.seekToNext()
         }
     }
 
     fun skipPrevious() {
-        if (player.hasPreviousMediaItem()) {
-            player.seekToPrevious()
+        if (player?.hasPreviousMediaItem() ?: false) {
+            player?.seekToPrevious()
         }
     }
 
     fun dismissPlayer() {
-        player.stop()
-        player.clearMediaItems()
+        player?.stop()
+        player?.clearMediaItems()
         currentQueue = emptyList()
         currentIndex = 0
         currentlyPlaying = null
@@ -239,6 +257,6 @@ class PlayerViewModel(context: Context) : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        player.release()
+        player?.release()
     }
 }

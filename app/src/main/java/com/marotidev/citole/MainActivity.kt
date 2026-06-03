@@ -101,7 +101,6 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             val context = LocalContext.current
-            val playerViewModel = remember { PlayerViewModel(context) }
 
             val systemDynamicPrimary = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (isSystemInDarkTheme()) dynamicDarkColorScheme(context).primary
@@ -110,16 +109,26 @@ class MainActivity : ComponentActivity() {
                 MaterialTheme.colorScheme.primary
             }
 
-            LaunchedEffect(systemDynamicPrimary) {
-                playerViewModel.updateDefaultColor(systemDynamicPrimary)
-            }
-
-            val currentSeedColor by playerViewModel.themeColor.collectAsState()
-
-            DynamicAppTheme(currentSeedColor) {
-                CitoleScreen(playerViewModel)
-            }
+            HomeSetup(systemDynamicPrimary = systemDynamicPrimary)
         }
+    }
+}
+
+@Composable
+fun HomeSetup(
+    playerViewModel: PlayerViewModel = viewModel(),
+    libraryViewModel: LibraryViewModel = viewModel(),
+    systemDynamicPrimary : Color
+) {
+
+    LaunchedEffect(systemDynamicPrimary) {
+        playerViewModel.updateDefaultColor(systemDynamicPrimary)
+    }
+
+    val currentSeedColor by playerViewModel.themeColor.collectAsState()
+
+    DynamicAppTheme(currentSeedColor) {
+        CitoleScreen(playerViewModel, libraryViewModel)
     }
 }
 
@@ -172,7 +181,8 @@ data class AlbumViewDestination(
 )
 @Composable
 fun CitoleScreen(
-    playerViewModel: PlayerViewModel
+    playerViewModel: PlayerViewModel,
+    libraryViewModel: LibraryViewModel
 ) {
 
     val context = LocalContext.current
@@ -185,14 +195,6 @@ fun CitoleScreen(
     var selectedPage by remember { mutableStateOf(Page.Tracks) }
 
     val scope = rememberCoroutineScope()
-
-    val libraryViewModel: LibraryViewModel = viewModel(
-        factory = viewModelFactory {
-            initializer {
-                LibraryViewModel()
-            }
-        }
-    )
 
     val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
