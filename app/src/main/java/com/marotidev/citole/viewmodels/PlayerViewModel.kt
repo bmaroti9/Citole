@@ -129,12 +129,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                if (isPlaying) {
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (playWhenReady) {
                     startProgressUpdate()
                 } else {
                     stopProgressUpdate()
                 }
+                playing = playWhenReady
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -186,8 +187,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         player?.setMediaItems(mediaItems, startIndex, 0L)
         player?.prepare()
         player?.play()
-
-        playing = true
     }
 
     fun addToQueue(track: AudioService.AudioData) {
@@ -200,7 +199,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             player?.setMediaItem(mediaItem)
             player?.prepare()
             player?.play()
-            playing = true
         } else {
             currentQueue += track
             player?.addMediaItem(mediaItem)
@@ -216,17 +214,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
         player?.seekTo(newIndex, 0L)
         player?.play()
-        playing = true
     }
 
     fun togglePlayPause() {
-        if (playing) {
+        if (player?.isPlaying == true) {
             player?.pause()
-        }
-        else {
+        } else {
             player?.play()
         }
-        playing = !playing
     }
 
     fun seekTo(position: Long) {
@@ -237,12 +232,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun skipNext() {
         if (player?.hasNextMediaItem() ?: false) {
             player?.seekToNext()
+            progress = player?.currentPosition ?: 0
         }
     }
 
     fun skipPrevious() {
         if (player?.hasPreviousMediaItem() ?: false) {
             player?.seekToPrevious()
+            progress = player?.currentPosition ?: 0
         }
     }
 
@@ -252,7 +249,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         currentQueue = emptyList()
         currentIndex = 0
         currentlyPlaying = null
-        playing = false
     }
 
     override fun onCleared() {
