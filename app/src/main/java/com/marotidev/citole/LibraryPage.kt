@@ -18,9 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole
 
-import android.content.ContentUris
-import android.content.Context
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -51,10 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,16 +59,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import okhttp3.MediaType
 
 @Composable
 fun TracksPage(
@@ -110,7 +99,7 @@ fun TracksPage(
 
 @Composable
 fun TrackItem(
-    track: AudioHelper.AudioData,
+    track: AudioService.AudioData,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
     onClicked: () -> Unit
@@ -193,7 +182,7 @@ fun AlbumsPage(
 }
 
 @Composable
-fun AlbumItem(album: AudioHelper.AlbumData, onClicked: () -> Unit, modifier: Modifier) {
+fun AlbumItem(album: AudioService.AlbumData, onClicked: () -> Unit, modifier: Modifier) {
     Column(
         modifier = modifier
             .padding(10.dp)

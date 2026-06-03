@@ -24,8 +24,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marotidev.citole.AudioHelper
-import com.marotidev.citole.AudioType
+import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.services.AudioType
 import com.marotidev.citole.SortChip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -73,19 +73,19 @@ class LibraryViewModel : ViewModel() {
         updateFilteredTracks()
     }
 
-    var allTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
+    var allTracks by mutableStateOf<List<AudioService.AudioData>>(emptyList())
         private set
 
-    var filteredTracks by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
+    var filteredTracks by mutableStateOf<List<AudioService.AudioData>>(emptyList())
         private set
 
-    var allAlbums by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
+    var allAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
         private set
 
-    var filteredAlbums by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
+    var filteredAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
         private set
 
-    var filteredArtists by mutableStateOf<List<AudioHelper.AlbumData>>(emptyList())
+    var filteredArtists by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
         private set
 
 
@@ -105,7 +105,7 @@ class LibraryViewModel : ViewModel() {
         filteredAlbums = filteredTracks.groupToAlbum()
     }
 
-    fun List<AudioHelper.AudioData>.filterTracksByQuery() : List<AudioHelper.AudioData> {
+    fun List<AudioService.AudioData>.filterTracksByQuery() : List<AudioService.AudioData> {
         return this.filter { track ->
             track.name.contains(searchQuery, ignoreCase = true)
                     || track.artist.contains(searchQuery, ignoreCase = true)
@@ -113,7 +113,7 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
-    fun List<AudioHelper.AudioData>.sortTracksBySortChip() : List<AudioHelper.AudioData> {
+    fun List<AudioService.AudioData>.sortTracksBySortChip() : List<AudioService.AudioData> {
         return this.sortedBy { track ->
             when (selectedSortChip) {
                 SortChip.Name -> track.name
@@ -124,7 +124,7 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
-    fun List<AudioHelper.AudioData>.filterTracksByFilterChips() : List<AudioHelper.AudioData> {
+    fun List<AudioService.AudioData>.filterTracksByFilterChips() : List<AudioService.AudioData> {
         return this.filter { track ->
             when (track.type) {
                 AudioType.Song -> showSongs
@@ -135,19 +135,19 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
-    fun List<AudioHelper.AudioData>.sortBySortOrder() : List<AudioHelper.AudioData> {
+    fun List<AudioService.AudioData>.sortBySortOrder() : List<AudioService.AudioData> {
         return when (reverseSortOrder) {
             true -> this.reversed()
             false -> this
         }
     }
 
-    fun List<AudioHelper.AudioData>.groupToAlbum() : List<AudioHelper.AlbumData> {
+    fun List<AudioService.AudioData>.groupToAlbum() : List<AudioService.AlbumData> {
         return this.groupBy { it.albumId }
             .map { (albumId, tracksInAlbum) ->
                 val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
                 tracksInAlbum
-                AudioHelper.AlbumData(
+                AudioService.AlbumData(
                     albumId = albumId,
                     albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
                     artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
@@ -158,13 +158,13 @@ class LibraryViewModel : ViewModel() {
             }
     }
 
-    fun findAlbumById(albumId: Long) : AudioHelper.AlbumData? {
+    fun findAlbumById(albumId: Long) : AudioService.AlbumData? {
         return allAlbums.find { it.albumId == albumId }
     }
 
     fun loadTracks(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
-            val tracks = AudioHelper.fetchAudioFiles(context)
+            val tracks = AudioService.fetchAudioFiles(context)
             allTracks = tracks
             allAlbums = tracks.groupToAlbum()
             updateFilteredTracks()

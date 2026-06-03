@@ -17,8 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 package com.marotidev.citole
-import android.content.Context
-import android.net.Uri
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -61,28 +59,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -94,28 +86,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
-import coil.ImageLoader
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.request.SuccessResult
+import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.PlayerViewModel
-import com.materialkolor.ktx.themeColor
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable.isActive
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -123,7 +97,7 @@ import kotlin.math.sin
 @Composable
 fun PlayerScreen(
     playerViewModel: PlayerViewModel,
-    currentlyPlaying : AudioHelper.AudioData,
+    currentlyPlaying : AudioService.AudioData,
     navController: NavController,
     onPlayerClose: () -> Unit
 ) {
@@ -158,7 +132,7 @@ fun PlayerScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ThumbnailCard(
-    currentlyPlaying : AudioHelper.AudioData
+    currentlyPlaying : AudioService.AudioData
 ) {
     Card(
         modifier = Modifier
@@ -179,7 +153,7 @@ fun ThumbnailCard(
 
 @Composable
 fun TitleAndArtist(
-    currentlyPlaying : AudioHelper.AudioData,
+    currentlyPlaying : AudioService.AudioData,
     navController: NavController,
     onPlayerClose: () -> Unit,
 ) {
@@ -221,7 +195,7 @@ fun TitleAndArtist(
 @Composable
 fun CustomWavySlider(
     playerViewModel: PlayerViewModel,
-    currentlyPlaying: AudioHelper.AudioData,
+    currentlyPlaying: AudioService.AudioData,
     sliderDragGlobal: Float,
     onSliderDragChanged: (Float) -> Unit,
     sliderInteractionSource: MutableInteractionSource,
@@ -330,7 +304,7 @@ fun durationToString(duration: Long) : String {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: AudioHelper.AudioData) {
+fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: AudioService.AudioData) {
 
     var sliderDrag by remember { mutableFloatStateOf(0f) }
     val sliderInteractionSource = remember { MutableInteractionSource() }

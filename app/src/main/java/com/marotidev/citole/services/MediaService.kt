@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole
+package com.marotidev.citole.services
 
 import android.content.ContentUris
 import android.content.Context
@@ -25,7 +25,6 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
-import java.time.LocalTime
 
 enum class AudioType {
     Song,
@@ -43,7 +42,7 @@ fun getAudioType(isSong : Int, isPodcast: Int, isAudiobook: Int) : AudioType {
     }
 }
 
-object AudioHelper {
+object AudioService {
 
     data class AudioData(
         val uri: Uri,

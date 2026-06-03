@@ -37,7 +37,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.marotidev.citole.AudioHelper
+import com.marotidev.citole.services.AudioService
 import com.materialkolor.ktx.themeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -54,10 +54,10 @@ class PlayerViewModel(context: Context) : ViewModel() {
     var playing by mutableStateOf<Boolean>(false)
         private set
 
-    var currentQueue by mutableStateOf<List<AudioHelper.AudioData>>(emptyList())
+    var currentQueue by mutableStateOf<List<AudioService.AudioData>>(emptyList())
         private set
 
-    var currentlyPlaying by mutableStateOf<AudioHelper.AudioData?>(null)
+    var currentlyPlaying by mutableStateOf<AudioService.AudioData?>(null)
     var currentIndex by mutableIntStateOf(0)
 
     var progress by mutableLongStateOf(0L)
@@ -158,7 +158,7 @@ class PlayerViewModel(context: Context) : ViewModel() {
         progressJob?.cancel()
     }
 
-    fun playQueue(tracks: List<AudioHelper.AudioData>, startIndex: Int = 0, shuffle: Boolean = false) {
+    fun playQueue(tracks: List<AudioService.AudioData>, startIndex: Int = 0, shuffle: Boolean = false) {
         currentQueue = tracks
         currentIndex = startIndex
         currentlyPlaying = tracks[startIndex]
@@ -172,7 +172,7 @@ class PlayerViewModel(context: Context) : ViewModel() {
         playing = true
     }
 
-    fun addToQueue(track: AudioHelper.AudioData) {
+    fun addToQueue(track: AudioService.AudioData) {
         val mediaItem = MediaItem.fromUri(track.uri)
         if (currentQueue.isEmpty()) {
             currentQueue += track

@@ -83,6 +83,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -289,7 +290,7 @@ fun CustomFloatingToolbar(
 @Composable
 fun ToolbarCollapsedState(
     collapsedAlpha : Float, scope: CoroutineScope, state: AnchoredDraggableState<SheetState>,
-    currentlyPlaying: AudioHelper.AudioData, playerViewModel: PlayerViewModel
+    currentlyPlaying: AudioService.AudioData, playerViewModel: PlayerViewModel
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -354,7 +355,7 @@ fun ToolbarExpandedState(
     playerViewModel: PlayerViewModel,
     expandedAlpha: Float,
     fraction: Float,
-    currentlyPlaying: AudioHelper.AudioData,
+    currentlyPlaying: AudioService.AudioData,
     navController: NavController,
     onPlayerClose: () -> Unit
 ) {

@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,6 +63,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 
@@ -75,7 +75,7 @@ fun AlbumPageScreen(
     playerViewModel: PlayerViewModel,
     navController: NavController
 ) {
-    val album: AudioHelper.AlbumData = libraryViewModel.findAlbumById(albumId)
+    val album: AudioService.AlbumData = libraryViewModel.findAlbumById(albumId)
         ?: return Box(modifier = Modifier.fillMaxSize()) {
             Text("Album not found", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Center))
         }
@@ -223,7 +223,7 @@ fun AlbumPageScreen(
 @Composable
 fun AlbumTrackItem(
     playerViewModel: PlayerViewModel,
-    tracks: List<AudioHelper.AudioData>,
+    tracks: List<AudioService.AudioData>,
     index: Int,
 ) {
     val track = tracks[index]
