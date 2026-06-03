@@ -24,6 +24,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,8 +43,18 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
@@ -62,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.services.durationToString
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 
@@ -74,14 +86,16 @@ fun TracksPage(
     LazyColumn(
         modifier = Modifier
             .imePadding()
+            .padding(horizontal = 16.dp)
             .fillMaxSize()
             .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
     ) {
-        items(
+
+        itemsIndexed(
             items = libraryViewModel.filteredTracks,
-            key = { track -> track.uri }
-        ) { track ->
+            key = { index, track -> track.uri }
+        ) { index, track ->
             TrackItem (
                 track = track,
                 modifier = Modifier.animateItem(
@@ -89,7 +103,9 @@ fun TracksPage(
                     fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
                     placementSpec = spring(stiffness = Spring.StiffnessMedium)
                 ),
-                playerViewModel = playerViewModel
+                playerViewModel = playerViewModel,
+                index = index,
+                count = libraryViewModel.filteredTracks.size
             ) {
                 playerViewModel.addToQueue(track)
             }
@@ -98,7 +114,7 @@ fun TracksPage(
 }
 
 @Composable
-fun TrackItem(
+fun TrackItem2(
     track: AudioService.AudioData,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
@@ -147,6 +163,86 @@ fun TrackItem(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun TrackItem(
+    track: AudioService.AudioData,
+    playerViewModel: PlayerViewModel,
+    modifier: Modifier = Modifier,
+    index: Int,
+    count: Int,
+    onClicked: () -> Unit,
+) {
+    val checked = playerViewModel.currentlyPlaying?.uri == track.uri
+
+    SegmentedListItem(
+        modifier = Modifier.padding(vertical = 1.dp),
+        contentPadding = PaddingValues(vertical = 13.dp, horizontal = 13.dp),
+        checked = checked,
+        onCheckedChange = { onClicked() },
+        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        leadingContent = {
+            AsyncImage(
+                model = track.artworkUri,
+                contentDescription = "Album Art",
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(5.dp)),
+                error = painterResource(R.drawable.ic_library),
+                contentScale = ContentScale.Crop
+            )
+        },
+        content = {
+            Text(
+                text = track.title,
+                style = MaterialTheme.typography.labelLarge,
+            )
+        },
+        supportingContent = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = track.artist,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 6.dp)
+                        .size(3.dp)
+                        .background(MaterialTheme.colorScheme.outline, CircleShape)
+                )
+                Text(
+                    text = durationToString(track.duration),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+
+        },
+        trailingContent = {
+            FilledTonalIconButton(
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = if (checked) { MaterialTheme.colorScheme.secondary}
+                        else { MaterialTheme.colorScheme.secondaryContainer},
+                    contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
+                    else { MaterialTheme.colorScheme.onSecondaryContainer},
+                ),
+                onClick = {},
+                modifier = Modifier.size(26.dp, 30.dp),
+                shape = CircleShape
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_more_vert),
+                    contentDescription = "Options",
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    )
 }
 
 @Composable

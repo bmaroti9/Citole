@@ -284,6 +284,7 @@ fun CitoleScreen(
                                 }
                             )
                         },
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     ) { paddingValues ->
                         AnimatedContent(
                             modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),

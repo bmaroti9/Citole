@@ -32,12 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import coil.ImageLoader
@@ -199,6 +197,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             player?.setMediaItem(mediaItem)
             player?.prepare()
             player?.play()
+            progress = 0
         } else {
             currentQueue += track
             player?.addMediaItem(mediaItem)
@@ -232,14 +231,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun skipNext() {
         if (player?.hasNextMediaItem() ?: false) {
             player?.seekToNext()
-            progress = player?.currentPosition ?: 0
+            progress =  0
         }
     }
 
     fun skipPrevious() {
         if (player?.hasPreviousMediaItem() ?: false) {
             player?.seekToPrevious()
-            progress = player?.currentPosition ?: 0
+            progress =  0
         }
     }
 

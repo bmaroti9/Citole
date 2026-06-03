@@ -89,6 +89,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.services.durationToString
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import kotlin.math.PI
 import kotlin.math.sin
@@ -298,9 +299,7 @@ fun CustomWavySlider(
     )
 }
 
-fun durationToString(duration: Long) : String {
-    return "%01d:%02d".format((duration / 1000) / 60, (duration / 1000) % 60)
-}
+
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -537,7 +536,9 @@ fun QueueDialog(
                 items(playerViewModel.currentQueue.size) { index ->
                     TrackItem (
                         playerViewModel.currentQueue[index],
-                        playerViewModel
+                        playerViewModel,
+                        index = index,
+                        count = playerViewModel.currentQueue.size
                     ) {
                         playerViewModel.skipInQueue(index)
                     }
