@@ -103,7 +103,7 @@ fun TracksPage(
             .padding(horizontal = 16.dp)
             .fillMaxSize()
             .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
-        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
+        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp)
     ) {
         itemsIndexed(
             items = libraryViewModel.filteredTracks,
@@ -120,60 +120,8 @@ fun TracksPage(
                 index = index,
                 count = libraryViewModel.filteredTracks.size
             ) {
-                playerViewModel.addToQueue(track)
+                playerViewModel.playQueue(listOf(track))
             }
-        }
-    }
-}
-
-@Composable
-fun TrackItem2(
-    track: AudioService.AudioData,
-    playerViewModel: PlayerViewModel,
-    modifier: Modifier = Modifier,
-    onClicked: () -> Unit
-) {
-    val haptic = LocalHapticFeedback.current
-    val isCurrentlyPlaying = playerViewModel.currentlyPlaying?.uri == track.uri
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = {
-                onClicked()
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            })
-            .background(
-                if (isCurrentlyPlaying) {MaterialTheme.colorScheme.secondaryContainer}
-                else {Color.Transparent}
-            )
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = track.artworkUri,
-            contentDescription = "Album Art",
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            error = painterResource(R.drawable.ic_library),
-            contentScale = ContentScale.Crop
-        )
-
-        Spacer(Modifier.width(12.dp))
-
-        Column() {
-            Text(
-                text = track.title,
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Text(
-                text = track.artist,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline
-            )
         }
     }
 }
@@ -262,7 +210,9 @@ fun TrackItem(
 
             TrackOptionsPopup(
                 expanded = popupExpanded,
-                onDismiss = {popupExpanded = false}
+                onDismiss = {popupExpanded = false},
+                playerViewModel,
+                track
             )
         },
     )
@@ -370,7 +320,12 @@ fun CarouselExample_MultiBrowse() {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TrackOptionsPopup(expanded: Boolean, onDismiss: () -> Unit) {
+fun TrackOptionsPopup(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    playerViewModel: PlayerViewModel,
+    track: AudioService.AudioData
+) {
     val groupInteractionSource = remember { MutableInteractionSource() }
 
     DropdownMenuPopup(
@@ -388,7 +343,7 @@ fun TrackOptionsPopup(expanded: Boolean, onDismiss: () -> Unit) {
                     Icon(painterResource(R.drawable.ic_play), null,
                         modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 },
-                onClick = { }
+                onClick = {playerViewModel.addToQueue(track, playerViewModel.currentIndex + 1); onDismiss()}
             )
             DropdownMenuItem(
                 text = { Text("Add to queue") },
@@ -396,7 +351,7 @@ fun TrackOptionsPopup(expanded: Boolean, onDismiss: () -> Unit) {
                     Icon(painterResource(R.drawable.ic_add), null,
                         modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 },
-                onClick = { }
+                onClick = {playerViewModel.addToQueue(track); onDismiss() }
             )
         }
 

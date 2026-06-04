@@ -25,6 +25,7 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -60,7 +61,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     var playing by mutableStateOf<Boolean>(false)
         private set
 
-    var currentQueue by mutableStateOf<List<AudioService.AudioData>>(emptyList())
+    var currentQueue = mutableStateListOf<AudioService.AudioData>()
         private set
 
     var currentlyPlaying by mutableStateOf<AudioService.AudioData?>(null)
@@ -176,7 +177,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun playQueue(tracks: List<AudioService.AudioData>, startIndex: Int = 0, shuffle: Boolean = false) {
-        currentQueue = tracks
+        currentQueue.clear()
+        currentQueue.addAll(tracks)
         currentIndex = startIndex
         currentlyPlaying = tracks[startIndex]
 
@@ -187,7 +189,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         player?.play()
     }
 
-    fun addToQueue(track: AudioService.AudioData) {
+    fun addToQueue(track: AudioService.AudioData, index: Int = currentQueue.size) {
         val mediaItem = MediaItem.fromUri(track.uri)
         if (currentQueue.isEmpty()) {
             currentQueue += track
@@ -199,7 +201,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             player?.play()
             progress = 0
         } else {
-            currentQueue += track
+            currentQueue.add(index, track)
             player?.addMediaItem(mediaItem)
         }
     }
@@ -245,7 +247,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun dismissPlayer() {
         player?.stop()
         player?.clearMediaItems()
-        currentQueue = emptyList()
+        currentQueue.clear()
         currentIndex = 0
         currentlyPlaying = null
     }
