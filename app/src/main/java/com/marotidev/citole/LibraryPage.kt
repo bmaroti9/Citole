@@ -24,8 +24,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -70,6 +72,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
@@ -178,8 +181,8 @@ fun TrackItem(
     val checked = playerViewModel.currentlyPlaying?.uri == track.uri
 
     SegmentedListItem(
-        modifier = Modifier.padding(vertical = 1.dp),
-        contentPadding = PaddingValues(vertical = 13.dp, horizontal = 13.dp),
+        modifier = modifier.padding(vertical = 1.dp),
+        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 14.dp),
         checked = checked,
         onCheckedChange = { onClicked() },
         shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
@@ -188,7 +191,7 @@ fun TrackItem(
                 model = track.artworkUri,
                 contentDescription = "Album Art",
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(48.dp)
                     .clip(RoundedCornerShape(5.dp)),
                 error = painterResource(R.drawable.ic_library),
                 contentScale = ContentScale.Crop
@@ -197,25 +200,28 @@ fun TrackItem(
         content = {
             Text(
                 text = track.title,
+                lineHeight = 30.sp,
                 style = MaterialTheme.typography.labelLarge,
             )
         },
         supportingContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            FlowRow (
+                itemVerticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
+                    lineHeight = 30.sp,
                     text = track.artist,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 6.dp)
                         .size(3.dp)
                         .background(MaterialTheme.colorScheme.outline, CircleShape)
                 )
                 Text(
+                    lineHeight = 30.sp,
                     text = durationToString(track.duration),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
@@ -227,13 +233,16 @@ fun TrackItem(
             FilledTonalIconButton(
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = if (checked) { MaterialTheme.colorScheme.secondary}
-                        else { MaterialTheme.colorScheme.secondaryContainer},
+                    else { MaterialTheme.colorScheme.secondaryContainer},
                     contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
                     else { MaterialTheme.colorScheme.onSecondaryContainer},
                 ),
                 onClick = {},
                 modifier = Modifier.size(26.dp, 30.dp),
-                shape = CircleShape
+                shapes = IconButtonDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = MaterialTheme.shapes.small
+                )
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_more_vert),
@@ -241,7 +250,7 @@ fun TrackItem(
                     modifier = Modifier.size(16.dp)
                 )
             }
-        }
+        },
     )
 }
 

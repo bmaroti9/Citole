@@ -58,6 +58,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -284,7 +285,7 @@ fun CitoleScreen(
                                 }
                             )
                         },
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.5.dp)
                     ) { paddingValues ->
                         AnimatedContent(
                             modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
