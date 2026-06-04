@@ -24,6 +24,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,20 +49,29 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenuGroup
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.traceEventEnd
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,6 +83,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
@@ -94,7 +105,6 @@ fun TracksPage(
             .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
     ) {
-
         itemsIndexed(
             items = libraryViewModel.filteredTracks,
             key = { index, track -> track.uri }
@@ -179,6 +189,7 @@ fun TrackItem(
     onClicked: () -> Unit,
 ) {
     val checked = playerViewModel.currentlyPlaying?.uri == track.uri
+    var popupExpanded by remember { mutableStateOf(false) }
 
     SegmentedListItem(
         modifier = modifier.padding(vertical = 1.dp),
@@ -191,8 +202,8 @@ fun TrackItem(
                 model = track.artworkUri,
                 contentDescription = "Album Art",
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(5.dp)),
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(6.dp)),
                 error = painterResource(R.drawable.ic_library),
                 contentScale = ContentScale.Crop
             )
@@ -213,7 +224,6 @@ fun TrackItem(
                     lineHeight = 30.sp,
                     text = track.artist,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
                 )
                 Box(
                     modifier = Modifier
@@ -224,7 +234,6 @@ fun TrackItem(
                     lineHeight = 30.sp,
                     text = durationToString(track.duration),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
                 )
             }
 
@@ -237,7 +246,7 @@ fun TrackItem(
                     contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
                     else { MaterialTheme.colorScheme.onSecondaryContainer},
                 ),
-                onClick = {},
+                onClick = {popupExpanded = true },
                 modifier = Modifier.size(26.dp, 30.dp),
                 shapes = IconButtonDefaults.shapes(
                     shape = CircleShape,
@@ -250,6 +259,11 @@ fun TrackItem(
                     modifier = Modifier.size(16.dp)
                 )
             }
+
+            TrackOptionsPopup(
+                expanded = popupExpanded,
+                onDismiss = {popupExpanded = false}
+            )
         },
     )
 }
@@ -351,5 +365,81 @@ fun CarouselExample_MultiBrowse() {
             contentDescription = item.contentDescription,
             contentScale = ContentScale.Crop
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun TrackOptionsPopup(expanded: Boolean, onDismiss: () -> Unit) {
+    val groupInteractionSource = remember { MutableInteractionSource() }
+
+    DropdownMenuPopup(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+    ) {
+        DropdownMenuGroup(
+            shapes = MenuDefaults.groupShape(index = 0, count = 3),
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            interactionSource = groupInteractionSource,
+        ) {
+            DropdownMenuItem(
+                text = { Text("Play Next") },
+                trailingIcon = {
+                    Icon(painterResource(R.drawable.ic_play), null,
+                        modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                },
+                onClick = { }
+            )
+            DropdownMenuItem(
+                text = { Text("Add to queue") },
+                trailingIcon = {
+                    Icon(painterResource(R.drawable.ic_add), null,
+                        modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                },
+                onClick = { }
+            )
+        }
+
+        Spacer(Modifier.height(3.dp))
+
+        DropdownMenuGroup(
+            shapes = MenuDefaults.groupShape(index = 1, count = 3),
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            interactionSource = groupInteractionSource,
+        ) {
+            DropdownMenuItem(
+                text = { Text("Go to Artist") },
+                trailingIcon = {
+                    Icon(painterResource(R.drawable.ic_person), null,
+                        modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                },
+                onClick = { }
+            )
+            DropdownMenuItem(
+                text = { Text("Go to Album") },
+                trailingIcon = {
+                    Icon(painterResource(R.drawable.ic_album), null,
+                        modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                },
+                onClick = { }
+            )
+        }
+
+        Spacer(Modifier.height(3.dp))
+
+        DropdownMenuGroup(
+            shapes = MenuDefaults.groupShape(index = 2, count = 3),
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            interactionSource = groupInteractionSource,
+        ) {
+            DropdownMenuItem(
+                text = { Text("About") },
+                trailingIcon = {
+                    Icon(painterResource(R.drawable.ic_info), null,
+                        modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                },
+                onClick = { }
+            )
+        }
     }
 }
