@@ -159,7 +159,7 @@ fun TrackItem(
         content = {
             Text(
                 text = track.title,
-                lineHeight = 30.sp,
+                lineHeight = 32.sp,
                 style = MaterialTheme.typography.labelLarge,
             )
         },
@@ -169,7 +169,7 @@ fun TrackItem(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    lineHeight = 30.sp,
+                    lineHeight = 32.sp,
                     text = track.artist,
                     style = MaterialTheme.typography.labelSmall,
                 )
@@ -179,7 +179,7 @@ fun TrackItem(
                         .background(MaterialTheme.colorScheme.outline, CircleShape)
                 )
                 Text(
-                    lineHeight = 30.sp,
+                    lineHeight = 32.sp,
                     text = durationToString(track.duration),
                     style = MaterialTheme.typography.labelSmall,
                 )

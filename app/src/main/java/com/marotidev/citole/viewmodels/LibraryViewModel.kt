@@ -146,7 +146,6 @@ class LibraryViewModel : ViewModel() {
         return this.groupBy { it.albumId }
             .map { (albumId, tracksInAlbum) ->
                 val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
-                tracksInAlbum
                 AudioService.AlbumData(
                     albumId = albumId,
                     albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",

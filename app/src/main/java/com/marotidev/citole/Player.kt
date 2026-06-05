@@ -103,14 +103,14 @@ fun PlayerScreen(
     onPlayerClose: () -> Unit
 ) {
 
-    val openAlertDialog = remember { mutableStateOf(false) }
+    var queueSheetOpen by remember { mutableStateOf(false) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (openAlertDialog.value) {
-            QueueDialog (
-                onDismissRequest = {openAlertDialog.value = false},
+        if (queueSheetOpen) {
+            QueueSheet (
+                onDismissRequest = {queueSheetOpen = false},
                 playerViewModel
             )
         }
@@ -125,8 +125,7 @@ fun PlayerScreen(
 
         Spacer(Modifier.weight(1f))
 
-        PlayerBottomBar({openAlertDialog.value = true})
-
+        PlayerBottomBar({queueSheetOpen = true})
     }
 }
 
@@ -501,49 +500,6 @@ fun PlayerBottomBar(onOpenDialog: () -> Unit) {
             )
             Spacer(Modifier.size(6.dp))
             Text("Queue", style = MaterialTheme.typography.labelLarge)
-        }
-    }
-}
-
-@Composable
-fun QueueDialog(
-    onDismissRequest: () -> Unit,
-    playerViewModel: PlayerViewModel
-) {
-    Dialog(
-        onDismissRequest = onDismissRequest,
-    ) {
-        val dialogWindowProvider = LocalView.current.parent as? DialogWindowProvider
-        SideEffect {
-            dialogWindowProvider?.window?.setDimAmount(0.2f)
-        }
-
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardColors(
-                MaterialTheme.colorScheme.surfaceContainer,
-                MaterialTheme.colorScheme.secondary,
-                MaterialTheme.colorScheme.secondaryContainer,
-                MaterialTheme.colorScheme.secondary,
-            ),
-            modifier = Modifier.height(500.dp)
-        ) {
-            LazyColumn(
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 10.dp)
-            ) {
-                items(playerViewModel.currentQueue.size) { index ->
-                    TrackItem (
-                        playerViewModel.currentQueue[index],
-                        playerViewModel,
-                        index = index,
-                        count = playerViewModel.currentQueue.size
-                    ) {
-                        playerViewModel.skipInQueue(index)
-                    }
-                }
-            }
         }
     }
 }
