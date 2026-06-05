@@ -227,7 +227,7 @@ fun AlbumTrackItem(
     index: Int,
 ) {
     val track = tracks[index]
-    val isCurrentlyPlaying = playerViewModel.currentlyPlaying?.uri == track.uri
+    val isCurrentlyPlaying = playerViewModel.currentlyPlaying?.id == track.id
 
     Row(
         modifier = Modifier

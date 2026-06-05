@@ -107,7 +107,7 @@ fun TracksPage(
     ) {
         itemsIndexed(
             items = libraryViewModel.filteredTracks,
-            key = { index, track -> track.uri }
+            key = { index, track -> track.id }
         ) { index, track ->
             TrackItem (
                 track = track,
@@ -136,7 +136,7 @@ fun TrackItem(
     count: Int,
     onClicked: () -> Unit,
 ) {
-    val checked = playerViewModel.currentlyPlaying?.uri == track.uri
+    val checked = playerViewModel.currentlyPlaying?.id == track.id
     var popupExpanded by remember { mutableStateOf(false) }
 
     SegmentedListItem(

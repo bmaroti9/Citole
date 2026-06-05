@@ -248,7 +248,7 @@ fun CustomFloatingToolbar(
                             if (up != null) {
                                 up.consume()
                                 playerViewModel.togglePlayPause()
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                             }
                         }
                     },

@@ -56,6 +56,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.collections.plus
+import com.marotidev.citole.services.AudioService.toAudioData
+import com.marotidev.citole.services.AudioService.toMediaItem
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     var playing by mutableStateOf<Boolean>(false)
@@ -112,6 +114,20 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         controllerFuture.addListener(
             {
                 player = controllerFuture.get()
+
+                currentQueue.addAll(
+                    (0 until (player?.mediaItemCount ?: 0)).map { index ->
+                        player!!.getMediaItemAt(index).toAudioData()
+                    }
+                )
+
+                currentIndex = player?.currentMediaItemIndex ?: 0
+                currentlyPlaying = currentQueue.getOrNull(currentIndex)
+                playing = player?.isPlaying ?: false
+                if (playing) {
+                    startProgressUpdate()
+                }
+
                 setupListeners()
             },
             MoreExecutors.directExecutor()
@@ -139,11 +155,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 currentIndex = player?.currentMediaItemIndex ?: 0
-                currentlyPlaying = if (currentQueue.isNotEmpty() and (currentIndex >= 0) and (currentIndex < currentQueue.size)) {
-                    currentQueue[currentIndex]
-                } else {
-                    null
-                }
+                currentlyPlaying = currentQueue.getOrNull(currentIndex)
             }
         })
 
@@ -182,7 +194,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         currentIndex = startIndex
         currentlyPlaying = tracks[startIndex]
 
-        val mediaItems = tracks.map { MediaItem.fromUri(it.uri) }
+        val mediaItems = tracks.map { it.toMediaItem() }
 
         player?.setMediaItems(mediaItems, startIndex, 0L)
         player?.prepare()
@@ -190,7 +202,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun addToQueue(track: AudioService.AudioData, index: Int = currentQueue.size) {
-        val mediaItem = MediaItem.fromUri(track.uri)
+        val mediaItem = track.toMediaItem()
         if (currentQueue.isEmpty()) {
             currentQueue += track
             currentIndex = 0
@@ -208,11 +220,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun skipInQueue(newIndex: Int) {
         currentIndex = newIndex
-        currentlyPlaying = if (currentQueue.isNotEmpty() and (currentIndex >= 0) and (currentIndex < currentQueue.size)) {
-            currentQueue[currentIndex]
-        } else {
-            null
-        }
+        currentlyPlaying = currentQueue.getOrNull(currentIndex)
         player?.seekTo(newIndex, 0L)
         player?.play()
     }
@@ -238,10 +246,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun skipPrevious() {
-        if (player?.hasPreviousMediaItem() ?: false) {
-            player?.seekToPrevious()
-            progress =  0
-        }
+        player?.seekToPrevious()
+        progress =  0
     }
 
     fun dismissPlayer() {

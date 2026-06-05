@@ -20,11 +20,16 @@ package com.marotidev.citole.services
 
 import android.content.ContentUris
 import android.content.Context
+import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import okhttp3.MediaType
 
 enum class AudioType {
     Song,
@@ -32,6 +37,9 @@ enum class AudioType {
     Audiobook,
     Other
 }
+
+fun AudioType.toInt() = ordinal
+fun Int.toAudioType() = AudioType.entries[this]
 
 fun getAudioType(isSong : Int, isPodcast: Int, isAudiobook: Int) : AudioType {
     return when {
@@ -45,6 +53,8 @@ fun getAudioType(isSong : Int, isPodcast: Int, isAudiobook: Int) : AudioType {
 object AudioService {
 
     data class AudioData(
+        val id: Long,
+
         val uri: Uri,
         val artworkUri : Uri,
 
@@ -57,12 +67,52 @@ object AudioService {
         val albumName : String,
 
         val duration: Long,
-        val size: Int,
+
         val dateAdded: Int,
         val trackNumber: Int,
 
         val type: AudioType
     )
+
+    fun AudioData.toMediaItem() : MediaItem {
+        return MediaItem.Builder()
+            .setMediaId(id.toString())
+            .setUri(uri)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setDisplayTitle(title)
+                    .setArtist(artist)
+                    .setArtworkUri(artworkUri)
+                    .setTitle(name)
+                    .setAlbumTitle(albumName)
+                    .setDurationMs(duration)
+                    .setTrackNumber(trackNumber)
+                    .setExtras(Bundle().apply {
+                        putLong("albumId", albumId)
+                        putInt("dateAdded", dateAdded)
+                        putInt("audioType", type.toInt())
+                    })
+                    .build()
+            )
+            .build()
+    }
+
+    fun MediaItem.toAudioData() : AudioData {
+        return AudioData(
+            id = mediaId.toLong(),
+            uri = localConfiguration?.uri ?: Uri.EMPTY,
+            artworkUri = mediaMetadata.artworkUri ?: Uri.EMPTY,
+            name = mediaMetadata.title.toString(),
+            title = mediaMetadata.displayTitle.toString(),
+            artist = mediaMetadata.artist.toString(),
+            albumId = mediaMetadata.extras?.getLong("albumId") ?: 0,
+            albumName = mediaMetadata.albumTitle.toString(),
+            duration = mediaMetadata.durationMs ?: 0,
+            dateAdded = mediaMetadata.extras?.getInt("dateAdded") ?: 0,
+            trackNumber = mediaMetadata.trackNumber ?: 0,
+            type = mediaMetadata.extras?.getInt("audioType")?.toAudioType() ?: AudioType.Other
+        )
+    }
 
     data class AlbumData(
         val albumId: Long,
@@ -98,7 +148,6 @@ object AudioService {
             MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.SIZE,
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.TRACK,
 
@@ -128,7 +177,6 @@ object AudioService {
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val albumNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-            val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
             val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val trackNumberColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
 
@@ -144,7 +192,6 @@ object AudioService {
                 val albumId = cursor.getLong(albumIdColumn)
                 val albumName = cursor.getString(albumNameColumn)
                 val duration = cursor.getLong(durationColumn)
-                val size = cursor.getInt(sizeColumn)
                 val dateAdded = cursor.getInt(dateAddedColumn)
                 val trackNumber = cursor.getInt(trackNumberColumn) % 1000
 
@@ -164,8 +211,8 @@ object AudioService {
                     albumId
                 )
 
-                audioList += AudioData(contentUri, artworkUri, name, title, artist, albumId, albumName,
-                    duration, size, dateAdded, trackNumber, audioType)
+                audioList += AudioData(id, contentUri, artworkUri, name, title, artist, albumId, albumName,
+                    duration, dateAdded, trackNumber, audioType)
             }
         }
 
