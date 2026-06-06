@@ -18,6 +18,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.services
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
+
 fun durationToString(duration: Long) : String {
     return "%01d:%02d".format((duration / 1000) / 60, (duration / 1000) % 60)
+}
+
+@Composable
+fun tintedPainter(id: Int, color: Color): Painter {
+    val base = painterResource(id)
+    val colorState = rememberUpdatedState(color)
+    return remember(id) {
+        object : Painter() {
+            override val intrinsicSize = base.intrinsicSize
+            override fun DrawScope.onDraw() {
+                with(base) { draw(size, colorFilter = ColorFilter.tint(colorState.value)) }
+            }
+        }
+    }
 }

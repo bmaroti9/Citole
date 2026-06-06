@@ -59,10 +59,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,6 +74,7 @@ import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.durationToString
+import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 
@@ -149,8 +154,9 @@ fun TrackItem(
                     contentDescription = "Album Art",
                     modifier = Modifier
                         .size(50.dp)
-                        .clip(RoundedCornerShape(6.dp)),
-                    error = painterResource(R.drawable.ic_library),
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
                     contentScale = ContentScale.Crop
                 )
             }
@@ -159,7 +165,6 @@ fun TrackItem(
         content = {
             Text(
                 text = track.title,
-                lineHeight = 32.sp,
                 style = MaterialTheme.typography.labelLarge,
             )
         },
@@ -179,7 +184,6 @@ fun TrackItem(
                         .background(MaterialTheme.colorScheme.outline, CircleShape)
                 )
                 Text(
-                    lineHeight = 32.sp,
                     text = durationToString(track.duration),
                     style = MaterialTheme.typography.labelSmall,
                 )

@@ -157,6 +157,21 @@ class LibraryViewModel : ViewModel() {
             }
     }
 
+    fun List<AudioService.AudioData>.groupToArtist() : List<AudioService.AlbumData> {
+        return this.groupBy { it.albumId }
+            .map { (albumId, tracksInAlbum) ->
+                val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
+                AudioService.AlbumData(
+                    albumId = albumId,
+                    albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
+                    artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
+                    tracks = sequentialTracks,
+                    type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
+                    artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
+                )
+            }
+    }
+
     fun findAlbumById(albumId: Long) : AudioService.AlbumData? {
         return allAlbums.find { it.albumId == albumId }
     }

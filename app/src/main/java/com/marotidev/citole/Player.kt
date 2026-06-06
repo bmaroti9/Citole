@@ -90,6 +90,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.durationToString
+import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import kotlin.math.PI
 import kotlin.math.sin
@@ -145,7 +146,7 @@ fun ThumbnailCard(
             modifier = Modifier.fillMaxSize(),
             model = currentlyPlaying.artworkUri,
             contentDescription = "Album Art",
-            error = painterResource(R.drawable.ic_library),
+            error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
             contentScale = ContentScale.Crop
         )
     }

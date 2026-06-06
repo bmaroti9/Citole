@@ -86,6 +86,7 @@ import androidx.compose.ui.util.lerp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -315,10 +316,11 @@ fun ToolbarCollapsedState(
             modifier = Modifier
                 .padding(start = 10.dp, end = 10.dp)
                 .size(44.dp)
-                .clip(RoundedCornerShape(30.dp)),
+                .clip(RoundedCornerShape(30.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             model = currentlyPlaying.artworkUri,
             contentDescription = "Album Art",
-            error = painterResource(R.drawable.ic_library),
+            error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
             contentScale = ContentScale.Crop
         )
         Column(

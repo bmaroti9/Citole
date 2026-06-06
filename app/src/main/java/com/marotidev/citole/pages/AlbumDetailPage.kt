@@ -65,6 +65,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 
@@ -126,8 +127,9 @@ fun AlbumDetailScreen(
                             .weight(1f)
                             .padding(top = collapsedHeight + 20.dp, bottom = 25.dp)
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(22.dp * (1f - collapsedFraction))),
-                        error = painterResource(R.drawable.ic_library),
+                            .clip(RoundedCornerShape(22.dp * (1f - collapsedFraction)))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
                         contentScale = ContentScale.Crop
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
