@@ -19,7 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package com.marotidev.citole
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -49,6 +51,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -92,6 +97,8 @@ import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.durationToString
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 
 @Composable
 fun TracksPage(
@@ -140,6 +147,8 @@ fun TrackItem(
     dragHandle: (@Composable () -> Unit)? = null,
     onClicked: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
+
     val checked = playerViewModel.currentlyPlaying?.id == track.id
     var popupExpanded by remember { mutableStateOf(false) }
 
@@ -147,8 +156,15 @@ fun TrackItem(
         modifier = modifier.padding(vertical = 1.dp),
         contentPadding = PaddingValues(vertical = 14.dp, horizontal = 14.dp),
         checked = checked,
-        onCheckedChange = { onClicked() },
-        shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        onCheckedChange = {
+            onClicked()
+            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+        },
+        shapes = if (count == 1) {
+            ListItemDefaults.shapes(shape = MaterialTheme.shapes.large)
+        } else {
+            ListItemDefaults.segmentedShapes(index = index, count = count)
+        },
         elevation = ListItemElevation(draggedElevation = 0.dp, elevation = elevation),
         leadingContent = {
             Row(
@@ -238,17 +254,20 @@ fun AlbumsPage(
     navController: NavController
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 180.dp),
+        //columns = GridCells.Adaptive(minSize = 180.dp),
+        columns = GridCells.Fixed(2),
         modifier = Modifier
             .imePadding()
             .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
     ) {
-        items(
+        itemsIndexed(
             libraryViewModel.filteredAlbums,
-            key = { album -> album.albumId }
-        ) { album ->
-            AlbumItem(album,
+            key = { index, album -> album.albumId }
+        ) { index, album ->
+            AlbumItem(
+                album,
+                playerViewModel,
                 onClicked = {
                     navController.navigate(AlbumViewDestination(albumId = album.albumId))
                 },
@@ -257,13 +276,15 @@ fun AlbumsPage(
                     fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
                     placementSpec = spring(stiffness = Spring.StiffnessMedium)
                 ),
+                index,
+                libraryViewModel.filteredAlbums.count()
             )
         }
     }
 }
 
 @Composable
-fun AlbumItem(album: AudioService.AlbumData, onClicked: () -> Unit, modifier: Modifier) {
+fun AlbumItem2(album: AudioService.AlbumData, onClicked: () -> Unit, modifier: Modifier) {
     Column(
         modifier = modifier
             .padding(10.dp)
@@ -286,6 +307,69 @@ fun AlbumItem(album: AudioService.AlbumData, onClicked: () -> Unit, modifier: Mo
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 5.dp, start = 1.dp)
         )
+    }
+}
+
+@Composable
+fun AlbumItem(
+    album: AudioService.AlbumData,
+    playerViewModel: PlayerViewModel,
+    onClicked: () -> Unit,
+    modifier: Modifier,
+    index: Int,
+    count: Int
+) {
+    val checked = playerViewModel.currentlyPlaying?.albumId == album.albumId
+
+    val roundedCornerDp = 16.dp
+    val flatCornerDp = 4.dp
+    val topStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = if (index == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
+    val topEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = if (index == 1 || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
+    val bottomStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = if (index >= count + (count % 2) - 2 && index % 2 == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
+    val bottomEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = if ((index >= count + (count % 2) - 2 && index % 2 == 1) || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
+
+    val containerColor by animateColorAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = if (checked) {MaterialTheme.colorScheme.secondaryContainer}
+        else { MaterialTheme.colorScheme.surface}
+    )
+
+    Card(
+        shape = RoundedCornerShape(topStartShape, topEndShape, bottomEndShape, bottomStartShape),
+        modifier = modifier.padding(1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
+        ),
+        onClick = {onClicked()},
+    ) {
+        Column(
+            modifier = Modifier.padding(22.dp).height(210.dp)
+        ) {
+            AsyncImage(
+                model = album.artworkUri,
+                contentDescription = "Album Art",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(8.dp)),
+                error = painterResource(R.drawable.ic_library),
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                text = album.albumName,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 12.dp, start = 1.dp)
+            )
+            Text(
+                text = album.artist,
+                color = MaterialTheme.colorScheme.secondary,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 4.dp, start = 1.dp)
+            )
+        }
     }
 }
 

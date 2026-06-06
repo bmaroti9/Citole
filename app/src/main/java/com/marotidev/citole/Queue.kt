@@ -76,8 +76,10 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.math.abs
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
+import kotlin.math.sign
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,8 +101,6 @@ fun QueueSheet(
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         playerViewModel.reorderInQueue(from.index, to.index)
-
-        hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
     ModalBottomSheet(
@@ -122,7 +122,10 @@ fun QueueSheet(
                     key = { index, track -> track.id }
                 ) { index, track ->
 
-                    ReorderableItem(reorderableLazyListState, key = track.id) { isDragging ->
+                    ReorderableItem(
+                        reorderableLazyListState,
+                        key = track.id,
+                    ) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
 
                         QueueTrackItem (
@@ -181,7 +184,7 @@ fun QueueTrackItem(
     )
 
     val haptic = LocalHapticFeedback.current
-    var hasTriggeredHaptic by remember { mutableStateOf(false) }
+    var hapticTriggerState by remember { mutableIntStateOf(0) }
 
     SwipeToDismissBox(
         //enableDismissFromEndToStart = track.id != playerViewModel.currentlyPlaying?.id,
@@ -199,13 +202,13 @@ fun QueueTrackItem(
             LaunchedEffect(draggedPx) {
                 val absoluteOffset = abs(draggedPx)
 
-                if (absoluteOffset > 100f && !hasTriggeredHaptic) {
+                if (absoluteOffset > 100f && hapticTriggerState.sign != draggedPx.toInt().sign) {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    hasTriggeredHaptic = true
+                    hapticTriggerState = draggedPx.toInt().sign
                 }
 
                 else if (absoluteOffset < 10f) {
-                    hasTriggeredHaptic = false
+                    hapticTriggerState = 0
                 }
             }
 
@@ -216,7 +219,7 @@ fun QueueTrackItem(
                     modifier = Modifier
                         .width(with(LocalDensity.current) { abs(draggedPx).toDp() })
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(50.dp))
+                        .clip(RoundedCornerShape(100.dp))
                         .background(MaterialTheme.colorScheme.errorContainer),
                     contentAlignment = Alignment.Center
                 ) {

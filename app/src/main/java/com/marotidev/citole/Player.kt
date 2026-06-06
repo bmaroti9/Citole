@@ -383,7 +383,7 @@ fun PlayPauseRow(
                                 interactionSource = interactionSource,
                                 onClick = {
                                     playerViewModel.skipPrevious()
-                                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                                 },
                                 indication = null
                             )
@@ -421,7 +421,7 @@ fun PlayPauseRow(
                                 interactionSource = interactionSource,
                                 onValueChange = {
                                     playerViewModel.togglePlayPause()
-                                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                                 },
                                 indication = null
                             )
@@ -461,7 +461,7 @@ fun PlayPauseRow(
                                 interactionSource = interactionSource,
                                 onClick = {
                                     playerViewModel.skipNext()
-                                    haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                                 },
                                 indication = null
                             )

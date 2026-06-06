@@ -250,7 +250,7 @@ fun CustomFloatingToolbar(
                             if (up != null) {
                                 up.consume()
                                 playerViewModel.togglePlayPause()
-                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             }
                         }
                     },
@@ -346,7 +346,7 @@ fun ToolbarCollapsedState(
         IconButton(
             onClick = {
                 playerViewModel.skipNext()
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
             modifier = Modifier.padding(end = 6.dp),
         ) { Icon(painterResource(R.drawable.ic_skip_next), contentDescription = null, tint = MaterialTheme.colorScheme.onSurface) }
