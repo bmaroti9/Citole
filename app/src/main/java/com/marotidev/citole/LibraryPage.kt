@@ -134,6 +134,7 @@ fun TrackItem(
     modifier: Modifier = Modifier,
     index: Int,
     count: Int,
+    dragHandle: (@Composable () -> Unit)? = null,
     onClicked: () -> Unit,
 ) {
     val checked = playerViewModel.currentlyPlaying?.id == track.id
@@ -187,25 +188,30 @@ fun TrackItem(
 
         },
         trailingContent = {
-            FilledTonalIconButton(
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = if (checked) { MaterialTheme.colorScheme.secondary}
-                    else { MaterialTheme.colorScheme.secondaryContainer},
-                    contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
-                    else { MaterialTheme.colorScheme.onSecondaryContainer},
-                ),
-                onClick = {popupExpanded = true },
-                modifier = Modifier.size(26.dp, 30.dp),
-                shapes = IconButtonDefaults.shapes(
-                    shape = CircleShape,
-                    pressedShape = MaterialTheme.shapes.small
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_more_vert),
-                    contentDescription = "Options",
-                    modifier = Modifier.size(16.dp)
-                )
+                FilledTonalIconButton(
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = if (checked) { MaterialTheme.colorScheme.secondary}
+                        else { MaterialTheme.colorScheme.secondaryContainer},
+                        contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
+                        else { MaterialTheme.colorScheme.onSecondaryContainer},
+                    ),
+                    onClick = {popupExpanded = true },
+                    modifier = Modifier.size(26.dp, 30.dp),
+                    shapes = IconButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = MaterialTheme.shapes.small
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_more_vert),
+                        contentDescription = "Options",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                dragHandle?.invoke()
             }
 
             TrackOptionsPopup(

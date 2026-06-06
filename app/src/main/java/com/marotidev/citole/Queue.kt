@@ -18,29 +18,57 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxDefaults
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.PlayerViewModel
+import kotlin.math.abs
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,11 +99,19 @@ fun QueueSheet(
                     .fillMaxSize()
                     .padding(vertical = 10.dp)
             ) {
-                items(playerViewModel.currentQueue.size) { index ->
-                    TrackItem (
-                        playerViewModel.currentQueue[index],
+                itemsIndexed(
+                    playerViewModel.currentQueue,
+                    key = { index, track -> track.id }
+                ) { index, track ->
+                    QueueTrackItem (
+                        track,
                         playerViewModel,
                         index = index,
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                            fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                            placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                        ),
                         count = playerViewModel.currentQueue.size
                     ) {
                         playerViewModel.skipInQueue(index)
@@ -83,6 +119,89 @@ fun QueueSheet(
                 }
             }
         }
+    }
+}
 
+@Composable
+fun QueueTrackItem(
+    track: AudioService.AudioData,
+    playerViewModel: PlayerViewModel,
+    modifier: Modifier = Modifier,
+    index: Int,
+    count: Int,
+    onClicked: () -> Unit,
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        SwipeToDismissBoxValue.Settled,
+        SwipeToDismissBoxDefaults.positionalThreshold
+    )
+
+    val haptic = LocalHapticFeedback.current
+    var hasTriggeredHaptic by remember { mutableStateOf(false) }
+
+    SwipeToDismissBox(
+        modifier = modifier,
+        state = dismissState,
+        onDismiss = {playerViewModel.removeFromQueue(index)},
+        backgroundContent = {
+            val draggedPx = try {
+                dismissState.requireOffset()
+            } catch (e: IllegalStateException) {
+                0f
+            }
+
+            LaunchedEffect(draggedPx) {
+                val absoluteOffset = abs(draggedPx)
+
+                if (absoluteOffset > 70f && !hasTriggeredHaptic) {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    hasTriggeredHaptic = true
+                }
+
+                else if (absoluteOffset < 10f) {
+                    hasTriggeredHaptic = false
+                }
+            }
+
+            Box(Modifier.fillMaxSize(),
+                contentAlignment = if (draggedPx < 0) {Alignment.CenterEnd} else {Alignment.CenterStart}
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(with(LocalDensity.current) { abs(draggedPx).toDp() })
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(MaterialTheme.colorScheme.errorContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    //for some reason if i don't add this it thinks it's a rowScope
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = abs(draggedPx) > 100f,
+                        enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
+                        exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.ic_delete),
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+            }
+        },
+    ) {
+        TrackItem(
+            track,
+            playerViewModel,
+            index = index,
+            count = count,
+            dragHandle = {
+                Icon(
+                    painterResource(R.drawable.ic_drag_indicator),
+                    "Drag handle",
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        ) { onClicked() }
     }
 }

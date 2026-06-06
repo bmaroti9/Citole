@@ -218,6 +218,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun removeFromQueue(index: Int) {
+        currentQueue.removeAt(index)
+    }
+
     fun skipInQueue(newIndex: Int) {
         currentIndex = newIndex
         currentlyPlaying = currentQueue.getOrNull(currentIndex)
