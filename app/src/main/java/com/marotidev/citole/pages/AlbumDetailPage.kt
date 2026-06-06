@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole
+package com.marotidev.citole.pages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -63,13 +63,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.R
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AlbumPageScreen(
+fun AlbumDetailScreen(
     albumId: Long,
     libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
@@ -125,7 +126,7 @@ fun AlbumPageScreen(
                             .weight(1f)
                             .padding(top = collapsedHeight + 20.dp, bottom = 25.dp)
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(33.dp * (1f - collapsedFraction))),
+                            .clip(RoundedCornerShape(22.dp * (1f - collapsedFraction))),
                         error = painterResource(R.drawable.ic_library),
                         contentScale = ContentScale.Crop
                     )

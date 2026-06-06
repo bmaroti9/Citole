@@ -16,73 +16,49 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole
+package com.marotidev.citole.pages
 
-import androidx.annotation.DrawableRes
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.traceEventEnd
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -90,18 +66,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.PopupProperties
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.R
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.durationToString
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 
 @Composable
-fun TracksPage(
+fun TrackListPage(
     libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues
@@ -244,174 +217,6 @@ fun TrackItem(
             )
         },
     )
-}
-
-@Composable
-fun AlbumsPage(
-    libraryViewModel: LibraryViewModel,
-    playerViewModel: PlayerViewModel,
-    paddingValues: PaddingValues,
-    navController: NavController
-) {
-    LazyVerticalGrid(
-        //columns = GridCells.Adaptive(minSize = 180.dp),
-        columns = GridCells.Fixed(2),
-        modifier = Modifier
-            .imePadding()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 30.dp)
-    ) {
-        itemsIndexed(
-            libraryViewModel.filteredAlbums,
-            key = { index, album -> album.albumId }
-        ) { index, album ->
-            AlbumItem(
-                album,
-                playerViewModel,
-                onClicked = {
-                    navController.navigate(AlbumViewDestination(albumId = album.albumId))
-                },
-                modifier = Modifier.animateItem(
-                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                ),
-                index,
-                libraryViewModel.filteredAlbums.count()
-            )
-        }
-    }
-}
-
-@Composable
-fun AlbumItem2(album: AudioService.AlbumData, onClicked: () -> Unit, modifier: Modifier) {
-    Column(
-        modifier = modifier
-            .padding(10.dp)
-            .clickable(
-                onClick = {onClicked()}
-            ),
-    ) {
-        AsyncImage(
-            model = album.artworkUri,
-            contentDescription = "Album Art",
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(22.dp)),
-            error = painterResource(R.drawable.ic_library),
-            contentScale = ContentScale.Crop
-        )
-        Text(
-            text = album.albumName,
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(top = 5.dp, start = 1.dp)
-        )
-    }
-}
-
-@Composable
-fun AlbumItem(
-    album: AudioService.AlbumData,
-    playerViewModel: PlayerViewModel,
-    onClicked: () -> Unit,
-    modifier: Modifier,
-    index: Int,
-    count: Int
-) {
-    val checked = playerViewModel.currentlyPlaying?.albumId == album.albumId
-
-    val roundedCornerDp = 16.dp
-    val flatCornerDp = 4.dp
-    val topStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
-    val topEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index == 1 || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
-    val bottomStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index >= count + (count % 2) - 2 && index % 2 == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
-    val bottomEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if ((index >= count + (count % 2) - 2 && index % 2 == 1) || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
-
-    val containerColor by animateColorAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (checked) {MaterialTheme.colorScheme.secondaryContainer}
-        else { MaterialTheme.colorScheme.surface}
-    )
-
-    Card(
-        shape = RoundedCornerShape(topStartShape, topEndShape, bottomEndShape, bottomStartShape),
-        modifier = modifier.padding(1.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor
-        ),
-        onClick = {onClicked()},
-    ) {
-        Column(
-            modifier = Modifier.padding(22.dp).height(210.dp)
-        ) {
-            AsyncImage(
-                model = album.artworkUri,
-                contentDescription = "Album Art",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(8.dp)),
-                error = painterResource(R.drawable.ic_library),
-                contentScale = ContentScale.Crop
-            )
-            Text(
-                text = album.albumName,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(top = 12.dp, start = 1.dp)
-            )
-            Text(
-                text = album.artist,
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(top = 4.dp, start = 1.dp)
-            )
-        }
-    }
-}
-
-
-@Composable
-fun CarouselExample_MultiBrowse() {
-    data class CarouselItem(
-        val id: Int,
-        @DrawableRes val imageResId: Int,
-        val contentDescription: String
-    )
-
-    val items = remember {
-        listOf(
-            CarouselItem(0, R.drawable.ic_album, "cupcake"),
-            CarouselItem(1, R.drawable.ic_album, "donut"),
-            CarouselItem(2, R.drawable.ic_album, "eclair"),
-            CarouselItem(3, R.drawable.ic_album, "froyo"),
-            CarouselItem(4, R.drawable.ic_album, "gingerbread"),
-        )
-    }
-
-    HorizontalMultiBrowseCarousel(
-        state = rememberCarouselState { items.count() },
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(top = 16.dp, bottom = 16.dp),
-        preferredItemWidth = 186.dp,
-        itemSpacing = 8.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp)
-    ) { i ->
-        val item = items[i]
-        Image(
-            modifier = Modifier
-                .height(205.dp)
-                .maskClip(MaterialTheme.shapes.extraLarge),
-            painter = painterResource(id = item.imageResId),
-            contentDescription = item.contentDescription,
-            contentScale = ContentScale.Crop
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

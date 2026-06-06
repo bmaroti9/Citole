@@ -79,6 +79,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
+import com.marotidev.citole.pages.TrackItem
 import kotlin.math.sign
 
 

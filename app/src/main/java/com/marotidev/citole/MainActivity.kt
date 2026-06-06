@@ -78,12 +78,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.marotidev.citole.pages.AlbumListPage
+import com.marotidev.citole.pages.AlbumDetailScreen
+import com.marotidev.citole.pages.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
 import com.marotidev.citole.viewmodels.LibraryViewModel
@@ -297,8 +298,8 @@ fun CitoleScreen(
                             }
                         ) { targetPage ->
                             when (targetPage) {
-                                Page.Tracks -> TracksPage(libraryViewModel, playerViewModel, paddingValues)
-                                Page.Albums -> AlbumsPage(libraryViewModel, playerViewModel, paddingValues, navController)
+                                Page.Tracks -> TrackListPage(libraryViewModel, playerViewModel, paddingValues)
+                                Page.Albums -> AlbumListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                             }
                         }
                     }
@@ -306,7 +307,7 @@ fun CitoleScreen(
 
                 composable <AlbumViewDestination> { backStackEntry ->
                     val args = backStackEntry.toRoute<AlbumViewDestination>()
-                    AlbumPageScreen(args.albumId, libraryViewModel, playerViewModel, navController)
+                    AlbumDetailScreen(args.albumId, libraryViewModel, playerViewModel, navController)
                 }
             }
             CustomFloatingToolbar(playerViewModel, navController)
