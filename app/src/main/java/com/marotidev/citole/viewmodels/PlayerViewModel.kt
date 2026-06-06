@@ -220,6 +220,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun removeFromQueue(index: Int) {
         currentQueue.removeAt(index)
+        player?.removeMediaItem(index)
+    }
+
+    fun reorderInQueue(from: Int, to: Int) {
+        currentQueue.add(to, currentQueue.removeAt(from))
+        player?.moveMediaItem(from, to)
     }
 
     fun skipInQueue(newIndex: Int) {

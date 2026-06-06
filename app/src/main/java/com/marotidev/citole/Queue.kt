@@ -28,20 +28,24 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxDefaults
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -68,7 +72,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.viewmodels.PlayerViewModel
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.math.abs
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.Dp
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,12 +86,22 @@ fun QueueSheet(
     onDismissRequest: () -> Unit,
     playerViewModel: PlayerViewModel
 ) {
+
+    val hapticFeedback = LocalHapticFeedback.current
+
     val sheetState = rememberModalBottomSheetState()
 
     val sheetCornerRadius by animateDpAsState(
         targetValue = if (sheetState.currentValue == SheetValue.Expanded) 0.dp else 32.dp,
         animationSpec = spring(stiffness = Spring.StiffnessMedium)
     )
+
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        playerViewModel.reorderInQueue(from.index, to.index)
+
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+    }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -95,26 +114,48 @@ fun QueueSheet(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             LazyColumn(
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 10.dp)
+                modifier = Modifier.fillMaxSize(),
+                state = lazyListState,
             ) {
                 itemsIndexed(
                     playerViewModel.currentQueue,
                     key = { index, track -> track.id }
                 ) { index, track ->
-                    QueueTrackItem (
-                        track,
-                        playerViewModel,
-                        index = index,
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                            fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                            placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                        ),
-                        count = playerViewModel.currentQueue.size
-                    ) {
-                        playerViewModel.skipInQueue(index)
+
+                    ReorderableItem(reorderableLazyListState, key = track.id) { isDragging ->
+                        val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
+
+                        QueueTrackItem (
+                            track,
+                            playerViewModel,
+                            index = index,
+                            modifier = Modifier
+                                .longPressDraggableHandle (
+                                    onDragStarted = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    },
+                                    onDragStopped = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                    }
+                                )
+                                .animateItem(
+                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                                ),
+                            dragHandleModifier = Modifier.draggableHandle(
+                                onDragStarted = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                },
+                                onDragStopped = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                },
+                            ),
+                            elevation = elevation,
+                            count = playerViewModel.currentQueue.size
+                        ) {
+                            playerViewModel.skipInQueue(index)
+                        }
                     }
                 }
             }
@@ -122,13 +163,16 @@ fun QueueSheet(
     }
 }
 
+
 @Composable
 fun QueueTrackItem(
     track: AudioService.AudioData,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
+    dragHandleModifier : Modifier = Modifier,
     index: Int,
     count: Int,
+    elevation: Dp = 0.dp,
     onClicked: () -> Unit,
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -140,6 +184,8 @@ fun QueueTrackItem(
     var hasTriggeredHaptic by remember { mutableStateOf(false) }
 
     SwipeToDismissBox(
+        //enableDismissFromEndToStart = track.id != playerViewModel.currentlyPlaying?.id,
+        //enableDismissFromStartToEnd = track.id != playerViewModel.currentlyPlaying?.id,
         modifier = modifier,
         state = dismissState,
         onDismiss = {playerViewModel.removeFromQueue(index)},
@@ -153,7 +199,7 @@ fun QueueTrackItem(
             LaunchedEffect(draggedPx) {
                 val absoluteOffset = abs(draggedPx)
 
-                if (absoluteOffset > 70f && !hasTriggeredHaptic) {
+                if (absoluteOffset > 100f && !hasTriggeredHaptic) {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     hasTriggeredHaptic = true
                 }
@@ -199,9 +245,11 @@ fun QueueTrackItem(
                 Icon(
                     painterResource(R.drawable.ic_drag_indicator),
                     "Drag handle",
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = dragHandleModifier
+                        .padding(end = 8.dp),
                 )
-            }
+            },
+            elevation = elevation
         ) { onClicked() }
     }
 }

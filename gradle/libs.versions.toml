@@ -16,6 +16,7 @@ animationCore = "1.11.0"
 materialKolor = "5.0.0-alpha07"
 media3Exoplayer = "1.10.1"
 navigationCompose = "2.9.8"
+reorderable = "3.1.0"
 serialization = "2.3.21"
 
 [libraries]
@@ -41,6 +42,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

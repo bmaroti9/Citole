@@ -60,6 +60,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.ListItemElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SegmentedListItem
@@ -81,6 +82,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
@@ -134,6 +136,7 @@ fun TrackItem(
     modifier: Modifier = Modifier,
     index: Int,
     count: Int,
+    elevation: Dp = 0.dp,
     dragHandle: (@Composable () -> Unit)? = null,
     onClicked: () -> Unit,
 ) {
@@ -146,16 +149,23 @@ fun TrackItem(
         checked = checked,
         onCheckedChange = { onClicked() },
         shapes = ListItemDefaults.segmentedShapes(index = index, count = count),
+        elevation = ListItemElevation(draggedElevation = 0.dp, elevation = elevation),
         leadingContent = {
-            AsyncImage(
-                model = track.artworkUri,
-                contentDescription = "Album Art",
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(RoundedCornerShape(6.dp)),
-                error = painterResource(R.drawable.ic_library),
-                contentScale = ContentScale.Crop
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                dragHandle?.invoke()
+                AsyncImage(
+                    model = track.artworkUri,
+                    contentDescription = "Album Art",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    error = painterResource(R.drawable.ic_library),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
         },
         content = {
             Text(
@@ -188,30 +198,26 @@ fun TrackItem(
 
         },
         trailingContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+
+            FilledTonalIconButton(
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = if (checked) { MaterialTheme.colorScheme.secondary}
+                    else { MaterialTheme.colorScheme.secondaryContainer},
+                    contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
+                    else { MaterialTheme.colorScheme.onSecondaryContainer},
+                ),
+                onClick = {popupExpanded = true },
+                modifier = Modifier.size(26.dp, 30.dp),
+                shapes = IconButtonDefaults.shapes(
+                    shape = CircleShape,
+                    pressedShape = MaterialTheme.shapes.small
+                )
             ) {
-                FilledTonalIconButton(
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = if (checked) { MaterialTheme.colorScheme.secondary}
-                        else { MaterialTheme.colorScheme.secondaryContainer},
-                        contentColor = if (checked) { MaterialTheme.colorScheme.onSecondary}
-                        else { MaterialTheme.colorScheme.onSecondaryContainer},
-                    ),
-                    onClick = {popupExpanded = true },
-                    modifier = Modifier.size(26.dp, 30.dp),
-                    shapes = IconButtonDefaults.shapes(
-                        shape = CircleShape,
-                        pressedShape = MaterialTheme.shapes.small
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_more_vert),
-                        contentDescription = "Options",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                dragHandle?.invoke()
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_more_vert),
+                    contentDescription = "Options",
+                    modifier = Modifier.size(16.dp)
+                )
             }
 
             TrackOptionsPopup(
