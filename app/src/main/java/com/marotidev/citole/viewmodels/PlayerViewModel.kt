@@ -214,7 +214,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             progress = 0
         } else {
             currentQueue.add(index, track)
-            player?.addMediaItem(mediaItem)
+            player?.addMediaItem(index, mediaItem)
         }
     }
 

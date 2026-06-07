@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -106,12 +107,13 @@ fun AlbumDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(expandedHeight + with(density) { scrollBehavior.state.heightOffset.toDp() })
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
             ) {
 
                 Column(
@@ -216,8 +218,20 @@ fun AlbumDetailScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
             contentPadding = innerPadding
         ) {
-            items(album.tracks.size) { index ->
-                AlbumTrackItem(playerViewModel, album.tracks, index)
+            itemsIndexed(album.tracks) { index, track ->
+                //AlbumTrackItem(playerViewModel, album.tracks, index)
+                TrackItem(
+                    track = track,
+                    playerViewModel = playerViewModel,
+                    index = index,
+                    count = album.tracks.count(),
+                    dragHandle = {
+                        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.width(32.dp).padding(horizontal = 4.dp), color = MaterialTheme.colorScheme.secondary)
+                    }
+                ) {
+                    playerViewModel.playQueue(album.tracks, index)
+                }
             }
         }
     }

@@ -188,8 +188,6 @@ fun QueueTrackItem(
     var hapticTriggerState by remember { mutableIntStateOf(0) }
 
     SwipeToDismissBox(
-        //enableDismissFromEndToStart = track.id != playerViewModel.currentlyPlaying?.id,
-        //enableDismissFromStartToEnd = track.id != playerViewModel.currentlyPlaying?.id,
         modifier = modifier,
         state = dismissState,
         onDismiss = {playerViewModel.removeFromQueue(index)},
