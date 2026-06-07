@@ -161,17 +161,24 @@ fun TrackListTrackItem(
     val haptic = LocalHapticFeedback.current
     var hapticTriggerState by remember { mutableIntStateOf(0) }
 
-    val playNextContainer = Color(0xFFFF9100).harmonize(other = MaterialTheme.colorScheme.primary)
-    val playNextOnContainer = Color(0xFF6B3D00).harmonize(other = MaterialTheme.colorScheme.primary)
-    val addToQueueContainer = Color(0xFF72AAFF).harmonize(other = MaterialTheme.colorScheme.primary)
-    val addToQueueOnContainer = Color(0xFF002260).harmonize(other = MaterialTheme.colorScheme.primary)
+    val playNextContainer = Color(0xFFFF9300).harmonize(other = MaterialTheme.colorScheme.primary)
+    val playNextOnContainer = Color(0xFF563200).harmonize(other = MaterialTheme.colorScheme.primary)
+    val addToQueueContainer = Color(0xFF00B2B2).harmonize(other = MaterialTheme.colorScheme.primary)
+    val addToQueueOnContainer = Color(0xFF004141).harmonize(other = MaterialTheme.colorScheme.primary)
 
     SwipeToDismissBox(
         modifier = modifier,
         state = swipeState,
-        onDismiss = {
+        onDismiss = { value ->
             coroutineScope.launch {
+                haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                 delay(300)
+                if (value == SwipeToDismissBoxValue.StartToEnd) {
+                    playerViewModel.addToQueue(track, playerViewModel.currentIndex + 1)
+                } else {
+                    playerViewModel.addToQueue(track)
+                }
+                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                 swipeState.reset()
             }
         },
@@ -221,7 +228,8 @@ fun TrackListTrackItem(
                             Icon(
                                 painterResource(R.drawable.ic_playlist_play),
                                 contentDescription = "Play next",
-                                tint = playNextOnContainer
+                                tint = playNextOnContainer,
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                         else {
