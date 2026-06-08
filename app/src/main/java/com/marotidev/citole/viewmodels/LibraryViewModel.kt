@@ -25,12 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.services.AudioService
-import com.marotidev.citole.services.AudioType
 import com.marotidev.citole.SortChip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.collections.component1
 import kotlin.collections.component2
+import com.marotidev.citole.services.AudioService.AudioType
 
 class LibraryViewModel : ViewModel() {
 
@@ -108,7 +108,7 @@ class LibraryViewModel : ViewModel() {
     fun List<AudioService.AudioData>.filterTracksByQuery() : List<AudioService.AudioData> {
         return this.filter { track ->
             track.name.contains(searchQuery, ignoreCase = true)
-                    || track.artist.contains(searchQuery, ignoreCase = true)
+                    || track.rawArtist.contains(searchQuery, ignoreCase = true)
                     || track.albumName.contains(searchQuery, ignoreCase = true)
         }
     }
@@ -118,7 +118,7 @@ class LibraryViewModel : ViewModel() {
             when (selectedSortChip) {
                 SortChip.Name -> track.name
                 SortChip.Album -> track.albumName
-                SortChip.Artist -> track.artist
+                SortChip.Artist -> track.rawArtist
                 SortChip.DateAdded -> track.dateAdded.toString()
             }
         }
@@ -142,6 +142,25 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
+    fun List<AudioService.AudioData>.determineArtists(): List<String> {
+        val artistFrequency : MutableMap<String, Int> = mutableMapOf()
+        this.forEach { track ->
+            track.artists.forEach { artist ->
+                artistFrequency[artist] = artistFrequency[artist]?.plus(1) ?: 0
+            }
+        }
+        val artists = mutableListOf<String>()
+        artistFrequency.forEach { (name, times) ->
+            if (times >= this.size / 2) {
+                artists.add(name)
+            }
+        }
+        if (artists.isEmpty()) {
+            return listOf("Various Artists")
+        }
+        return artists
+    }
+
     fun List<AudioService.AudioData>.groupToAlbum() : List<AudioService.AlbumData> {
         return this.groupBy { it.albumId }
             .map { (albumId, tracksInAlbum) ->
@@ -149,22 +168,7 @@ class LibraryViewModel : ViewModel() {
                 AudioService.AlbumData(
                     albumId = albumId,
                     albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
-                    artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
-                    tracks = sequentialTracks,
-                    type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
-                    artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
-                )
-            }
-    }
-
-    fun List<AudioService.AudioData>.groupToArtist() : List<AudioService.AlbumData> {
-        return this.groupBy { it.albumId }
-            .map { (albumId, tracksInAlbum) ->
-                val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
-                AudioService.AlbumData(
-                    albumId = albumId,
-                    albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
-                    artist = tracksInAlbum.firstOrNull()?.artist ?: "Unknown Artist",
+                    artists = tracksInAlbum.determineArtists(),
                     tracks = sequentialTracks,
                     type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
                     artworkUri = tracksInAlbum.firstOrNull()?.artworkUri

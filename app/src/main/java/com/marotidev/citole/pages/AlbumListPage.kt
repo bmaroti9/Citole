@@ -147,7 +147,7 @@ fun AlbumItem(
                 modifier = Modifier.padding(top = 12.dp, start = 1.dp)
             )
             Text(
-                text = album.artist,
+                text = album.artists.joinToString(", "),
                 color = MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 4.dp, start = 1.dp)

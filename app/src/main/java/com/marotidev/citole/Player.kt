@@ -182,7 +182,7 @@ fun TitleAndArtist(
     )
 
     Text(
-        currentlyPlaying.artist,
+        currentlyPlaying.artists.joinToString(separator = ", "),
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.secondary,
         maxLines = 1,

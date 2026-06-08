@@ -136,7 +136,7 @@ fun AlbumDetailScreen(
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
                     Spacer(modifier = Modifier.height(3.dp))
-                    Text(album.artist, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(album.artists.joinToString(", "), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
                     Row(
                         modifier = Modifier.padding(top = 18.dp, bottom = 26.dp)
                     ) {
@@ -267,7 +267,7 @@ fun AlbumTrackItem(
                 style = MaterialTheme.typography.titleSmall,
             )
             Text(
-                text = track.artist,
+                text = track.artists.joinToString(", "),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline
             )

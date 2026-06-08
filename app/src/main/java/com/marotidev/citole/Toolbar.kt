@@ -338,7 +338,7 @@ fun ToolbarCollapsedState(
                     .basicMarquee(),
             )
             Text(
-                currentlyPlaying.artist,
+                currentlyPlaying.artists.joinToString(separator = ", "),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
                 maxLines = 1,

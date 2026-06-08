@@ -18,11 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.pages
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -76,6 +79,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -151,6 +155,7 @@ fun TrackListTrackItem(
     onClicked: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
     val swipeState =
         rememberSwipeToDismissBoxState(
@@ -158,7 +163,6 @@ fun TrackListTrackItem(
             positionalThreshold = SwipeToDismissBoxDefaults.positionalThreshold
         )
 
-    val haptic = LocalHapticFeedback.current
     var hapticTriggerState by remember { mutableIntStateOf(0) }
 
     val playNextContainer = Color(0xFFFF9300).harmonize(other = MaterialTheme.colorScheme.primary)
@@ -166,19 +170,32 @@ fun TrackListTrackItem(
     val addToQueueContainer = Color(0xFF00B2B2).harmonize(other = MaterialTheme.colorScheme.primary)
     val addToQueueOnContainer = Color(0xFF004141).harmonize(other = MaterialTheme.colorScheme.primary)
 
+    val iconScale = remember { Animatable(1f) }
+
     SwipeToDismissBox(
         modifier = modifier,
         state = swipeState,
         onDismiss = { value ->
             coroutineScope.launch {
-                haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                launch {
+                    iconScale.animateTo(
+                        1.3f,
+                        spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)
+                    )
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                    iconScale.animateTo(
+                        1f,
+                        spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)
+                    )
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                }
+
                 delay(300)
                 if (value == SwipeToDismissBoxValue.StartToEnd) {
                     playerViewModel.addToQueue(track, playerViewModel.currentIndex + 1)
                 } else {
                     playerViewModel.addToQueue(track)
                 }
-                haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
                 swipeState.reset()
             }
         },
@@ -223,7 +240,9 @@ fun TrackListTrackItem(
                         visible = abs(draggedPx) > 100f,
                         enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
                         exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
+                        modifier = Modifier.scale(iconScale.value)
                     ) {
+
                         if (direction == SwipeToDismissBoxValue.StartToEnd) {
                             Icon(
                                 painterResource(R.drawable.ic_playlist_play),
@@ -317,7 +336,7 @@ fun TrackItem(
             ) {
                 Text(
                     lineHeight = 32.sp,
-                    text = track.artist,
+                    text = track.artists.joinToString(separator = ", "),
                     style = MaterialTheme.typography.labelSmall,
                 )
                 Box(
@@ -388,7 +407,7 @@ fun TrackOptionsPopup(
                 text = { Text("Play Next") },
                 trailingIcon = {
                     Icon(
-                        painterResource(R.drawable.ic_play),
+                        painterResource(R.drawable.ic_playlist_play),
                         null,
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -405,7 +424,7 @@ fun TrackOptionsPopup(
                 text = { Text("Add to queue") },
                 trailingIcon = {
                     Icon(
-                        painterResource(R.drawable.ic_add),
+                        painterResource(R.drawable.ic_low_priority),
                         null,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer

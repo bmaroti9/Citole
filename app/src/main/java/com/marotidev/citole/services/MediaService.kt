@@ -20,7 +20,6 @@ package com.marotidev.citole.services
 
 import android.content.ContentUris
 import android.content.Context
-import android.media.browse.MediaBrowser
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -29,28 +28,21 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import okhttp3.MediaType
 
-enum class AudioType {
-    Song,
-    Podcast,
-    Audiobook,
-    Other
-}
-
-fun AudioType.toInt() = ordinal
-fun Int.toAudioType() = AudioType.entries[this]
-
-fun getAudioType(isSong : Int, isPodcast: Int, isAudiobook: Int) : AudioType {
-    return when {
-        isSong == 1-> AudioType.Song
-        isPodcast == 1 -> AudioType.Podcast
-        isAudiobook == 1 -> AudioType.Audiobook
-        else -> AudioType.Other
-    }
-}
 
 object AudioService {
+
+    private val artistSplitterRegex = Regex(
+        pattern = """\s*([,;\\/&]|feat\.?|ft\.?|\|)\s*""",
+        options = setOf(RegexOption.IGNORE_CASE)
+    )
+
+    enum class AudioType {
+        Song,
+        Podcast,
+        Audiobook,
+        Other
+    }
 
     data class AudioData(
         val id: Long,
@@ -61,7 +53,8 @@ object AudioService {
         val name: String,
 
         val title: String,
-        val artist: String,
+        val rawArtist: String,
+        val artists: List<String>,
 
         val artistId: Long,
 
@@ -76,6 +69,38 @@ object AudioService {
         val type: AudioType
     )
 
+    data class AlbumData(
+        val albumId: Long,
+
+        val artworkUri : Uri?,
+
+        val albumName: String,
+        val artists: List<String>,
+
+        val tracks : List<AudioData>,
+
+        val type: AudioType
+    )
+
+    data class ArtistData(
+        val artistId: Long,
+
+        val tracks: List<AudioData>,
+        val albums: List<AlbumData>,
+    )
+
+    fun AudioType.toInt() = ordinal
+    fun Int.toAudioType() = AudioType.entries[this]
+
+    fun getAudioType(isSong : Int, isPodcast: Int, isAudiobook: Int) : AudioType {
+        return when {
+            isSong == 1-> AudioType.Song
+            isPodcast == 1 -> AudioType.Podcast
+            isAudiobook == 1 -> AudioType.Audiobook
+            else -> AudioType.Other
+        }
+    }
+
     fun AudioData.toMediaItem() : MediaItem {
         return MediaItem.Builder()
             .setMediaId(id.toString())
@@ -83,7 +108,7 @@ object AudioService {
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setDisplayTitle(title)
-                    .setArtist(artist)
+                    .setArtist(rawArtist)
                     .setArtworkUri(artworkUri)
                     .setTitle(name)
                     .setAlbumTitle(albumName)
@@ -107,7 +132,8 @@ object AudioService {
             artworkUri = mediaMetadata.artworkUri ?: Uri.EMPTY,
             name = mediaMetadata.title.toString(),
             title = mediaMetadata.displayTitle.toString(),
-            artist = mediaMetadata.artist.toString(),
+            rawArtist = mediaMetadata.artist.toString(),
+            artists = splitArtists(mediaMetadata.artist.toString()),
             albumId = mediaMetadata.extras?.getLong("albumId") ?: 0,
             albumName = mediaMetadata.albumTitle.toString(),
             duration = mediaMetadata.durationMs ?: 0,
@@ -118,25 +144,15 @@ object AudioService {
         )
     }
 
-    data class AlbumData(
-        val albumId: Long,
+    fun splitArtists(rawArtist: String?): List<String> {
+        if (rawArtist.isNullOrBlank()) return listOf("Unknown Artist")
 
-        val artworkUri : Uri?,
-
-        val albumName: String,
-        val artist: String,
-
-        val tracks : List<AudioData>,
-
-        val type: AudioType
-    )
-
-    data class ArtistData(
-        val artistId: Long,
-
-        val tracks: List<AudioData>,
-        val albums: List<AlbumData>,
-    )
+        return rawArtist
+            .split(artistSplitterRegex)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.equals("and", ignoreCase = true) }
+            .distinct()
+    }
 
     fun fetchAudioFiles(context: Context): List<AudioData> {
         Log.i("FETCHING AUDIO", "fetchCalled")
@@ -201,7 +217,7 @@ object AudioService {
                 val id = cursor.getLong(idColumn)
                 val name = cursor.getString(nameColumn)
                 val title = cursor.getString(titleColumn)
-                val artist = cursor.getString(artistColumn)
+                val artistsPlainString = cursor.getString(artistColumn)
                 val albumId = cursor.getLong(albumIdColumn)
                 val albumName = cursor.getString(albumNameColumn)
                 val duration = cursor.getLong(durationColumn)
@@ -214,6 +230,7 @@ object AudioService {
                 val isAudiobook = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {cursor.getInt(isAudiobookRow)} else {0}
 
                 val audioType = getAudioType(isMusic, isPodcast, isAudiobook)
+                val artists = splitArtists(artistsPlainString)
 
                 val contentUri: Uri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -225,8 +242,22 @@ object AudioService {
                     albumId
                 )
 
-                audioList += AudioData(id, contentUri, artworkUri, name, title, artist, artistId, albumId, albumName,
-                    duration, dateAdded, trackNumber, audioType)
+                audioList += AudioData(
+                    id = id,
+                    uri = contentUri,
+                    artworkUri = artworkUri,
+                    title = title,
+                    name = name,
+                    rawArtist = artistsPlainString,
+                    artistId = artistId,
+                    albumId = albumId,
+                    albumName = albumName,
+                    duration = duration,
+                    dateAdded = dateAdded,
+                    trackNumber = trackNumber,
+                    type = audioType,
+                    artists = artists,
+                )
             }
         }
 
