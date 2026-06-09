@@ -133,7 +133,7 @@ fun ArtistItem(
         onClick = {onClicked()},
     ) {
         Column(
-            modifier = Modifier.padding(22.dp).aspectRatio(0.78f),
+            modifier = Modifier.padding(18.dp).aspectRatio(0.78f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ArtistCollage(artist.name, artist.appearsIn)
@@ -210,7 +210,7 @@ fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
         0.85f,
         0.85f
     )
-    val sizeList = listOf(1f, 0.6f, 0.3f)
+    val sizeList = listOf(1f, 1f, 0.5f, 0.5f, 0.5f, 0.2f, 0.25f, 0.25f, 0.25f, 0.25f)
 
     //Generate a list of coordinates Using Wang's circle packing algorithm with the seed
 
@@ -287,14 +287,15 @@ fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
             .onSizeChanged { containerSize = it }
     ) {
         if (containerSize != IntSize.Zero) {
-            for (index in 0..min(points.size - 1, albums.size - 1)) {
+            for (index in 0..min(points.size - 1, 8)) {
                 val point = points[index]
                 val album = albums[index]
                 val rotate = if (albums.size > 1) (seed.nextFloat() - 0.5f) * 145 else 0f
 
                 val newX = ((point.x - smallestX) * globalScaler) + offsetX
                 val newY = ((point.y - smallestY) * globalScaler) + offsetY
-                val newScale = if (albums.size > 1) (point.r * 2 * globalScaler) else 0.7f
+                val newScale = if (albums.size > 1) (point.r * 2 * globalScaler * shapeSizeScale[point.shape])
+                    else 0.7f / shapeSizeScale[point.shape]
                 Box(
                     modifier = Modifier
                         .size(baseSizeDp)
