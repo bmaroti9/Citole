@@ -136,7 +136,8 @@ fun AlbumDetailScreen(
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
                     Spacer(modifier = Modifier.height(3.dp))
-                    Text(album.artists.joinToString(", "), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(album.ownerArtists.joinToString(", "), style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary)
                     Row(
                         modifier = Modifier.padding(top = 18.dp, bottom = 26.dp)
                     ) {
@@ -228,7 +229,8 @@ fun AlbumDetailScreen(
                     dragHandle = {
                         Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.width(32.dp).padding(horizontal = 4.dp), color = MaterialTheme.colorScheme.secondary)
-                    }
+                    },
+                    navController = navController
                 ) {
                     playerViewModel.playQueue(album.tracks, index)
                 }

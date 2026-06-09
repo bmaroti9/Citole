@@ -56,8 +56,6 @@ object AudioService {
         val rawArtist: String,
         val artists: List<String>,
 
-        val artistId: Long,
-
         val albumId : Long,
         val albumName : String,
 
@@ -75,7 +73,8 @@ object AudioService {
         val artworkUri : Uri?,
 
         val albumName: String,
-        val artists: List<String>,
+        val ownerArtists: List<String>,
+        val allArtists: List<String>,
 
         val tracks : List<AudioData>,
 
@@ -83,10 +82,11 @@ object AudioService {
     )
 
     data class ArtistData(
-        val artistId: Long,
+        val name : String,
 
         val tracks: List<AudioData>,
         val albums: List<AlbumData>,
+        val appearsIn: List<AlbumData>
     )
 
     fun AudioType.toInt() = ordinal
@@ -116,7 +116,6 @@ object AudioService {
                     .setTrackNumber(trackNumber)
                     .setExtras(Bundle().apply {
                         putLong("albumId", albumId)
-                        putLong("artistId", artistId)
                         putInt("dateAdded", dateAdded)
                         putInt("audioType", type.toInt())
                     })
@@ -140,7 +139,6 @@ object AudioService {
             dateAdded = mediaMetadata.extras?.getInt("dateAdded") ?: 0,
             trackNumber = mediaMetadata.trackNumber ?: 0,
             type = mediaMetadata.extras?.getInt("audioType")?.toAudioType() ?: AudioType.Other,
-            artistId = mediaMetadata.extras?.getLong("artistId") ?: 0,
         )
     }
 
@@ -177,7 +175,6 @@ object AudioService {
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.TRACK,
-            MediaStore.Audio.Media.ARTIST_ID,
 
             MediaStore.Audio.Media.IS_MUSIC,
             MediaStore.Audio.Media.IS_PODCAST,
@@ -207,7 +204,6 @@ object AudioService {
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val trackNumberColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
-            val artistIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST_ID)
 
             val isMusicRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)
             val isPodcastRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)
@@ -223,7 +219,6 @@ object AudioService {
                 val duration = cursor.getLong(durationColumn)
                 val dateAdded = cursor.getInt(dateAddedColumn)
                 val trackNumber = cursor.getInt(trackNumberColumn) % 1000
-                val artistId = cursor.getLong(artistIdColumn)
 
                 val isMusic = cursor.getInt(isMusicRow)
                 val isPodcast = cursor.getInt(isPodcastRow)
@@ -249,7 +244,6 @@ object AudioService {
                     title = title,
                     name = name,
                     rawArtist = artistsPlainString,
-                    artistId = artistId,
                     albumId = albumId,
                     albumName = albumName,
                     duration = duration,

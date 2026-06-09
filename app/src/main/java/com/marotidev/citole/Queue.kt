@@ -79,6 +79,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
+import androidx.navigation.NavController
 import com.marotidev.citole.pages.TrackItem
 import kotlin.math.sign
 
@@ -87,7 +88,8 @@ import kotlin.math.sign
 @Composable
 fun QueueSheet(
     onDismissRequest: () -> Unit,
-    playerViewModel: PlayerViewModel
+    playerViewModel: PlayerViewModel,
+    navController: NavController
 ) {
 
     val hapticFeedback = LocalHapticFeedback.current
@@ -156,7 +158,8 @@ fun QueueSheet(
                                 },
                             ),
                             elevation = elevation,
-                            count = playerViewModel.currentQueue.size
+                            count = playerViewModel.currentQueue.size,
+                            navController = navController
                         ) {
                             playerViewModel.skipInQueue(index)
                         }
@@ -176,6 +179,7 @@ fun QueueTrackItem(
     dragHandleModifier : Modifier = Modifier,
     index: Int,
     count: Int,
+    navController: NavController,
     elevation: Dp = 0.dp,
     onClicked: () -> Unit,
 ) {
@@ -251,7 +255,8 @@ fun QueueTrackItem(
                         .padding(end = 8.dp),
                 )
             },
-            elevation = elevation
+            elevation = elevation,
+            navController = navController
         ) { onClicked() }
     }
 }

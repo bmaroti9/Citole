@@ -112,7 +112,8 @@ fun PlayerScreen(
         if (queueSheetOpen) {
             QueueSheet (
                 onDismissRequest = {queueSheetOpen = false},
-                playerViewModel
+                playerViewModel,
+                navController
             )
         }
 

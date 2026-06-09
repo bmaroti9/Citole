@@ -85,7 +85,7 @@ class LibraryViewModel : ViewModel() {
     var filteredAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
         private set
 
-    var filteredArtists by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
+    var filteredArtists by mutableStateOf<List<AudioService.ArtistData>>(emptyList())
         private set
 
 
@@ -103,6 +103,8 @@ class LibraryViewModel : ViewModel() {
         filteredTracks = allTracks.filterTracksByQuery().filterTracksByFilterChips().sortTracksBySortChip().sortBySortOrder()
 
         filteredAlbums = filteredTracks.groupToAlbum()
+
+        filteredArtists = filteredTracks.groupToArtist(filteredAlbums)
     }
 
     fun List<AudioService.AudioData>.filterTracksByQuery() : List<AudioService.AudioData> {
@@ -142,7 +144,7 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
-    fun List<AudioService.AudioData>.determineArtists(): List<String> {
+    fun List<AudioService.AudioData>.determineArtists(): Pair<List<String>, List<String>> {
         val artistFrequency : MutableMap<String, Int> = mutableMapOf()
         this.forEach { track ->
             track.artists.forEach { artist ->
@@ -156,24 +158,45 @@ class LibraryViewModel : ViewModel() {
             }
         }
         if (artists.isEmpty()) {
-            return listOf("Various Artists")
+            return Pair(listOf("Various Artists"), artistFrequency.keys.toList())
         }
-        return artists
+        return Pair(artists, artistFrequency.keys.toList())
     }
 
     fun List<AudioService.AudioData>.groupToAlbum() : List<AudioService.AlbumData> {
         return this.groupBy { it.albumId }
-            .map { (albumId, tracksInAlbum) ->
-                val sequentialTracks = tracksInAlbum.sortedBy { it.trackNumber }
+            .map { (albumId, tracks) ->
+                val sequentialTracks = tracks.sortedBy { it.trackNumber }
+                val ownerAndAllArtists = tracks.determineArtists()
                 AudioService.AlbumData(
                     albumId = albumId,
-                    albumName = tracksInAlbum.firstOrNull()?.albumName ?: "Unknown Album",
-                    artists = tracksInAlbum.determineArtists(),
+                    albumName = tracks.firstOrNull()?.albumName ?: "Unknown Album",
+                    ownerArtists = ownerAndAllArtists.first,
+                    allArtists = ownerAndAllArtists.second,
                     tracks = sequentialTracks,
-                    type = tracksInAlbum.firstOrNull()?.type ?: AudioType.Other,
-                    artworkUri = tracksInAlbum.firstOrNull()?.artworkUri
+                    type = tracks.firstOrNull()?.type ?: AudioType.Other,
+                    artworkUri = tracks.firstOrNull()?.artworkUri
                 )
             }
+    }
+
+    fun List<AudioService.AudioData>.groupToArtist(albums: List<AudioService.AlbumData>): List<AudioService.ArtistData> {
+        val artistTracks = mutableMapOf<String, MutableList<AudioService.AudioData>>()
+
+        this.forEach { track ->
+            track.artists.forEach { artist ->
+                artistTracks.getOrPut(artist) { mutableListOf() }.add(track)
+            }
+        }
+
+        return artistTracks.map { (artistName, tracks) ->
+            AudioService.ArtistData(
+                name = artistName,
+                tracks = tracks,
+                albums = albums.filter { artistName in it.ownerArtists },
+                appearsIn = albums.filter { artistName in it.allArtists }
+            )
+        }
     }
 
     fun findAlbumById(albumId: Long) : AudioService.AlbumData? {

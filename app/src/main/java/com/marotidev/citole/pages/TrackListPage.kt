@@ -109,12 +109,15 @@ import kotlinx.coroutines.time.delay
 import kotlin.math.abs
 import kotlin.math.sign
 import androidx.core.graphics.toColorInt
+import androidx.navigation.NavController
+import com.marotidev.citole.AlbumViewDestination
 
 @Composable
 fun TrackListPage(
     libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    navController: NavController,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -137,7 +140,8 @@ fun TrackListPage(
                 ),
                 playerViewModel = playerViewModel,
                 index = index,
-                count = libraryViewModel.filteredTracks.size
+                count = libraryViewModel.filteredTracks.size,
+                navController = navController
             ) {
                 playerViewModel.playQueue(listOf(track))
             }
@@ -152,6 +156,7 @@ fun TrackListTrackItem(
     modifier: Modifier = Modifier,
     index: Int,
     count: Int,
+    navController: NavController,
     onClicked: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -179,7 +184,7 @@ fun TrackListTrackItem(
             coroutineScope.launch {
                 launch {
                     iconScale.animateTo(
-                        1.3f,
+                        1.25f,
                         spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)
                     )
                     haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
@@ -228,7 +233,7 @@ fun TrackListTrackItem(
                     modifier = Modifier
                         .width(with(LocalDensity.current) { abs(draggedPx).toDp() })
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(100.dp))
+                        .clip(CircleShape)
                         .background(
                             if (direction == SwipeToDismissBoxValue.StartToEnd) {playNextContainer}
                             else {addToQueueContainer}
@@ -269,6 +274,7 @@ fun TrackListTrackItem(
             playerViewModel,
             index = index,
             count = count,
+            navController = navController,
         ) { onClicked() }
     }
 }
@@ -281,6 +287,7 @@ fun TrackItem(
     modifier: Modifier = Modifier,
     index: Int,
     count: Int,
+    navController: NavController,
     elevation: Dp = 0.dp,
     dragHandle: (@Composable () -> Unit)? = null,
     onClicked: () -> Unit,
@@ -335,7 +342,6 @@ fun TrackItem(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    lineHeight = 32.sp,
                     text = track.artists.joinToString(separator = ", "),
                     style = MaterialTheme.typography.labelSmall,
                 )
@@ -378,7 +384,8 @@ fun TrackItem(
                 expanded = popupExpanded,
                 onDismiss = {popupExpanded = false},
                 playerViewModel,
-                track
+                track,
+                navController
             )
         },
     )
@@ -390,7 +397,8 @@ fun TrackOptionsPopup(
     expanded: Boolean,
     onDismiss: () -> Unit,
     playerViewModel: PlayerViewModel,
-    track: AudioService.AudioData
+    track: AudioService.AudioData,
+    navController: NavController,
 ) {
     val groupInteractionSource = remember { MutableInteractionSource() }
 
@@ -463,7 +471,12 @@ fun TrackOptionsPopup(
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 },
-                onClick = { }
+                onClick = {
+                    navController.navigate(AlbumViewDestination(albumId = track.albumId)) {
+                        launchSingleTop = true
+                    }
+                    onDismiss()
+                }
             )
         }
 

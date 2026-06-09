@@ -84,6 +84,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marotidev.citole.pages.AlbumListPage
 import com.marotidev.citole.pages.AlbumDetailScreen
+import com.marotidev.citole.pages.ArtistListPage
 import com.marotidev.citole.pages.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
@@ -137,6 +138,7 @@ fun HomeSetup(
 enum class Page {
     Tracks,
     Albums,
+    Artists
 }
 
 @Composable
@@ -164,8 +166,8 @@ fun CustomNavigationDrawerItem(
             contentDescription = "Songs",
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-        Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp, end = 4.dp))
     }
 }
 
@@ -253,6 +255,18 @@ fun CitoleScreen(
                     iconId = R.drawable.ic_album,
                     text = "Albums"
                 )
+                CustomNavigationDrawerItem(
+                    selected = selectedPage == Page.Artists,
+                    onSelected =  {
+                        selectedPage = Page.Artists
+                        scope.launch {
+                            delay(200)
+                            drawerState.close()
+                        }
+                    },
+                    iconId = R.drawable.ic_person,
+                    text = "Artists"
+                )
             }
         },
     ) {
@@ -298,8 +312,9 @@ fun CitoleScreen(
                             }
                         ) { targetPage ->
                             when (targetPage) {
-                                Page.Tracks -> TrackListPage(libraryViewModel, playerViewModel, paddingValues)
+                                Page.Tracks -> TrackListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                                 Page.Albums -> AlbumListPage(libraryViewModel, playerViewModel, paddingValues, navController)
+                                Page.Artists -> ArtistListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                             }
                         }
                     }
