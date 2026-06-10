@@ -168,7 +168,7 @@ fun ArtistDetailScreen(
                         pressedShape = MaterialTheme.shapes.medium
                     ),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.secondary
                     ),
                     modifier = Modifier

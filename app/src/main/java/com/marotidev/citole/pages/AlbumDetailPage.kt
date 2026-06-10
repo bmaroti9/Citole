@@ -87,7 +87,7 @@ fun AlbumDetailScreen(
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
 
     val density = LocalDensity.current
-    val expandedHeight = 465.dp + statusBarTopDp
+    val expandedHeight = 420.dp + statusBarTopDp
     val collapsedHeight = 64.dp + statusBarTopDp
 
     val expandedHeightPx = with(density) { expandedHeight.toPx() }
@@ -129,50 +129,14 @@ fun AlbumDetailScreen(
                             .weight(1f)
                             .padding(top = collapsedHeight + 20.dp, bottom = 25.dp)
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(22.dp * (1f - collapsedFraction)))
+                            .clip(RoundedCornerShape(26.dp * (1f - collapsedFraction)))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                         error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
                         contentScale = ContentScale.Crop
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
-                    Spacer(modifier = Modifier.height(3.dp))
                     Text(album.ownerArtists.joinToString(", "), style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary)
-                    Row(
-                        modifier = Modifier.padding(top = 18.dp, bottom = 26.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                playerViewModel.playQueue(album.tracks, 0, false)
-                            },
-                            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
-                            shapes = ButtonDefaults.shapes(
-                                shape = CircleShape,
-                                pressedShape = MaterialTheme.shapes.medium
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_play),
-                                contentDescription = "Play",
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Play", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.width(3.dp))
-                        }
-                        FilledTonalIconButton(
-                            onClick = {},
-                            shapes = IconButtonDefaults.shapes(
-                                shape = CircleShape,
-                                pressedShape = MaterialTheme.shapes.medium
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_shuffle),
-                                contentDescription = "Shuffle",
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
+                        color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 3.dp, bottom = 40.dp))
                 }
 
                 Box(
@@ -219,21 +183,63 @@ fun AlbumDetailScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
             contentPadding = innerPadding
         ) {
-            itemsIndexed(album.tracks) { index, track ->
-                AlbumTrackItem(playerViewModel, album.tracks, index)
-//                TrackItem(
-//                    track = track,
-//                    playerViewModel = playerViewModel,
-//                    index = index,
-//                    count = album.tracks.count(),
-//                    dragHandle = {
-//                        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
-//                            modifier = Modifier.width(32.dp).padding(horizontal = 4.dp), color = MaterialTheme.colorScheme.secondary)
-//                    },
-//                    navController = navController
-//                ) {
-//                    playerViewModel.playQueue(album.tracks, index)
-//                }
+            item {
+                Column(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    ) {
+                        Text("Tracks", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 4.dp))
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(
+                            onClick = {
+                                playerViewModel.playQueue(album.tracks, 0, false)
+                            },
+                            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
+                            shapes = ButtonDefaults.shapes(
+                                shape = CircleShape,
+                                pressedShape = MaterialTheme.shapes.medium
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_play),
+                                contentDescription = "Play",
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Play", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.width(3.dp))
+                        }
+                        FilledTonalIconButton(
+                            onClick = {},
+                            shapes = IconButtonDefaults.shapes(
+                                shape = CircleShape,
+                                pressedShape = MaterialTheme.shapes.medium
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_shuffle),
+                                contentDescription = "Shuffle",
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+
+                    album.tracks.forEachIndexed { index, track ->
+                        TrackItem(
+                            track = track,
+                            playerViewModel = playerViewModel,
+                            index = index,
+                            count = album.tracks.count(),
+                            navController = navController
+                        ) {
+                            playerViewModel.playQueue(album.tracks, index)
+                        }
+                    }
+                }
             }
         }
     }

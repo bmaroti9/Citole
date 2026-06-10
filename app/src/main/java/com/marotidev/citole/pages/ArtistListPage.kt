@@ -246,7 +246,7 @@ fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
         var index = 0
 
         //start the packing
-        loop@ while (index < 200 && points.size < min(albums.size, 10)) {
+        loop@ while (index < 200 && points.size < min(albums.size, 7)) {
             index++
 
             val newR = sizeList.random(seed)

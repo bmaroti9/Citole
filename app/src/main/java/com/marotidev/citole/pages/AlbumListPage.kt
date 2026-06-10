@@ -136,7 +136,7 @@ fun AlbumItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
                 contentScale = ContentScale.Crop
