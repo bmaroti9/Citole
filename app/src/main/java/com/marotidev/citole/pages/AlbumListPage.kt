@@ -97,7 +97,7 @@ fun AlbumItem(
     album: AudioService.AlbumData,
     playerViewModel: PlayerViewModel,
     onClicked: () -> Unit,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     index: Int,
     count: Int
 ) {
@@ -128,7 +128,7 @@ fun AlbumItem(
         onClick = {onClicked()},
     ) {
         Column(
-            modifier = Modifier.padding(22.dp).aspectRatio(0.685f)
+            modifier = Modifier.padding(22.dp).aspectRatio(0.69f)
         ) {
             AsyncImage(
                 model = album.artworkUri,
@@ -136,7 +136,7 @@ fun AlbumItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
                 contentScale = ContentScale.Crop

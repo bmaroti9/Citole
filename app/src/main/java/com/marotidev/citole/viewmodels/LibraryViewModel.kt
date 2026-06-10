@@ -85,6 +85,9 @@ class LibraryViewModel : ViewModel() {
     var filteredAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
         private set
 
+    var allArtists by mutableStateOf<List<AudioService.ArtistData>>(emptyList())
+        private set
+
     var filteredArtists by mutableStateOf<List<AudioService.ArtistData>>(emptyList())
         private set
 
@@ -203,11 +206,16 @@ class LibraryViewModel : ViewModel() {
         return allAlbums.find { it.albumId == albumId }
     }
 
+    fun findArtistByName(artistName: String) : AudioService.ArtistData? {
+        return allArtists.find { it.name == artistName }
+    }
+
     fun loadTracks(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val tracks = AudioService.fetchAudioFiles(context)
             allTracks = tracks
             allAlbums = tracks.groupToAlbum()
+            allArtists = tracks.groupToArtist(allAlbums)
             updateFilteredTracks()
         }
     }

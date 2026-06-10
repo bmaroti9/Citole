@@ -107,13 +107,13 @@ fun AlbumDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(expandedHeight + with(density) { scrollBehavior.state.heightOffset.toDp() })
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
 
                 Column(
@@ -220,20 +220,20 @@ fun AlbumDetailScreen(
             contentPadding = innerPadding
         ) {
             itemsIndexed(album.tracks) { index, track ->
-                //AlbumTrackItem(playerViewModel, album.tracks, index)
-                TrackItem(
-                    track = track,
-                    playerViewModel = playerViewModel,
-                    index = index,
-                    count = album.tracks.count(),
-                    dragHandle = {
-                        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.width(32.dp).padding(horizontal = 4.dp), color = MaterialTheme.colorScheme.secondary)
-                    },
-                    navController = navController
-                ) {
-                    playerViewModel.playQueue(album.tracks, index)
-                }
+                AlbumTrackItem(playerViewModel, album.tracks, index)
+//                TrackItem(
+//                    track = track,
+//                    playerViewModel = playerViewModel,
+//                    index = index,
+//                    count = album.tracks.count(),
+//                    dragHandle = {
+//                        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
+//                            modifier = Modifier.width(32.dp).padding(horizontal = 4.dp), color = MaterialTheme.colorScheme.secondary)
+//                    },
+//                    navController = navController
+//                ) {
+//                    playerViewModel.playQueue(album.tracks, index)
+//                }
             }
         }
     }

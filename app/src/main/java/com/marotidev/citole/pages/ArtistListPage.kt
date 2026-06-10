@@ -1,3 +1,21 @@
+/*
+Copyright (C) <2026>  <Balint Maroti>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+*/
+
 package com.marotidev.citole.pages
 
 import androidx.compose.animation.animateColorAsState
@@ -56,6 +74,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
+import com.marotidev.citole.AlbumViewDestination
+import com.marotidev.citole.ArtistViewDestination
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
@@ -78,12 +98,12 @@ fun ArtistListPage(
         itemsIndexed(
             libraryViewModel.filteredArtists,
             key = { index, artist -> artist.name }
-        ) { index, album ->
+        ) { index, artist ->
             ArtistItem(
-                album,
+                artist,
                 playerViewModel,
                 onClicked = {
-
+                    navController.navigate(ArtistViewDestination(artistName = artist.name))
                 },
                 modifier = Modifier.animateItem(
                     fadeInSpec = spring(stiffness = Spring.StiffnessMedium),

@@ -84,6 +84,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.marotidev.citole.pages.AlbumListPage
 import com.marotidev.citole.pages.AlbumDetailScreen
+import com.marotidev.citole.pages.ArtistDetailScreen
 import com.marotidev.citole.pages.ArtistListPage
 import com.marotidev.citole.pages.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
@@ -177,6 +178,11 @@ object LibraryViewDestination
 @Serializable
 data class AlbumViewDestination(
     val albumId: Long,
+)
+
+@Serializable
+data class ArtistViewDestination(
+    val artistName: String,
 )
 
 
@@ -323,6 +329,11 @@ fun CitoleScreen(
                 composable <AlbumViewDestination> { backStackEntry ->
                     val args = backStackEntry.toRoute<AlbumViewDestination>()
                     AlbumDetailScreen(args.albumId, libraryViewModel, playerViewModel, navController)
+                }
+
+                composable <ArtistViewDestination> { backStackEntry ->
+                    val args = backStackEntry.toRoute<ArtistViewDestination>()
+                    ArtistDetailScreen(args.artistName, libraryViewModel, playerViewModel, navController)
                 }
             }
             CustomFloatingToolbar(playerViewModel, navController)
