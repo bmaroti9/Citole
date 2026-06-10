@@ -86,6 +86,7 @@ object AudioService {
 
         val tracks: List<AudioData>,
         val albums: List<AlbumData>,
+        val allAlbums: List<AlbumData>,
         val appearsIn: List<AlbumData>
     )
 

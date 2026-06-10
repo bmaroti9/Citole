@@ -193,11 +193,14 @@ class LibraryViewModel : ViewModel() {
         }
 
         return artistTracks.map { (artistName, tracks) ->
+            val ownAlbums = albums.filter { artistName in it.ownerArtists }
+            val allAlbums =  albums.filter { artistName in it.allArtists }
             AudioService.ArtistData(
                 name = artistName,
                 tracks = tracks,
-                albums = albums.filter { artistName in it.ownerArtists },
-                appearsIn = albums.filter { artistName in it.allArtists }
+                albums = ownAlbums,
+                allAlbums = allAlbums,
+                appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList()
             )
         }
     }

@@ -139,7 +139,7 @@ fun ArtistDetailScreen(
                             .padding(top = collapsedHeight + 20.dp)
                             .aspectRatio(1f)
                     ) {
-                        ArtistCollage(artistName, artist.appearsIn)
+                        ArtistCollage(artistName, artist.allAlbums)
                     }
                     Text(artist.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 25.dp, bottom = 40.dp))
                 }
@@ -190,147 +190,152 @@ fun ArtistDetailScreen(
         ) {
 
             item {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
-                        .padding(12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 12.dp)
+                if (artist.tracks.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                            .padding(12.dp)
                     ) {
-                        Text("Tracks", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 4.dp))
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(
-                            onClick = {
-                                playerViewModel.playQueue(artist.tracks, 0, false)
-                            },
-                            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
-                            shapes = ButtonDefaults.shapes(
-                                shape = CircleShape,
-                                pressedShape = MaterialTheme.shapes.medium
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_play),
-                                contentDescription = "Play",
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Play", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.width(3.dp))
-                        }
-                        FilledTonalIconButton(
-                            onClick = {},
-                            shapes = IconButtonDefaults.shapes(
-                                shape = CircleShape,
-                                pressedShape = MaterialTheme.shapes.medium
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_shuffle),
-                                contentDescription = "Shuffle",
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
-
-                    artist.tracks.forEachIndexed { index, track ->
-                        TrackItem(
-                            track = track,
-                            playerViewModel = playerViewModel,
-                            index = index,
-                            count = artist.tracks.count(),
-                            navController = navController
-                        ) {
-                            playerViewModel.playQueue(artist.tracks, index)
-                        }
-                        //TODO add "show more" button
-                    }
-                }
-            }
-
-            item {
-                Column(
-                    modifier = Modifier
-                        .padding(top = 12.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
-                        .padding(12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    ) {
-                        Text("Albums", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
-                    }
-
-                    chunkedAlbums.forEachIndexed { rowIndex, rowAlbums ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(0.5.dp)
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
                         ) {
-                            for (i in 0..<rowAlbums.count()) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    AlbumItem(
-                                        album = rowAlbums[i],
-                                        playerViewModel = playerViewModel,
-                                        onClicked = {
-                                            navController.navigate(AlbumViewDestination(albumId = rowAlbums[i].albumId))
-                                        },
-                                        index = rowIndex * 2 + i,
-                                        count = artist.albums.count()
-                                    )
-                                }
+                            Text("Tracks", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 4.dp))
+                            Spacer(modifier = Modifier.weight(1f))
+                            Button(
+                                onClick = {
+                                    playerViewModel.playQueue(artist.tracks, 0, false)
+                                },
+                                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
+                                shapes = ButtonDefaults.shapes(
+                                    shape = CircleShape,
+                                    pressedShape = MaterialTheme.shapes.medium
+                                )
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_play),
+                                    contentDescription = "Play",
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Play", style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.width(3.dp))
                             }
+                            FilledTonalIconButton(
+                                onClick = {},
+                                shapes = IconButtonDefaults.shapes(
+                                    shape = CircleShape,
+                                    pressedShape = MaterialTheme.shapes.medium
+                                )
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_shuffle),
+                                    contentDescription = "Shuffle",
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        }
 
-                            if (rowAlbums.size < 2) {
-                                Spacer(modifier = Modifier.weight(1f))
+                        artist.tracks.forEachIndexed { index, track ->
+                            TrackItem(
+                                track = track,
+                                playerViewModel = playerViewModel,
+                                index = index,
+                                count = artist.tracks.count(),
+                                navController = navController
+                            ) {
+                                playerViewModel.playQueue(artist.tracks, index)
                             }
+                            //TODO add "show more" button
                         }
                     }
                 }
             }
 
             item {
-                Column(
-                    modifier = Modifier
-                        .padding(top = 12.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
-                        .padding(12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 12.dp)
+                if (artist.albums.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                            .padding(12.dp)
                     ) {
-                        Text("Appears In", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
-                    }
-
-                    chunkedAppearsIn.forEachIndexed { rowIndex, rowAlbums ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(0.5.dp)
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
                         ) {
-                            for (i in 0..<rowAlbums.count()) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    AlbumItem(
-                                        album = rowAlbums[i],
-                                        playerViewModel = playerViewModel,
-                                        onClicked = {
-                                            navController.navigate(AlbumViewDestination(albumId = rowAlbums[i].albumId))
-                                        },
-                                        index = rowIndex * 2 + i,
-                                        count = artist.albums.count()
-                                    )
-                                }
-                            }
+                            Text("Albums", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
+                        }
 
-                            if (rowAlbums.size < 2) {
-                                Spacer(modifier = Modifier.weight(1f))
+                        chunkedAlbums.forEachIndexed { rowIndex, rowAlbums ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(0.5.dp)
+                            ) {
+                                for (i in 0..<rowAlbums.count()) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        AlbumItem(
+                                            album = rowAlbums[i],
+                                            playerViewModel = playerViewModel,
+                                            onClicked = {
+                                                navController.navigate(AlbumViewDestination(albumId = rowAlbums[i].albumId))
+                                            },
+                                            index = rowIndex * 2 + i,
+                                            count = artist.albums.count()
+                                        )
+                                    }
+                                }
+
+                                if (rowAlbums.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
                 }
             }
 
+            item {
+                if (artist.appearsIn.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Text("Appears In", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
+                        }
+
+                        chunkedAppearsIn.forEachIndexed { rowIndex, rowAlbums ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(0.5.dp)
+                            ) {
+                                for (i in 0..<rowAlbums.count()) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        AlbumItem(
+                                            album = rowAlbums[i],
+                                            playerViewModel = playerViewModel,
+                                            onClicked = {
+                                                navController.navigate(AlbumViewDestination(albumId = rowAlbums[i].albumId))
+                                            },
+                                            index = rowIndex * 2 + i,
+                                            count = artist.appearsIn.count()
+                                        )
+                                    }
+                                }
+
+                                if (rowAlbums.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

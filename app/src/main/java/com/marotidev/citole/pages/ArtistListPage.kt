@@ -156,7 +156,7 @@ fun ArtistItem(
             modifier = Modifier.padding(18.dp).aspectRatio(0.78f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ArtistCollage(artist.name, artist.appearsIn)
+            ArtistCollage(artist.name, artist.allAlbums)
             Text(
                 text = artist.name,
                 style = MaterialTheme.typography.labelLarge,
@@ -205,6 +205,8 @@ fun getDistance(A: Point, B: Point) : Float {
 @Composable
 fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
 
+    if (albums.isEmpty()) return
+
     val hash = artistName.hashCode()
     val seed = Random(hash)
 
@@ -216,7 +218,6 @@ fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
         MaterialShapes.Circle.toShape(),
         MaterialShapes.VerySunny.toShape(),
         MaterialShapes.Cookie12Sided.toShape(),
-        MaterialShapes.Arch.toShape(),
         MaterialShapes.Square.toShape()
     )
     val shapeSizeScale = listOf(
@@ -227,8 +228,7 @@ fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
         1f,
         1f,
         1f,
-        0.85f,
-        0.85f
+        0.9f
     )
     val sizeList = listOf(1f, 1f, 0.5f, 0.5f, 0.5f, 0.2f, 0.25f, 0.25f, 0.25f, 0.25f)
 
