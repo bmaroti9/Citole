@@ -55,7 +55,7 @@ class PlaybackService : MediaSessionService() {
             DefaultMediaNotificationProvider.Builder(this)
                 .setChannelId("citole_channel")
                 .build()
-                .also { it.setSmallIcon(R.drawable.ic_citole_black) }
+                .also { it.setSmallIcon(R.drawable.ic_citole_black_cropped) }
         )
     }
 

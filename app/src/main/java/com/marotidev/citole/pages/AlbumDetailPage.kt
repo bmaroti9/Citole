@@ -20,8 +20,10 @@ package com.marotidev.citole.pages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,9 +65,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.ArtistViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.tintedPainter
@@ -136,8 +141,31 @@ fun AlbumDetailScreen(
                         contentScale = ContentScale.Crop
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
-                    Text(album.ownerArtists.joinToString(", "), style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 3.dp, bottom = 40.dp))
+                    FlowRow(
+                        modifier = Modifier.padding(top = 3.dp, bottom = 40.dp),
+                    ) {
+                        album.ownerArtists.forEachIndexed { index, artist ->
+                            Text(
+                                if (index == album.ownerArtists.size - 1) {artist} else {
+                                    "$artist, "
+                                },
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.secondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .clickable(
+                                        onClick = {
+                                            navController.navigate(ArtistViewDestination(artistName = artist)) {
+                                                launchSingleTop = true
+                                            }
+                                        },
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ),
+                            )
+                        }
+                    }
                 }
 
                 Box(
@@ -199,7 +227,7 @@ fun AlbumDetailScreen(
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
                             onClick = {
-                                playerViewModel.playQueue(album.tracks, 0, false)
+                                playerViewModel.playQueue(album.tracks, 0)
                             },
                             contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
                             shapes = ButtonDefaults.shapes(
@@ -216,7 +244,9 @@ fun AlbumDetailScreen(
                             Spacer(modifier = Modifier.width(3.dp))
                         }
                         FilledTonalIconButton(
-                            onClick = {},
+                            onClick = {
+                                playerViewModel.playQueue(album.tracks.shuffled(), 0)
+                            },
                             shapes = IconButtonDefaults.shapes(
                                 shape = CircleShape,
                                 pressedShape = MaterialTheme.shapes.medium

@@ -188,7 +188,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         progressJob?.cancel()
     }
 
-    fun playQueue(tracks: List<AudioService.AudioData>, startIndex: Int = 0, shuffle: Boolean = false) {
+    fun playQueue(tracks: List<AudioService.AudioData>, startIndex: Int = 0) {
         currentQueue.clear()
         currentQueue.addAll(tracks)
         currentIndex = startIndex

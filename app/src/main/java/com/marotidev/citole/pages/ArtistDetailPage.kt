@@ -222,7 +222,7 @@ fun ArtistDetailScreen(
                             Spacer(modifier = Modifier.weight(1f))
                             Button(
                                 onClick = {
-                                    playerViewModel.playQueue(artist.tracks, 0, false)
+                                    playerViewModel.playQueue(artist.tracks, 0)
                                 },
                                 contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
                                 shapes = ButtonDefaults.shapes(
@@ -239,7 +239,9 @@ fun ArtistDetailScreen(
                                 Spacer(modifier = Modifier.width(3.dp))
                             }
                             FilledTonalIconButton(
-                                onClick = {},
+                                onClick = {
+                                    playerViewModel.playQueue(artist.tracks.shuffled(), 0)
+                                },
                                 shapes = IconButtonDefaults.shapes(
                                     shape = CircleShape,
                                     pressedShape = MaterialTheme.shapes.medium

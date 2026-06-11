@@ -118,13 +118,17 @@ class LibraryViewModel : ViewModel() {
         }
     }
 
-    fun List<AudioService.AudioData>.sortTracksBySortChip() : List<AudioService.AudioData> {
-        return this.sortedBy { track ->
-            when (selectedSortChip) {
-                SortChip.Name -> track.name
-                SortChip.Album -> track.albumName
-                SortChip.Artist -> track.rawArtist
-                SortChip.DateAdded -> track.dateAdded.toString()
+    fun List<AudioService.AudioData>.sortTracksBySortChip(): List<AudioService.AudioData> {
+        return if (selectedSortChip == SortChip.DateAdded) {
+            this.sortedByDescending { it.dateAdded }
+        } else {
+            this.sortedBy { track ->
+                when (selectedSortChip) {
+                    SortChip.Name -> track.name
+                    SortChip.Album -> track.albumName
+                    SortChip.Artist -> track.rawArtist
+                    else -> ""
+                }
             }
         }
     }

@@ -16,8 +16,8 @@ android {
         applicationId = "com.marotidev.citole"
         minSdk = 24
         targetSdk = 36
-        versionCode = 18
-        versionName = "0.1.11"
+        versionCode = 19
+        versionName = "0.1.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
