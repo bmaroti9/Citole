@@ -35,6 +35,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -119,7 +120,7 @@ fun PlayerScreen(
 
         ThumbnailCard(currentlyPlaying)
 
-        TitleAndArtist(currentlyPlaying, navController, onPlayerClose)
+        TitleAndArtists(currentlyPlaying, navController, onPlayerClose)
 
         ExpressiveWavySlider(playerViewModel, currentlyPlaying)
 
@@ -154,7 +155,7 @@ fun ThumbnailCard(
 }
 
 @Composable
-fun TitleAndArtist(
+fun TitleAndArtists(
     currentlyPlaying : AudioService.AudioData,
     navController: NavController,
     onPlayerClose: () -> Unit,
@@ -182,15 +183,32 @@ fun TitleAndArtist(
             ),
     )
 
-    Text(
-        currentlyPlaying.artists.joinToString(separator = ", "),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.secondary,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .padding(horizontal = 25.dp)
-    )
+    FlowRow(
+        modifier = Modifier.padding(horizontal = 25.dp, vertical = 2.dp)
+    ) {
+        currentlyPlaying.artists.forEachIndexed { index, artist ->
+            Text(
+                if (index == currentlyPlaying.artists.size - 1) {artist} else {
+                    "$artist, "
+                },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .clickable(
+                        onClick = {
+                            navController.navigate(ArtistViewDestination(artistName = artist)) {
+                                launchSingleTop = true
+                            }
+                            onPlayerClose()
+                        },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ),
+            )
+        }
+    }
 
 }
 
