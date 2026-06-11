@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.pages
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -35,6 +36,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -49,6 +51,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -58,6 +61,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,6 +84,7 @@ import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -110,6 +118,8 @@ fun ArtistDetailScreen(
     )
 
     val collapsedFraction = scrollBehavior.state.collapsedFraction
+
+    var maxSongsToShow by remember { mutableIntStateOf(8) }
 
     val chunkedAlbums = artist.albums.chunked(2)
     val chunkedAppearsIn = artist.appearsIn.chunked(2)
@@ -195,7 +205,14 @@ fun ArtistDetailScreen(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
                             .padding(12.dp)
-                            .clipToBounds()
+                            .animateContentSize(
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioLowBouncy,
+                                    stiffness = Spring.StiffnessMediumLow
+                                )
+                            )
+                            .clipToBounds(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -236,17 +253,60 @@ fun ArtistDetailScreen(
                             }
                         }
 
-                        artist.tracks.forEachIndexed { index, track ->
+                        artist.tracks.take(maxSongsToShow).forEachIndexed { index, track ->
                             SwipeableTrackItem (
                                 track = track,
                                 playerViewModel = playerViewModel,
                                 index = index,
-                                count = artist.tracks.count(),
+                                count = min(artist.tracks.count(), maxSongsToShow),
                                 navController = navController
                             ) {
                                 playerViewModel.playQueue(artist.tracks, index)
                             }
-                            //TODO add "show more" button
+                        }
+
+                        if (maxSongsToShow < artist.tracks.size) {
+                            FilledTonalButton(
+                                onClick = { maxSongsToShow = 1000 },
+                                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 6.dp),
+                                shapes = ButtonDefaults.shapes(
+                                    shape = CircleShape,
+                                    pressedShape = MaterialTheme.shapes.medium
+                                ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.tertiary),
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_arrow_down),
+                                    contentDescription = "Show More",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Show More", style = MaterialTheme.typography.labelMedium)
+                                Spacer(modifier = Modifier.width(3.dp))
+                            }
+                        } else if (maxSongsToShow == 1000) {
+                            FilledTonalButton(
+                                onClick = { maxSongsToShow = 8 },
+                                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 6.dp),
+                                shapes = ButtonDefaults.shapes(
+                                    shape = CircleShape,
+                                    pressedShape = MaterialTheme.shapes.medium
+                                ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.tertiary),
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_arrow_up),
+                                    contentDescription = "Show Less",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Show Less", style = MaterialTheme.typography.labelMedium)
+                                Spacer(modifier = Modifier.width(3.dp))
+                            }
                         }
                     }
                 }

@@ -253,10 +253,10 @@ fun SwipeableTrackItem(
 
                         if (direction == SwipeToDismissBoxValue.StartToEnd) {
                             Icon(
-                                painterResource(R.drawable.ic_playlist_play),
+                                painterResource(R.drawable.ic_read_more),
                                 contentDescription = "Play next",
                                 tint = playNextOnContainer,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                         else {
@@ -419,7 +419,7 @@ fun TrackOptionsPopup(
                 text = { Text("Play Next") },
                 trailingIcon = {
                     Icon(
-                        painterResource(R.drawable.ic_playlist_play),
+                        painterResource(R.drawable.ic_read_more),
                         null,
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
