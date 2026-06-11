@@ -91,6 +91,7 @@ import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.viewmodels.SettingsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -122,6 +123,7 @@ class MainActivity : ComponentActivity() {
 fun HomeSetup(
     playerViewModel: PlayerViewModel = viewModel(),
     libraryViewModel: LibraryViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel(),
     systemDynamicPrimary : Color
 ) {
 
@@ -132,7 +134,7 @@ fun HomeSetup(
     val currentSeedColor by playerViewModel.themeColor.collectAsState()
 
     DynamicAppTheme(currentSeedColor) {
-        CitoleScreen(playerViewModel, libraryViewModel)
+        CitoleScreen(playerViewModel, libraryViewModel, settingsViewModel)
     }
 }
 
@@ -192,7 +194,8 @@ data class ArtistViewDestination(
 @Composable
 fun CitoleScreen(
     playerViewModel: PlayerViewModel,
-    libraryViewModel: LibraryViewModel
+    libraryViewModel: LibraryViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
 
     val context = LocalContext.current

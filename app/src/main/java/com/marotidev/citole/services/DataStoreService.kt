@@ -21,7 +21,9 @@ package com.marotidev.citole.services
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.marotidev.citole.SortChip
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -34,6 +36,8 @@ class DataStoreService(private val context: Context) {
         val CHIP_SHOW_PODCASTS = booleanPreferencesKey("chip_show_podcasts")
         val CHIP_SHOW_AUDIOBOOKS = booleanPreferencesKey("chip_show_albums")
         val CHIP_SHOW_OTHER = booleanPreferencesKey("chip_show_other")
+        val CHIP_SORT_CHIP = intPreferencesKey("chip_sort_chip")
+        val CHIP_SORT_REVERSED = booleanPreferencesKey("chip_sort_reversed")
     }
 
     suspend fun saveChipShowSongs(to: Boolean) {
@@ -60,6 +64,18 @@ class DataStoreService(private val context: Context) {
         }
     }
 
+    suspend fun saveChipSortChip(to: SortChip) {
+        context.dataStore.edit { preferences ->
+            preferences[CHIP_SORT_CHIP] = to.ordinal
+        }
+    }
+
+    suspend fun saveChipSortReversed(to: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[CHIP_SORT_REVERSED] = to
+        }
+    }
+
     val chipShowSongs: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[CHIP_SHOW_SONGS] ?: true}
 
@@ -71,4 +87,11 @@ class DataStoreService(private val context: Context) {
 
     val chipShowOther: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[CHIP_SHOW_OTHER] ?: false}
+
+    val chipSortChip: Flow<SortChip> = context.dataStore.data.map { preferences ->
+            SortChip.entries[preferences[CHIP_SORT_CHIP] ?: 0]
+    }
+
+    val chipSortReversed: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[CHIP_SORT_REVERSED] ?: false}
 }

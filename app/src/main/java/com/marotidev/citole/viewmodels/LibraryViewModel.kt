@@ -18,11 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.viewmodels
 
+import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.SortChip
@@ -31,8 +32,13 @@ import kotlinx.coroutines.launch
 import kotlin.collections.component1
 import kotlin.collections.component2
 import com.marotidev.citole.services.AudioService.AudioType
+import com.marotidev.citole.services.DataStoreService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 
-class LibraryViewModel : ViewModel() {
+class LibraryViewModel(application: Application) : AndroidViewModel(application) {
+    private val dataStoreService = DataStoreService(application)
 
     var showSongs by mutableStateOf(true)
     var showPodcasts by mutableStateOf(false)
@@ -43,34 +49,28 @@ class LibraryViewModel : ViewModel() {
 
     var reverseSortOrder by mutableStateOf(false)
 
-    fun onShowSongsChanged() {
-        showSongs = !showSongs
-        updateFilteredTracks()
+    fun setChipShowSongs(to: Boolean) {
+        viewModelScope.launch { dataStoreService.saveChipShowSongs(to) }
     }
 
-    fun onShowPodcastsChanged() {
-        showPodcasts = !showPodcasts
-        updateFilteredTracks()
+    fun setChipShowPodcasts(to: Boolean) {
+        viewModelScope.launch { dataStoreService.saveChipShowPodcasts(to) }
     }
 
-    fun onShowAudiobooksChanged() {
-        showAudiobooks = !showAudiobooks
-        updateFilteredTracks()
+    fun setChipShowAudiobooks(to: Boolean) {
+        viewModelScope.launch { dataStoreService.saveChipShowAudiobooks(to) }
     }
 
-    fun onShowOtherChanged() {
-        showOther = !showOther
-        updateFilteredTracks()
+    fun setChipShowOther(to: Boolean) {
+        viewModelScope.launch { dataStoreService.saveChipShowOther(to) }
     }
 
-    fun onSelectedSortChipChanged(to: SortChip) {
-        selectedSortChip = to
-        updateFilteredTracks()
+    fun setSortChipSort(to: SortChip) {
+        viewModelScope.launch { dataStoreService.saveChipSortChip(to) }
     }
 
     fun onReverseSortOrderChanged(to: Boolean) {
-        reverseSortOrder = to
-        updateFilteredTracks()
+        viewModelScope.launch { dataStoreService.saveChipSortReversed(to) }
     }
 
     var allTracks by mutableStateOf<List<AudioService.AudioData>>(emptyList())
@@ -100,6 +100,30 @@ class LibraryViewModel : ViewModel() {
         searchQuery = newQuery
 
         updateFilteredTracks()
+    }
+
+    private fun observeFilterChanges() {
+        viewModelScope.launch {
+            combine(
+                listOf(
+                    dataStoreService.chipShowSongs as Flow<Any>,
+                    dataStoreService.chipShowPodcasts as Flow<Any>,
+                    dataStoreService.chipShowAudiobooks as Flow<Any>,
+                    dataStoreService.chipShowOther as Flow<Any>,
+                    dataStoreService.chipSortChip as Flow<Any>,
+                    dataStoreService.chipSortReversed as Flow<Any>
+                )
+            ) { values ->
+                showSongs = values[0] as Boolean
+                showPodcasts = values[1] as Boolean
+                showAudiobooks = values[2] as Boolean
+                showOther = values[3] as Boolean
+                selectedSortChip = values[4] as SortChip
+                reverseSortOrder = values[5] as Boolean
+
+                updateFilteredTracks()
+            }.collect()
+        }
     }
 
     fun updateFilteredTracks() {
@@ -223,7 +247,7 @@ class LibraryViewModel : ViewModel() {
             allTracks = tracks
             allAlbums = tracks.groupToAlbum()
             allArtists = tracks.groupToArtist(allAlbums)
-            updateFilteredTracks()
+            observeFilterChanges()
         }
     }
 }

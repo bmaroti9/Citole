@@ -25,34 +25,34 @@ import com.marotidev.citole.services.DataStoreService
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
-    private val service = DataStoreService(application)
+    private val dataStoreService = DataStoreService(application)
 
-    val chipShowSongs = service.chipShowSongs
-    val chipShowPodcasts = service.chipShowPodcasts
-    val chipShowAudiobooks = service.chipShowAudiobooks
-    val chipShowOther = service.chipShowOther
-
-    fun setChipShowSongs(to: Boolean) {
-        viewModelScope.launch {
-            service.saveChipShowSongs(to)
-        }
-    }
-
-    fun setChipShowPodcasts(to: Boolean) {
-        viewModelScope.launch {
-            service.saveChipShowPodcasts(to)
-        }
-    }
-
-    fun setChipShowAudiobooks(to: Boolean) {
-        viewModelScope.launch {
-            service.saveChipShowAudiobooks(to)
-        }
-    }
-
-    fun setChipShowOther(to: Boolean) {
-        viewModelScope.launch {
-            service.saveChipShowOther(to)
-        }
-    }
+//    val chipShowSongs = service.chipShowSongs
+//    val chipShowPodcasts = service.chipShowPodcasts
+//    val chipShowAudiobooks = service.chipShowAudiobooks
+//    val chipShowOther = service.chipShowOther
+//
+//    fun setChipShowSongs(to: Boolean) {
+//        viewModelScope.launch {
+//            service.saveChipShowSongs(to)
+//        }
+//    }
+//
+//    fun setChipShowPodcasts(to: Boolean) {
+//        viewModelScope.launch {
+//            service.saveChipShowPodcasts(to)
+//        }
+//    }
+//
+//    fun setChipShowAudiobooks(to: Boolean) {
+//        viewModelScope.launch {
+//            service.saveChipShowAudiobooks(to)
+//        }
+//    }
+//
+//    fun setChipShowOther(to: Boolean) {
+//        viewModelScope.launch {
+//            service.saveChipShowOther(to)
+//        }
+//    }
 }
