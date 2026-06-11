@@ -195,6 +195,7 @@ fun ArtistDetailScreen(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
                             .padding(12.dp)
+                            .clipToBounds()
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -236,7 +237,7 @@ fun ArtistDetailScreen(
                         }
 
                         artist.tracks.forEachIndexed { index, track ->
-                            TrackItem(
+                            SwipeableTrackItem (
                                 track = track,
                                 playerViewModel = playerViewModel,
                                 index = index,

@@ -229,7 +229,7 @@ fun AlbumDetailScreen(
                     }
 
                     album.tracks.forEachIndexed { index, track ->
-                        TrackItem(
+                        SwipeableTrackItem (
                             track = track,
                             playerViewModel = playerViewModel,
                             index = index,

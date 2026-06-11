@@ -59,7 +59,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemElevation
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorPosition
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.MenuDefaults.rememberDropdownMenuPopupPositionProvider
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxDefaults
@@ -111,6 +113,7 @@ import kotlin.math.sign
 import androidx.core.graphics.toColorInt
 import androidx.navigation.NavController
 import com.marotidev.citole.AlbumViewDestination
+import com.marotidev.citole.ArtistViewDestination
 
 @Composable
 fun TrackListPage(
@@ -131,7 +134,7 @@ fun TrackListPage(
             items = libraryViewModel.filteredTracks,
             key = { index, track -> track.id }
         ) { index, track ->
-            TrackListTrackItem (
+            SwipeableTrackItem (
                 track = track,
                 modifier = Modifier.animateItem(
                     fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
@@ -150,7 +153,7 @@ fun TrackListPage(
 }
 
 @Composable
-fun TrackListTrackItem(
+fun SwipeableTrackItem(
     track: AudioService.AudioData,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
@@ -401,6 +404,7 @@ fun TrackOptionsPopup(
     navController: NavController,
 ) {
     val groupInteractionSource = remember { MutableInteractionSource() }
+    var artistMenuExpanded by remember { mutableStateOf(false) }
 
     DropdownMenuPopup(
         expanded = expanded,
@@ -449,18 +453,59 @@ fun TrackOptionsPopup(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             interactionSource = groupInteractionSource,
         ) {
-            DropdownMenuItem(
-                text = { Text("Go to Artist") },
-                trailingIcon = {
-                    Icon(
-                        painterResource(R.drawable.ic_person),
-                        null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                },
-                onClick = { }
-            )
+            Box {
+                DropdownMenuItem(
+                    text = { Text("Go to Artist") },
+                    trailingIcon = {
+                        Icon(
+                            painterResource(R.drawable.ic_person),
+                            null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    },
+                    onClick = {
+                        if (track.artists.size == 1) {
+                            navController.navigate(ArtistViewDestination(artistName = track.artists[0])) {
+                                launchSingleTop = true
+                            }
+                            onDismiss()
+                        } else {
+                            artistMenuExpanded = true
+                        }
+                    }
+                )
+
+                DropdownMenuPopup(
+                    expanded = artistMenuExpanded,
+                    onDismissRequest = { artistMenuExpanded = false },
+                    popupPositionProvider = rememberDropdownMenuPopupPositionProvider(
+                        dropdownMenuAnchorPosition = MenuAnchorPosition.Start
+                    ),
+                ) {
+                    val subInteractionSource = remember { MutableInteractionSource() }
+
+                    DropdownMenuGroup(
+                        shapes = MenuDefaults.groupShape(index = 0, count = 1),
+                        interactionSource = subInteractionSource,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        track.artists.forEachIndexed { index, artist ->
+                            DropdownMenuItem(
+                                text = { Text(artist) },
+                                onClick = {
+                                    navController.navigate(ArtistViewDestination(artistName = track.artists[index])) {
+                                        launchSingleTop = true
+                                    }
+                                    artistMenuExpanded = false
+                                    onDismiss()
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             DropdownMenuItem(
                 text = { Text("Go to Album") },
                 trailingIcon = {
