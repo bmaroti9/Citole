@@ -19,7 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package com.marotidev.citole
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -86,6 +88,7 @@ import com.marotidev.citole.pages.AlbumListPage
 import com.marotidev.citole.pages.AlbumDetailScreen
 import com.marotidev.citole.pages.ArtistDetailScreen
 import com.marotidev.citole.pages.ArtistListPage
+import com.marotidev.citole.pages.ForYouListPage
 import com.marotidev.citole.pages.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
@@ -124,13 +127,12 @@ fun HomeSetup(
     playerViewModel: PlayerViewModel = viewModel(),
     libraryViewModel: LibraryViewModel = viewModel(),
     settingsViewModel: SettingsViewModel = viewModel(),
-    systemDynamicPrimary : Color
+    systemDynamicPrimary : Color,
 ) {
 
     LaunchedEffect(systemDynamicPrimary) {
         playerViewModel.updateDefaultColor(systemDynamicPrimary)
     }
-
     val currentSeedColor by playerViewModel.themeColor.collectAsState()
 
     DynamicAppTheme(currentSeedColor) {
@@ -139,6 +141,7 @@ fun HomeSetup(
 }
 
 enum class Page {
+    ForYou,
     Tracks,
     Albums,
     Artists
@@ -241,6 +244,18 @@ fun CitoleScreen(
             ModalDrawerSheet {
                 Spacer(modifier = Modifier.height(30.dp))
                 CustomNavigationDrawerItem(
+                    selected = selectedPage == Page.ForYou,
+                    onSelected =  {
+                        selectedPage = Page.ForYou
+                        scope.launch {
+                            delay(200)
+                            drawerState.close()
+                        }
+                    },
+                    iconId = R.drawable.ic_explore,
+                    text = "For You"
+                )
+                CustomNavigationDrawerItem(
                     selected = selectedPage == Page.Tracks,
                     onSelected =  {
                         selectedPage = Page.Tracks
@@ -321,6 +336,7 @@ fun CitoleScreen(
                             }
                         ) { targetPage ->
                             when (targetPage) {
+                                Page.ForYou -> ForYouListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                                 Page.Tracks -> TrackListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                                 Page.Albums -> AlbumListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                                 Page.Artists -> ArtistListPage(libraryViewModel, playerViewModel, paddingValues, navController)

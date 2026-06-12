@@ -28,6 +28,7 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import okhttp3.internal.toLongOrDefault
 
 
 object AudioService {
@@ -128,7 +129,7 @@ object AudioService {
 
     fun MediaItem.toAudioData() : AudioData {
         return AudioData(
-            id = mediaId.toLong(),
+            id = mediaId.toLongOrDefault(0),
             uri = localConfiguration?.uri ?: Uri.EMPTY,
             artworkUri = mediaMetadata.artworkUri ?: Uri.EMPTY,
             name = mediaMetadata.title.toString(),
