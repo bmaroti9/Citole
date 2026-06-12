@@ -48,7 +48,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
@@ -56,10 +58,14 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -380,7 +386,7 @@ fun PlayPauseRow(
                 ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
             },
             horizontalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.CenterHorizontally),
-            modifier = Modifier.align(Alignment.Center).padding(top = 10.dp).width(250.dp)
+            modifier = Modifier.align(Alignment.Center).padding(top = 10.dp, bottom = 20.dp).width(250.dp)
         ) {
             customItem(
                 buttonGroupContent = {
@@ -488,7 +494,6 @@ fun PlayPauseRow(
                             .animateWidth(interactionSource),
                     ) {
                         Icon(
-
                             painter = painterResource(id = R.drawable.ic_skip_next),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,

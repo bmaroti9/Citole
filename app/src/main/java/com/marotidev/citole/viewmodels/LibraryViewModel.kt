@@ -221,14 +221,16 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
 
         return artistTracks.map { (artistName, tracks) ->
-            val ownAlbums = albums.filter { artistName in it.ownerArtists }
             val allAlbums =  albums.filter { artistName in it.allArtists }
+            val singles = allAlbums.filter { it.tracks.size == 1 && it.albumName == it.tracks.firstOrNull()?.title }
+            val ownAlbums = albums.filter { artistName in it.ownerArtists }
             AudioService.ArtistData(
                 name = artistName,
                 tracks = tracks,
-                albums = ownAlbums,
+                singles = singles,
+                albums = ownAlbums.subtract(singles.toSet()).toList(),
                 allAlbums = allAlbums,
-                appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList()
+                appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList(),
             )
         }
     }

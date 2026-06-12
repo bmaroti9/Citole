@@ -175,7 +175,7 @@ fun CustomNavigationDrawerItem(
 }
 
 @Serializable
-object LibraryViewDestination
+object TracksViewDestination
 
 @Serializable
 data class AlbumViewDestination(
@@ -289,13 +289,13 @@ fun CitoleScreen(
 
             NavHost(
                 navController = navController,
-                startDestination = LibraryViewDestination,
+                startDestination = TracksViewDestination,
                 enterTransition = M3ExpressiveTransitions.enter,
                 exitTransition = M3ExpressiveTransitions.exit,
                 popEnterTransition = M3ExpressiveTransitions.popEnter,
                 popExitTransition = M3ExpressiveTransitions.popExit
             ) {
-                composable<LibraryViewDestination> {
+                composable<TracksViewDestination> {
                     Scaffold(
                         topBar = {
                             FixedTopBar(

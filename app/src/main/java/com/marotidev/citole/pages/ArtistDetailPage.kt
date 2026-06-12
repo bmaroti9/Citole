@@ -122,6 +122,7 @@ fun ArtistDetailScreen(
     var maxSongsToShow by remember { mutableIntStateOf(8) }
 
     val chunkedAlbums = artist.albums.chunked(2)
+    val chunkedSingles = artist.singles.chunked(2)
     val chunkedAppearsIn = artist.appearsIn.chunked(2)
 
     Scaffold(
@@ -344,6 +345,49 @@ fun ArtistDetailScreen(
                                             },
                                             index = rowIndex * 2 + i,
                                             count = artist.albums.count()
+                                        )
+                                    }
+                                }
+
+                                if (rowAlbums.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                if (artist.singles.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Text("Singles", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
+                        }
+
+                        chunkedSingles.forEachIndexed { rowIndex, rowAlbums ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(0.5.dp)
+                            ) {
+                                for (i in 0..<rowAlbums.count()) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        AlbumItem(
+                                            album = rowAlbums[i],
+                                            playerViewModel = playerViewModel,
+                                            onClicked = {
+                                                navController.navigate(AlbumViewDestination(albumId = rowAlbums[i].albumId))
+                                            },
+                                            index = rowIndex * 2 + i,
+                                            count = artist.singles.count()
                                         )
                                     }
                                 }
