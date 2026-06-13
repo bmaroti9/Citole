@@ -1,36 +1,69 @@
+/*
+Copyright (C) <2026>  <Balint Maroti>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+*/
+
 package com.marotidev.citole.services
 
+import android.content.Context
 import androidx.room.ColumnInfo
 import androidx.room.Dao
+import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
 @Entity
 data class TrackPlayLog(
-    @PrimaryKey val uid: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "track_id") val trackId: Long,
-    @ColumnInfo(name = "playback_started") val playbackStarted: Long,
+    @ColumnInfo(name = "playback_started") val playbackStartedMs: Long,
     @ColumnInfo(name = "playback_duration_ms") val playbackDurationMs: Int
 )
 
-//@Dao
-//interface TrackPlayLogDao {
-//    @Query("SELECT * FROM trackplaylog")
-//    fun getAll(): List<TrackPlayLog>
-//
-//    @Query("SELECT * FROM trackplaylog WHERE uid IN (:userIds)")
-//    fun loadAllByIds(userIds: IntArray): List<User>
-//
-//    @Query("SELECT * FROM trackplaylog WHERE track_id LIKE :first AND " +
-//            "last_name LIKE :last LIMIT 1")
-//    fun findById(id: Long): TrackPlayLog
-//
-//    @Insert
-//    fun insertAll(vararg users: User)
-//
-//    @Delete
-//    fun delete(user: User)
-//}
+@Dao
+interface TrackPlayLogDao {
+    @Query("SELECT * FROM trackplaylog")
+    suspend fun getAll(): List<TrackPlayLog>
+
+    @Insert
+    suspend fun insertAll(vararg trackPlayLogs: TrackPlayLog)
+}
+
+@Database(entities = [TrackPlayLog::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun trackPlayLogDao(): TrackPlayLogDao
+
+    companion object {
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: Context): AppDatabase {
+            if (INSTANCE == null) {
+                INSTANCE = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "app-database"
+                ).build()
+            }
+            return INSTANCE!!
+        }
+    }
+}
+

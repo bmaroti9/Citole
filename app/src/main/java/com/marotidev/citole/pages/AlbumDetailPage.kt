@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -280,7 +279,7 @@ fun AlbumDetailScreen(
 @Composable
 fun AlbumTrackItem(
     playerViewModel: PlayerViewModel,
-    tracks: List<AudioService.AudioData>,
+    tracks: List<AudioService.TrackData>,
     index: Int,
 ) {
     val track = tracks[index]

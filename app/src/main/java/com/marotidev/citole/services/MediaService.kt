@@ -45,7 +45,7 @@ object AudioService {
         Other
     }
 
-    data class AudioData(
+    data class TrackData(
         val id: Long,
 
         val uri: Uri,
@@ -77,7 +77,7 @@ object AudioService {
         val ownerArtists: List<String>,
         val allArtists: List<String>,
 
-        val tracks : List<AudioData>,
+        val tracks : List<TrackData>,
 
         val type: AudioType
     )
@@ -85,7 +85,7 @@ object AudioService {
     data class ArtistData(
         val name : String,
 
-        val tracks: List<AudioData>,
+        val tracks: List<TrackData>,
         val albums: List<AlbumData>,
         val appearsIn: List<AlbumData>,
         val singles: List<AlbumData>,
@@ -104,7 +104,7 @@ object AudioService {
         }
     }
 
-    fun AudioData.toMediaItem() : MediaItem {
+    fun TrackData.toMediaItem() : MediaItem {
         return MediaItem.Builder()
             .setMediaId(id.toString())
             .setUri(uri)
@@ -127,8 +127,8 @@ object AudioService {
             .build()
     }
 
-    fun MediaItem.toAudioData() : AudioData {
-        return AudioData(
+    fun MediaItem.toAudioData() : TrackData {
+        return TrackData(
             id = mediaId.toLongOrDefault(0),
             uri = localConfiguration?.uri ?: Uri.EMPTY,
             artworkUri = mediaMetadata.artworkUri ?: Uri.EMPTY,
@@ -155,9 +155,9 @@ object AudioService {
             .distinct()
     }
 
-    fun fetchAudioFiles(context: Context): List<AudioData> {
+    fun fetchAudioFiles(context: Context): List<TrackData> {
         Log.i("FETCHING AUDIO", "fetchCalled")
-        val audioList = mutableListOf<AudioData>()
+        val audioList = mutableListOf<TrackData>()
 
         val collection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -240,7 +240,7 @@ object AudioService {
                     albumId
                 )
 
-                audioList += AudioData(
+                audioList += TrackData(
                     id = id,
                     uri = contentUri,
                     artworkUri = artworkUri,

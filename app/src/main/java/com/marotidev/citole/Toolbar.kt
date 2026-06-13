@@ -26,10 +26,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
@@ -296,7 +294,7 @@ fun CustomFloatingToolbar(
 @Composable
 fun ToolbarCollapsedState(
     collapsedAlpha : Float, scope: CoroutineScope, state: AnchoredDraggableState<SheetState>,
-    currentlyPlaying: AudioService.AudioData, playerViewModel: PlayerViewModel
+    currentlyPlaying: AudioService.TrackData, playerViewModel: PlayerViewModel
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -362,7 +360,7 @@ fun ToolbarExpandedState(
     playerViewModel: PlayerViewModel,
     expandedAlpha: Float,
     fraction: Float,
-    currentlyPlaying: AudioService.AudioData,
+    currentlyPlaying: AudioService.TrackData,
     navController: NavController,
     onPlayerClose: () -> Unit
 ) {

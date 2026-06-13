@@ -46,28 +46,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,13 +76,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogWindowProvider
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.services.AudioService
@@ -106,7 +93,7 @@ import kotlin.math.sin
 @Composable
 fun PlayerScreen(
     playerViewModel: PlayerViewModel,
-    currentlyPlaying : AudioService.AudioData,
+    currentlyPlaying : AudioService.TrackData,
     navController: NavController,
     onPlayerClose: () -> Unit
 ) {
@@ -141,7 +128,7 @@ fun PlayerScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ThumbnailCard(
-    currentlyPlaying : AudioService.AudioData
+    currentlyPlaying : AudioService.TrackData
 ) {
     Card(
         modifier = Modifier
@@ -162,7 +149,7 @@ fun ThumbnailCard(
 
 @Composable
 fun TitleAndArtists(
-    currentlyPlaying : AudioService.AudioData,
+    currentlyPlaying : AudioService.TrackData,
     navController: NavController,
     onPlayerClose: () -> Unit,
 ) {
@@ -221,7 +208,7 @@ fun TitleAndArtists(
 @Composable
 fun CustomWavySlider(
     playerViewModel: PlayerViewModel,
-    currentlyPlaying: AudioService.AudioData,
+    currentlyPlaying: AudioService.TrackData,
     sliderDragGlobal: Float,
     onSliderDragChanged: (Float) -> Unit,
     sliderInteractionSource: MutableInteractionSource,
@@ -328,7 +315,7 @@ fun CustomWavySlider(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: AudioService.AudioData) {
+fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: AudioService.TrackData) {
 
     var sliderDrag by remember { mutableFloatStateOf(0f) }
     val sliderInteractionSource = remember { MutableInteractionSource() }

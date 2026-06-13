@@ -73,10 +73,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { dataStoreService.saveChipSortReversed(to) }
     }
 
-    var allTracks by mutableStateOf<List<AudioService.AudioData>>(emptyList())
+    var allTracks by mutableStateOf<List<AudioService.TrackData>>(emptyList())
         private set
 
-    var filteredTracks by mutableStateOf<List<AudioService.AudioData>>(emptyList())
+    var filteredTracks by mutableStateOf<List<AudioService.TrackData>>(emptyList())
         private set
 
     var allAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
@@ -134,7 +134,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         filteredArtists = filteredTracks.groupToArtist(filteredAlbums)
     }
 
-    fun List<AudioService.AudioData>.filterTracksByQuery() : List<AudioService.AudioData> {
+    fun List<AudioService.TrackData>.filterTracksByQuery() : List<AudioService.TrackData> {
         return this.filter { track ->
             track.name.contains(searchQuery, ignoreCase = true)
                     || track.rawArtist.contains(searchQuery, ignoreCase = true)
@@ -142,7 +142,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun List<AudioService.AudioData>.sortTracksBySortChip(): List<AudioService.AudioData> {
+    fun List<AudioService.TrackData>.sortTracksBySortChip(): List<AudioService.TrackData> {
         return if (selectedSortChip == SortChip.DateAdded) {
             this.sortedByDescending { it.dateAdded }
         } else {
@@ -157,7 +157,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun List<AudioService.AudioData>.filterTracksByFilterChips() : List<AudioService.AudioData> {
+    fun List<AudioService.TrackData>.filterTracksByFilterChips() : List<AudioService.TrackData> {
         return this.filter { track ->
             when (track.type) {
                 AudioType.Song -> showSongs
@@ -168,14 +168,14 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun List<AudioService.AudioData>.sortBySortOrder() : List<AudioService.AudioData> {
+    fun List<AudioService.TrackData>.sortBySortOrder() : List<AudioService.TrackData> {
         return when (reverseSortOrder) {
             true -> this.reversed()
             false -> this
         }
     }
 
-    fun List<AudioService.AudioData>.determineArtists(): Pair<List<String>, List<String>> {
+    fun List<AudioService.TrackData>.determineArtists(): Pair<List<String>, List<String>> {
         val artistFrequency : MutableMap<String, Int> = mutableMapOf()
         this.forEach { track ->
             track.artists.forEach { artist ->
@@ -194,7 +194,7 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         return Pair(artists, artistFrequency.keys.toList())
     }
 
-    fun List<AudioService.AudioData>.groupToAlbum() : List<AudioService.AlbumData> {
+    fun List<AudioService.TrackData>.groupToAlbum() : List<AudioService.AlbumData> {
         return this.groupBy { it.albumId }
             .map { (albumId, tracks) ->
                 val sequentialTracks = tracks.sortedBy { it.trackNumber }
@@ -211,8 +211,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
             }
     }
 
-    fun List<AudioService.AudioData>.groupToArtist(albums: List<AudioService.AlbumData>): List<AudioService.ArtistData> {
-        val artistTracks = mutableMapOf<String, MutableList<AudioService.AudioData>>()
+    fun List<AudioService.TrackData>.groupToArtist(albums: List<AudioService.AlbumData>): List<AudioService.ArtistData> {
+        val artistTracks = mutableMapOf<String, MutableList<AudioService.TrackData>>()
 
         this.forEach { track ->
             track.artists.forEach { artist ->
@@ -233,6 +233,10 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
                 appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList(),
             )
         }
+    }
+
+    fun findTrackById(id: Long) : AudioService.TrackData? {
+        return allTracks.find { it.id == id }
     }
 
     fun findAlbumById(albumId: Long) : AudioService.AlbumData? {

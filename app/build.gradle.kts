@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.ksp)
 }
 
 android {
@@ -51,14 +52,19 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
 
-    //playback
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.session)
-
     //m3expressive
     implementation(libs.androidx.compose.material3)
     implementation(libs.material)
     implementation(libs.androidx.compose.animation.core)
+
+    //playback
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
+
+    //room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     //plugins
     implementation(libs.coil.compose)
@@ -67,7 +73,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.reorderable)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.room.runtime)
 
     //testing
     testImplementation(libs.junit)

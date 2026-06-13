@@ -21,7 +21,6 @@ package com.marotidev.citole.viewmodels
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -37,7 +36,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -45,6 +43,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
+import com.marotidev.citole.services.AppDatabase
 import com.marotidev.citole.services.AudioService
 import com.marotidev.citole.services.PlaybackService
 import com.materialkolor.ktx.themeColor
@@ -57,18 +56,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.collections.plus
 import com.marotidev.citole.services.AudioService.toAudioData
 import com.marotidev.citole.services.AudioService.toMediaItem
+import com.marotidev.citole.services.TrackPlayLog
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val db = AppDatabase.getInstance(application)
+    private val trackPlayLogDao = db.trackPlayLogDao()
+
     var playing by mutableStateOf<Boolean>(false)
         private set
 
-    var currentQueue = mutableStateListOf<AudioService.AudioData>()
+    var currentQueue = mutableStateListOf<AudioService.TrackData>()
         private set
 
-    var currentlyPlaying by mutableStateOf<AudioService.AudioData?>(null)
+    var currentlyPlaying by mutableStateOf<AudioService.TrackData?>(null)
     var currentIndex by mutableIntStateOf(0)
 
     var progress by mutableLongStateOf(0L)
@@ -82,6 +85,17 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val themeColor: StateFlow<Color> = _themeColor.asStateFlow()
 
     private val imageLoader = ImageLoader(application)
+
+    fun addTrackToPlayLog(trackId: Long, playbackDurationMs: Int) {
+        viewModelScope.launch {
+            val trackPlayLog = TrackPlayLog(
+                trackId = trackId,
+                playbackStartedMs = System.currentTimeMillis(),
+                playbackDurationMs = playbackDurationMs
+            )
+            trackPlayLogDao.insertAll(trackPlayLog)
+        }
+    }
 
     private suspend fun updateColorFromAlbumArt(artworkUri: Uri?, context: Context) {
         if (artworkUri == null) {
@@ -190,7 +204,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         progressJob?.cancel()
     }
 
-    fun playQueue(tracks: List<AudioService.AudioData>, startIndex: Int = 0) {
+    fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0) {
         currentQueue.clear()
         currentQueue.addAll(tracks)
         currentIndex = startIndex
@@ -203,7 +217,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         player?.play()
     }
 
-    fun addToQueue(track: AudioService.AudioData, index: Int = currentQueue.size) {
+    fun addToQueue(track: AudioService.TrackData, index: Int = currentQueue.size) {
         val mediaItem = track.toMediaItem()
         if (currentQueue.isEmpty()) {
             currentQueue += track
@@ -231,8 +245,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun skipInQueue(newIndex: Int) {
-        currentIndex = newIndex
-        currentlyPlaying = currentQueue.getOrNull(currentIndex)
+        //currentIndex = newIndex
+        //currentlyPlaying = currentQueue.getOrNull(currentIndex)
         player?.seekTo(newIndex, 0L)
         player?.play()
     }
