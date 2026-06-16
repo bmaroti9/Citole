@@ -22,6 +22,7 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -86,14 +87,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private val imageLoader = ImageLoader(application)
 
-    fun addTrackToPlayLog(trackId: Long, playbackDurationMs: Int) {
+    fun addToPlayLog(track: AudioService.TrackData, playbackDurationMs: Long) {
         viewModelScope.launch {
             val trackPlayLog = TrackPlayLog(
-                trackId = trackId,
-                playbackStartedMs = System.currentTimeMillis(),
-                playbackDurationMs = playbackDurationMs
+                trackId = track.id,
+                playbackEndedMs = System.currentTimeMillis(),
+                playbackDurationMs = playbackDurationMs,
+                trackType = track.type.ordinal
             )
             trackPlayLogDao.insertAll(trackPlayLog)
+            Log.i("AddedToLog", "${track.id}, $playbackDurationMs")
         }
     }
 
@@ -170,6 +173,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                //log the previous play
+                currentlyPlaying?.let {
+                    addToPlayLog(it, progress)
+                }
+
                 currentIndex = player?.currentMediaItemIndex ?: 0
                 currentlyPlaying = currentQueue.getOrNull(currentIndex)
             }
@@ -245,8 +253,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun skipInQueue(newIndex: Int) {
-        //currentIndex = newIndex
-        //currentlyPlaying = currentQueue.getOrNull(currentIndex)
         player?.seekTo(newIndex, 0L)
         player?.play()
     }

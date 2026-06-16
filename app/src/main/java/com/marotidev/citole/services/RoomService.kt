@@ -34,14 +34,21 @@ import androidx.room.RoomDatabase
 data class TrackPlayLog(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "track_id") val trackId: Long,
-    @ColumnInfo(name = "playback_started") val playbackStartedMs: Long,
-    @ColumnInfo(name = "playback_duration_ms") val playbackDurationMs: Int
+    @ColumnInfo(name = "playback_ended_ms") val playbackEndedMs: Long,
+    @ColumnInfo(name = "playback_duration_ms") val playbackDurationMs: Long,
+    @ColumnInfo(name = "track_type") val trackType: Int,
 )
 
 @Dao
 interface TrackPlayLogDao {
     @Query("SELECT * FROM trackplaylog")
     suspend fun getAll(): List<TrackPlayLog>
+
+    @Query("SELECT * FROM trackplaylog WHERE track_id = :trackId ORDER BY playback_ended_ms DESC LIMIT 1")
+    suspend fun getLastProgress(trackId: Long): TrackPlayLog
+
+    @Query("SELECT * FROM trackplaylog WHERE track_type = :type ORDER BY playback_ended_ms DESC LIMIT 1")
+    suspend fun getLastByType(trackId: Long, type: AudioService.AudioType): TrackPlayLog
 
     @Insert
     suspend fun insertAll(vararg trackPlayLogs: TrackPlayLog)
