@@ -27,7 +27,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
 import com.marotidev.citole.services.AppDatabase
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.services.TrackPlayLog
 import kotlinx.coroutines.launch
 

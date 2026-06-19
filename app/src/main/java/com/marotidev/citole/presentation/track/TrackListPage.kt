@@ -16,8 +16,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.pages
+package com.marotidev.citole.presentation.track
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -84,7 +85,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.services.durationToString
 import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.LibraryViewModel
@@ -227,7 +228,7 @@ fun SwipeableTrackItem(
                     contentAlignment = Alignment.Center
                 ) {
                     //for some reason if i don't add this it thinks it's a rowScope
-                    androidx.compose.animation.AnimatedVisibility(
+                    AnimatedVisibility(
                         visible = abs(draggedPx) > 100f,
                         enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
                         exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),

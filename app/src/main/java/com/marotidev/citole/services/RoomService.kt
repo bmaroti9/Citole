@@ -29,6 +29,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.marotidev.citole.data.service.AudioService
 
 @Entity
 data class TrackPlayLog(
@@ -48,7 +49,7 @@ interface TrackPlayLogDao {
     suspend fun getLastProgress(trackId: Long): TrackPlayLog
 
     @Query("SELECT * FROM trackplaylog WHERE track_type = :type ORDER BY playback_ended_ms DESC LIMIT 1")
-    suspend fun getLastByType(trackId: Long, type: AudioService.AudioType): TrackPlayLog
+    suspend fun getLastByType(type: AudioService.AudioType): TrackPlayLog
 
     @Insert
     suspend fun insertAll(vararg trackPlayLogs: TrackPlayLog)

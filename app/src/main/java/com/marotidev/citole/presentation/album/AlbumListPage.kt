@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.pages
+package com.marotidev.citole.presentation.album
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -43,13 +43,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.AlbumViewDestination
 import com.marotidev.citole.R
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel

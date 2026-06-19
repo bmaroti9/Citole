@@ -18,27 +18,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.viewmodels
 
-import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.SortChip
-import kotlinx.coroutines.Dispatchers
+import com.marotidev.citole.data.repository.AudioRepository
 import kotlinx.coroutines.launch
-import kotlin.collections.component1
-import kotlin.collections.component2
-import com.marotidev.citole.services.AudioService.AudioType
-import com.marotidev.citole.services.DataStoreService
+import com.marotidev.citole.data.service.AudioService.AudioType
+import com.marotidev.citole.data.repository.DataStoreRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import javax.inject.Inject
 
-class LibraryViewModel(application: Application) : AndroidViewModel(application) {
-    private val dataStoreService = DataStoreService(application)
+@HiltViewModel
+class LibraryViewModel @Inject constructor(
+    audioRepository : AudioRepository,
+    private val dataStoreRepository: DataStoreRepository
+) : ViewModel() {
+
+    val allTracks: StateFlow<List<AudioService.TrackData>> = audioRepository.allTracks
+    val allAlbums: StateFlow<List<AudioService.AlbumData>> = audioRepository.allAlbums
+    val allArtists: StateFlow<List<AudioService.ArtistData>> = audioRepository.allArtists
 
     var showSongs by mutableStateOf(true)
     var showPodcasts by mutableStateOf(false)
@@ -50,42 +56,33 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     var reverseSortOrder by mutableStateOf(false)
 
     fun setChipShowSongs(to: Boolean) {
-        viewModelScope.launch { dataStoreService.saveChipShowSongs(to) }
+        viewModelScope.launch { dataStoreRepository.saveChipShowSongs(to) }
     }
 
     fun setChipShowPodcasts(to: Boolean) {
-        viewModelScope.launch { dataStoreService.saveChipShowPodcasts(to) }
+        viewModelScope.launch { dataStoreRepository.saveChipShowPodcasts(to) }
     }
 
     fun setChipShowAudiobooks(to: Boolean) {
-        viewModelScope.launch { dataStoreService.saveChipShowAudiobooks(to) }
+        viewModelScope.launch { dataStoreRepository.saveChipShowAudiobooks(to) }
     }
 
     fun setChipShowOther(to: Boolean) {
-        viewModelScope.launch { dataStoreService.saveChipShowOther(to) }
+        viewModelScope.launch { dataStoreRepository.saveChipShowOther(to) }
     }
 
     fun setSortChipSort(to: SortChip) {
-        viewModelScope.launch { dataStoreService.saveChipSortChip(to) }
+        viewModelScope.launch { dataStoreRepository.saveChipSortChip(to) }
     }
 
     fun onReverseSortOrderChanged(to: Boolean) {
-        viewModelScope.launch { dataStoreService.saveChipSortReversed(to) }
+        viewModelScope.launch { dataStoreRepository.saveChipSortReversed(to) }
     }
-
-    var allTracks by mutableStateOf<List<AudioService.TrackData>>(emptyList())
-        private set
 
     var filteredTracks by mutableStateOf<List<AudioService.TrackData>>(emptyList())
         private set
 
-    var allAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
-        private set
-
     var filteredAlbums by mutableStateOf<List<AudioService.AlbumData>>(emptyList())
-        private set
-
-    var allArtists by mutableStateOf<List<AudioService.ArtistData>>(emptyList())
         private set
 
     var filteredArtists by mutableStateOf<List<AudioService.ArtistData>>(emptyList())
@@ -106,12 +103,12 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             combine(
                 listOf(
-                    dataStoreService.chipShowSongs as Flow<Any>,
-                    dataStoreService.chipShowPodcasts as Flow<Any>,
-                    dataStoreService.chipShowAudiobooks as Flow<Any>,
-                    dataStoreService.chipShowOther as Flow<Any>,
-                    dataStoreService.chipSortChip as Flow<Any>,
-                    dataStoreService.chipSortReversed as Flow<Any>
+                    dataStoreRepository.chipShowSongs as Flow<Any>,
+                    dataStoreRepository.chipShowPodcasts as Flow<Any>,
+                    dataStoreRepository.chipShowAudiobooks as Flow<Any>,
+                    dataStoreRepository.chipShowOther as Flow<Any>,
+                    dataStoreRepository.chipSortChip as Flow<Any>,
+                    dataStoreRepository.chipSortReversed as Flow<Any>
                 )
             ) { values ->
                 showSongs = values[0] as Boolean
@@ -172,88 +169,6 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         return when (reverseSortOrder) {
             true -> this.reversed()
             false -> this
-        }
-    }
-
-    fun List<AudioService.TrackData>.determineArtists(): Pair<List<String>, List<String>> {
-        val artistFrequency : MutableMap<String, Int> = mutableMapOf()
-        this.forEach { track ->
-            track.artists.forEach { artist ->
-                artistFrequency[artist] = artistFrequency[artist]?.plus(1) ?: 0
-            }
-        }
-        val artists = mutableListOf<String>()
-        artistFrequency.forEach { (name, times) ->
-            if (times >= this.size / 2) {
-                artists.add(name)
-            }
-        }
-        if (artists.isEmpty()) {
-            return Pair(listOf("Various Artists"), artistFrequency.keys.toList())
-        }
-        return Pair(artists, artistFrequency.keys.toList())
-    }
-
-    fun List<AudioService.TrackData>.groupToAlbum() : List<AudioService.AlbumData> {
-        return this.groupBy { it.albumId }
-            .map { (albumId, tracks) ->
-                val sequentialTracks = tracks.sortedBy { it.trackNumber }
-                val ownerAndAllArtists = tracks.determineArtists()
-                AudioService.AlbumData(
-                    albumId = albumId,
-                    albumName = tracks.firstOrNull()?.albumName ?: "Unknown Album",
-                    ownerArtists = ownerAndAllArtists.first,
-                    allArtists = ownerAndAllArtists.second,
-                    tracks = sequentialTracks,
-                    type = tracks.firstOrNull()?.type ?: AudioType.Other,
-                    artworkUri = tracks.firstOrNull()?.artworkUri
-                )
-            }
-    }
-
-    fun List<AudioService.TrackData>.groupToArtist(albums: List<AudioService.AlbumData>): List<AudioService.ArtistData> {
-        val artistTracks = mutableMapOf<String, MutableList<AudioService.TrackData>>()
-
-        this.forEach { track ->
-            track.artists.forEach { artist ->
-                artistTracks.getOrPut(artist) { mutableListOf() }.add(track)
-            }
-        }
-
-        return artistTracks.map { (artistName, tracks) ->
-            val allAlbums =  albums.filter { artistName in it.allArtists }
-            val singles = allAlbums.filter { it.tracks.size == 1 && it.albumName == it.tracks.firstOrNull()?.title }
-            val ownAlbums = albums.filter { artistName in it.ownerArtists }
-            AudioService.ArtistData(
-                name = artistName,
-                tracks = tracks,
-                singles = singles,
-                albums = ownAlbums.subtract(singles.toSet()).toList(),
-                allAlbums = allAlbums,
-                appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList(),
-            )
-        }
-    }
-
-    fun findTrackById(id: Long) : AudioService.TrackData? {
-        return allTracks.find { it.id == id }
-    }
-
-    fun findAlbumById(albumId: Long) : AudioService.AlbumData? {
-        return allAlbums.find { it.albumId == albumId }
-    }
-
-    fun findArtistByName(artistName: String) : AudioService.ArtistData? {
-        return allArtists.find { it.name == artistName }
-    }
-
-    fun loadTracks(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val tracks = AudioService.fetchAudioFiles(context)
-            allTracks = tracks
-            allAlbums = tracks.groupToAlbum()
-            allArtists = tracks.groupToArtist(allAlbums)
-            observeFilterChanges()
         }
     }
 }

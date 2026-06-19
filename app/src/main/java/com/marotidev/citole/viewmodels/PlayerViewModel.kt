@@ -45,7 +45,7 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
 import com.marotidev.citole.services.AppDatabase
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.services.PlaybackService
 import com.materialkolor.ktx.themeColor
 import kotlinx.coroutines.Dispatchers
@@ -57,8 +57,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.marotidev.citole.services.AudioService.toAudioData
-import com.marotidev.citole.services.AudioService.toMediaItem
+import com.marotidev.citole.data.service.AudioService.toAudioData
+import com.marotidev.citole.data.service.AudioService.toMediaItem
 import com.marotidev.citole.services.TrackPlayLog
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
@@ -66,7 +66,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val db = AppDatabase.getInstance(application)
     private val trackPlayLogDao = db.trackPlayLogDao()
 
-    var playing by mutableStateOf<Boolean>(false)
+    var playing by mutableStateOf(false)
         private set
 
     var currentQueue = mutableStateListOf<AudioService.TrackData>()

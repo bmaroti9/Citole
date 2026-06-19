@@ -16,7 +16,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.services
+
+package com.marotidev.citole.data.service
 
 import android.content.ContentUris
 import android.content.Context
@@ -28,10 +29,11 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.internal.toLongOrDefault
 
-
-object AudioService {
+class AudioService {
 
     private val artistSplitterRegex = Regex(
         pattern = """\s*([,;\\/&]|feat\.?|ft\.?|\|)\s*""",
@@ -155,7 +157,7 @@ object AudioService {
             .distinct()
     }
 
-    fun fetchAudioFiles(context: Context): List<TrackData> {
+    suspend fun fetchAudioFiles(context: Context): List<TrackData> = withContext(Dispatchers.IO) {
         Log.i("FETCHING AUDIO", "fetchCalled")
         val audioList = mutableListOf<TrackData>()
 
@@ -210,7 +212,8 @@ object AudioService {
 
             val isMusicRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)
             val isPodcastRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)
-            val isAudiobookRow = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_AUDIOBOOK)} else {0}
+            val isAudiobookRow = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {cursor.getColumnIndexOrThrow(
+                MediaStore.Audio.Media.IS_AUDIOBOOK)} else {0}
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
@@ -258,6 +261,6 @@ object AudioService {
             }
         }
 
-        return audioList
+        audioList
     }
 }

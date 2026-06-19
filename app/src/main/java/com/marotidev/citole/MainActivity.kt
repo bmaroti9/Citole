@@ -19,9 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package com.marotidev.citole
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -84,22 +82,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.marotidev.citole.pages.AlbumListPage
-import com.marotidev.citole.pages.AlbumDetailScreen
-import com.marotidev.citole.pages.ArtistDetailScreen
-import com.marotidev.citole.pages.ArtistListPage
-import com.marotidev.citole.pages.ForYouListPage
-import com.marotidev.citole.pages.TrackListPage
+import com.marotidev.citole.presentation.album.AlbumListPage
+import com.marotidev.citole.presentation.album.AlbumDetailScreen
+import com.marotidev.citole.presentation.artist.ArtistDetailScreen
+import com.marotidev.citole.presentation.artist.ArtistListPage
+import com.marotidev.citole.presentation.track.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import com.marotidev.citole.viewmodels.RoomViewModel
 import com.marotidev.citole.viewmodels.SettingsViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class,
         ExperimentalAnimationApi::class

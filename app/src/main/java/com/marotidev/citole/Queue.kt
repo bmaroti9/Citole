@@ -57,7 +57,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -65,7 +65,7 @@ import kotlin.math.abs
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
-import com.marotidev.citole.pages.TrackItem
+import com.marotidev.citole.presentation.track.TrackItem
 import kotlin.math.sign
 
 

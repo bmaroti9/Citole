@@ -20,12 +20,10 @@ package com.marotidev.citole.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.marotidev.citole.services.DataStoreService
-import kotlinx.coroutines.launch
+import com.marotidev.citole.data.repository.DataStoreRepository
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
-    private val dataStoreService = DataStoreService(application)
+    private val dataStoreRepository = DataStoreRepository(application)
 
 //    val chipShowSongs = service.chipShowSongs
 //    val chipShowPodcasts = service.chipShowPodcasts

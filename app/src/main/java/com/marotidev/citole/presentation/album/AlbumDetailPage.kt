@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.pages
+package com.marotidev.citole.presentation.album
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -70,7 +70,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.ArtistViewDestination
 import com.marotidev.citole.R
-import com.marotidev.citole.services.AudioService
+import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.track.SwipeableTrackItem
 import com.marotidev.citole.services.tintedPainter
 import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
@@ -260,7 +261,7 @@ fun AlbumDetailScreen(
                     }
 
                     album.tracks.forEachIndexed { index, track ->
-                        SwipeableTrackItem (
+                        SwipeableTrackItem(
                             track = track,
                             playerViewModel = playerViewModel,
                             index = index,
