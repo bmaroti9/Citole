@@ -55,7 +55,7 @@ class BrowseViewModel @Inject constructor(
     }
 
     fun onQueryChange(to: String) {
-        query = to
+        searchQueryStateHolder.updateQuery(to)
     }
 
     init {
@@ -71,7 +71,6 @@ class BrowseViewModel @Inject constructor(
             ) { songs, podcasts, audiobooks, other ->
                 listOf(songs, podcasts, audiobooks, other)
             }
-
         ) { queryState, sortChip, sortReversed, types ->
             query = queryState
             selectedSortChip = sortChip

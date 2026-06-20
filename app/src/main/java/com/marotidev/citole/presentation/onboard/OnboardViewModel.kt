@@ -19,7 +19,7 @@ class OnboardViewModel @Inject constructor(
 ) : ViewModel() {
     val count = 8
 
-    val artworkUris = audioRepository.allTracks.map{
+    val artworkUris = audioRepository.allTracks.map {
         val tracks = it.shuffled()
         List(count) { index ->
             if (index < tracks.size) tracks[index].artworkUri else Uri.EMPTY

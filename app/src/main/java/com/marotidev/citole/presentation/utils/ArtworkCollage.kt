@@ -71,7 +71,7 @@ fun getDistance(A: Point, B: Point) : Float {
 }
 
 @Composable
-fun ArtworkCollage(hash: Int, artworkUris: List<Uri>) {
+fun ArtworkCollage(hash: Int, artworkUris: List<Uri?>) {
 
     if (artworkUris.isEmpty()) return
     val count = artworkUris.size

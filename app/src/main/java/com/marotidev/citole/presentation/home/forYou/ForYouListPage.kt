@@ -35,10 +35,13 @@ import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
@@ -48,12 +51,12 @@ import kotlin.collections.get
 
 @Composable
 fun ForYouListPage(
-    playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues,
     navController: NavController,
+    forYouViewModel: ForYouViewModel = hiltViewModel()
 ) {
 
-    val recentlyAdded = libraryViewModel.allTracks.sortedByDescending { it.dateAdded }.take(14)
+    val recentlyAdded by forYouViewModel.recentlyAdded.collectAsStateWithLifecycle()
     val carouselState = rememberCarouselState { recentlyAdded.size }
 
     LazyColumn(

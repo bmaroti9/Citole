@@ -53,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,11 +67,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.marotidev.citole.ArtistViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.utils.tintedPainter
 import com.marotidev.citole.presentation.player.PlayerViewModel
@@ -78,15 +81,18 @@ import com.marotidev.citole.presentation.player.PlayerViewModel
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AlbumDetailScreen(
-    albumId: Long,
-    libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
-    navController: NavController
+    navController: NavController,
+    albumDetailViewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
-    val album: AudioService.AlbumData = libraryViewModel.findAlbumById(albumId)
-        ?: return Box(modifier = Modifier.fillMaxSize()) {
-            Text("Album not found", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Center))
-        }
+    val albumState by albumDetailViewModel.album.collectAsStateWithLifecycle()
+    val album = albumState ?: return Box(modifier = Modifier.fillMaxSize()) {
+        Text(
+            "Album not found",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.Center)
+        )
+    }
 
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
@@ -272,44 +278,6 @@ fun AlbumDetailScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun AlbumTrackItem(
-    playerViewModel: PlayerViewModel,
-    tracks: List<AudioService.TrackData>,
-    index: Int,
-) {
-    val track = tracks[index]
-    val isCurrentlyPlaying = playerViewModel.currentlyPlaying?.id == track.id
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = {
-                playerViewModel.playQueue(tracks, index)
-            })
-            .background(if (isCurrentlyPlaying) { MaterialTheme.colorScheme.secondaryContainer} else {Color.Transparent})
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text("${index + 1}.", style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.width(32.dp), color = MaterialTheme.colorScheme.secondary)
-
-
-        Column() {
-            Text(
-                text = track.title,
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Text(
-                text = track.artists.joinToString(", "),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline
-            )
         }
     }
 }

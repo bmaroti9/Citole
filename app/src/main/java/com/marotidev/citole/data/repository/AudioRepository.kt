@@ -108,18 +108,6 @@ class AudioRepository @Inject constructor(
         }
     }
 
-    fun findTrackById(id: Long) : AudioService.TrackData? {
-        return allTracks.value.find { it.id == id }
-    }
-
-    fun findAlbumById(albumId: Long) : AudioService.AlbumData? {
-        return allAlbums.value.find { it.albumId == albumId }
-    }
-
-    fun findArtistByName(artistName: String) : AudioService.ArtistData? {
-        return allArtists.value.find { it.name == artistName }
-    }
-
     fun checkHasAudioPermission() : Boolean {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO

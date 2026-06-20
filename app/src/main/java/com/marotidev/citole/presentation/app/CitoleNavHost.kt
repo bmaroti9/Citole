@@ -236,8 +236,6 @@ fun CitoleNavHost(
                         ) { targetPage ->
                             when (targetPage) {
                                 Page.ForYou -> ForYouListPage(
-                                    libraryViewModel,
-                                    playerViewModel,
                                     paddingValues,
                                     navController
                                 )
@@ -249,18 +247,15 @@ fun CitoleNavHost(
                     }
                 }
 
-                composable <AlbumViewDestination> { backStackEntry ->
-                    val args = backStackEntry.toRoute<AlbumViewDestination>()
-                    AlbumDetailScreen(args.albumId, libraryViewModel, playerViewModel, navController)
+                composable <AlbumViewDestination> {
+                    AlbumDetailScreen(playerViewModel, navController)
                 }
 
-                composable <ArtistViewDestination> { backStackEntry ->
-                    val args = backStackEntry.toRoute<ArtistViewDestination>()
-                    ArtistDetailScreen(args.artistName, libraryViewModel, playerViewModel, navController)
+                composable <ArtistViewDestination> {
+                    ArtistDetailScreen(playerViewModel, navController)
                 }
 
-                composable <OnboardViewDestination> { backStackEntry ->
-                    val args = backStackEntry.toRoute<ArtistViewDestination>()
+                composable <OnboardViewDestination> {
                     OnboardScreen()
                 }
             }

@@ -82,10 +82,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.marotidev.citole.AlbumViewDestination
-import com.marotidev.citole.ArtistViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.app.AlbumViewDestination
+import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.utils.durationToString
 import com.marotidev.citole.presentation.utils.tintedPainter
 import kotlin.math.PI

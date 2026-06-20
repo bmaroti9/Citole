@@ -68,27 +68,34 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.marotidev.citole.AlbumViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.home.album.AlbumItem
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.ArtworkCollage
 import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ArtistDetailScreen(
-    artistName: String,
-    libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
-    navController: NavController
+    navController: NavController,
+    artistDetailViewModel: ArtistDetailViewModel = hiltViewModel()
 ) {
-    val artist: AudioService.ArtistData = libraryViewModel.findArtistByName(artistName)
-        ?: return Box(modifier = Modifier.fillMaxSize()) {
-            Text("Album not found", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Center))
-        }
+
+    val artistState by artistDetailViewModel.artist.collectAsStateWithLifecycle()
+    val artist = artistState ?: return Box(modifier = Modifier.fillMaxSize()) {
+        Text(
+            "Album not found",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.Center)
+        )
+    }
 
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
@@ -141,7 +148,10 @@ fun ArtistDetailScreen(
                             .padding(top = collapsedHeight + 20.dp)
                             .aspectRatio(1f)
                     ) {
-                        ArtistCollage(artistName, artist.allAlbums)
+                        ArtworkCollage(
+                            hash = artist.name.hashCode(),
+                            artworkUris = artist.allAlbums.map { it.artworkUri }
+                        )
                     }
                     Text(artist.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 25.dp, bottom = 40.dp))
                 }
