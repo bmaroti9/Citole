@@ -72,7 +72,8 @@ class AudioRepository @Inject constructor(
                     allArtists = ownerAndAllArtists.second,
                     tracks = sequentialTracks,
                     type = tracks.firstOrNull()?.type ?: AudioType.Other,
-                    artworkUri = tracks.firstOrNull()?.artworkUri
+                    artworkUri = tracks.firstOrNull()?.artworkUri,
+                    dateAdded = tracks.minByOrNull { it.dateAdded }?.dateAdded ?: 0
                 )
             }
     }
@@ -97,6 +98,8 @@ class AudioRepository @Inject constructor(
                 albums = ownAlbums.subtract(singles.toSet()).toList(),
                 allAlbums = allAlbums,
                 appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList(),
+                dateAdded = tracks.minByOrNull { it.dateAdded }?.dateAdded ?: 0,
+                type = tracks.firstOrNull()?.type ?: AudioType.Other
             )
         }
     }

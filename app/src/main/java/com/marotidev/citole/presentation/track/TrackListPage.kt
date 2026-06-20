@@ -88,7 +88,6 @@ import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.services.durationToString
 import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import com.materialkolor.ktx.harmonize
 import kotlinx.coroutines.delay

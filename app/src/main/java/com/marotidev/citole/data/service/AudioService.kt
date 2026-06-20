@@ -81,6 +81,8 @@ class AudioService {
 
         val tracks : List<TrackData>,
 
+        val dateAdded: Int,
+
         val type: AudioType
     )
 
@@ -92,6 +94,9 @@ class AudioService {
         val appearsIn: List<AlbumData>,
         val singles: List<AlbumData>,
         val allAlbums: List<AlbumData>,
+
+        val dateAdded: Int,
+        val type: AudioType
     )
 
     fun AudioType.toInt() = ordinal

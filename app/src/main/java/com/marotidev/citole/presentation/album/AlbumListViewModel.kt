@@ -17,45 +17,47 @@ class AlbumListViewModel @Inject constructor(
 ) : ViewModel() {
 
     var filteredAlbums = combine(
-        audioRepository.allTracks,
+        audioRepository.allAlbums,
         dataStoreRepository.chipSortChip,
+        dataStoreRepository.chipSortReversed,
         combine(
             dataStoreRepository.chipShowSongs,
             dataStoreRepository.chipShowPodcasts,
             dataStoreRepository.chipShowAudiobooks,
             dataStoreRepository.chipShowOther,
         ) { songs, podcasts, audiobooks, other ->
-            listOf<Boolean>(songs, podcasts, audiobooks, other)
+            listOf(songs, podcasts, audiobooks, other)
         }
 
-    ) { allTracks, sortChip, types ->
-        allTracks
+    ) { allAlbums, sortChip, sortReversed, types ->
+        allAlbums
             .filterByType(types[0], types[1], types[2], types[3])
             .sortByChip(sortChip)
+            .reverseIf(sortReversed)
     }
 
-    fun List<AudioService.TrackData>.sortByChip(sortChip: SortChip): List<AudioService.TrackData> {
+    fun List<AudioService.AlbumData>.sortByChip(sortChip: SortChip): List<AudioService.AlbumData> {
         return if (sortChip == SortChip.DateAdded) {
             this.sortedByDescending { it.dateAdded }
         } else {
-            this.sortedBy { track ->
+            this.sortedBy { album ->
                 when (sortChip) {
-                    SortChip.Name -> track.name
-                    SortChip.Album -> track.albumName
-                    SortChip.Artist -> track.rawArtist
+                    SortChip.Name -> album.albumName
+                    SortChip.Album -> album.albumName
+                    SortChip.Artist -> album.ownerArtists.joinToString(", ")
                 }
             }
         }
     }
 
-    fun List<AudioService.TrackData>.filterByType(
+    fun List<AudioService.AlbumData>.filterByType(
         showSongs: Boolean,
         showPodcasts: Boolean,
         showAudiobooks: Boolean,
         showOther: Boolean,
-    ) : List<AudioService.TrackData> {
-        return this.filter { track ->
-            when (track.type) {
+    ) : List<AudioService.AlbumData> {
+        return this.filter { album ->
+            when (album.type) {
                 AudioType.Song -> showSongs
                 AudioType.Podcast -> showPodcasts
                 AudioType.Audiobook -> showAudiobooks
@@ -64,11 +66,19 @@ class AlbumListViewModel @Inject constructor(
         }
     }
 
-    fun List<AudioService.TrackData>.filterByQuery(query: String) : List<AudioService.TrackData> {
-        return this.filter { track ->
-            track.name.contains(query, ignoreCase = true)
-                    || track.rawArtist.contains(query, ignoreCase = true)
-                    || track.albumName.contains(query, ignoreCase = true)
+    fun List<AudioService.AlbumData>.filterByQuery(query: String) : List<AudioService.AlbumData> {
+        return this.filter { album ->
+            album.albumName.contains(query, ignoreCase = true)
+                    || album.ownerArtists.any {it.contains(query, ignoreCase = true)}
+        }
+    }
+
+
+    fun List<AudioService.AlbumData>.reverseIf(reverse: Boolean) : List<AudioService.AlbumData> {
+        return if (reverse) {
+            this.reversed()
+        } else {
+            this
         }
     }
 

@@ -19,19 +19,21 @@ class TrackListViewModel @Inject constructor(
     var filteredTracks = combine(
         audioRepository.allTracks,
         dataStoreRepository.chipSortChip,
+        dataStoreRepository.chipSortReversed,
         combine(
             dataStoreRepository.chipShowSongs,
             dataStoreRepository.chipShowPodcasts,
             dataStoreRepository.chipShowAudiobooks,
             dataStoreRepository.chipShowOther,
         ) { songs, podcasts, audiobooks, other ->
-            listOf<Boolean>(songs, podcasts, audiobooks, other)
+            listOf(songs, podcasts, audiobooks, other)
         }
 
-    ) { allTracks, sortChip, types ->
+    ) { allTracks, sortChip, sortReversed, types ->
         allTracks
             .filterByType(types[0], types[1], types[2], types[3])
             .sortByChip(sortChip)
+            .reverseIf(sortReversed)
     }
 
     fun List<AudioService.TrackData>.sortByChip(sortChip: SortChip): List<AudioService.TrackData> {
@@ -69,6 +71,14 @@ class TrackListViewModel @Inject constructor(
             track.name.contains(query, ignoreCase = true)
                     || track.rawArtist.contains(query, ignoreCase = true)
                     || track.albumName.contains(query, ignoreCase = true)
+        }
+    }
+
+    fun List<AudioService.TrackData>.reverseIf(reverse: Boolean) : List<AudioService.TrackData> {
+        return if (reverse) {
+            this.reversed()
+        } else {
+            this
         }
     }
 

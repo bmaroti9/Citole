@@ -73,7 +73,6 @@ import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.track.SwipeableTrackItem
 import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

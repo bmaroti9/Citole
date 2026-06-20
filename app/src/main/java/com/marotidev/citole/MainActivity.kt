@@ -89,7 +89,6 @@ import com.marotidev.citole.presentation.artist.ArtistListPage
 import com.marotidev.citole.presentation.track.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
-import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import com.marotidev.citole.viewmodels.RoomViewModel
 import com.marotidev.citole.viewmodels.SettingsViewModel

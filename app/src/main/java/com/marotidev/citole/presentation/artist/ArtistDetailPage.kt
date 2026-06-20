@@ -74,7 +74,6 @@ import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.album.AlbumItem
 import com.marotidev.citole.presentation.track.SwipeableTrackItem
-import com.marotidev.citole.viewmodels.LibraryViewModel
 import com.marotidev.citole.viewmodels.PlayerViewModel
 import kotlin.math.min
 
