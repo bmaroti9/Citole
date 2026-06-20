@@ -1,6 +1,7 @@
 package com.marotidev.citole.presentation.home.artist
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.presentation.browse.SortChip
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
@@ -8,7 +9,9 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.AudioService.AudioType
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,7 +41,11 @@ class ArtistListViewModel @Inject constructor(
             .filterByType(types[0], types[1], types[2], types[3])
             .sortByChip(sortChip)
             .reverseIf(sortReversed)
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     fun List<AudioService.ArtistData>.sortByChip(sortChip: SortChip): List<AudioService.ArtistData> {
         return if (sortChip == SortChip.DateAdded) {

@@ -83,6 +83,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
@@ -95,16 +97,16 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sign
 import androidx.navigation.NavController
-import com.marotidev.citole.AlbumViewDestination
-import com.marotidev.citole.ArtistViewDestination
 
 @Composable
 fun TrackListPage(
-    libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues,
     navController: NavController,
+    trackListViewModel: TrackListViewModel = hiltViewModel(),
 ) {
+    val filteredTracks by trackListViewModel.filteredTracks.collectAsStateWithLifecycle()
+
     LazyColumn(
         modifier = Modifier
             .imePadding()
@@ -114,7 +116,7 @@ fun TrackListPage(
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp)
     ) {
         itemsIndexed(
-            items = libraryViewModel.filteredTracks,
+            items = filteredTracks,
             key = { index, track -> track.id }
         ) { index, track ->
             SwipeableTrackItem (
@@ -126,7 +128,7 @@ fun TrackListPage(
                 ),
                 playerViewModel = playerViewModel,
                 index = index,
-                count = libraryViewModel.filteredTracks.size,
+                count = filteredTracks.size,
                 navController = navController
             ) {
                 playerViewModel.playQueue(listOf(track))
@@ -227,7 +229,7 @@ fun SwipeableTrackItem(
                     contentAlignment = Alignment.Center
                 ) {
                     //for some reason if i don't add this it thinks it's a rowScope
-                    AnimatedVisibility(
+                    androidx.compose.animation.AnimatedVisibility(
                         visible = abs(draggedPx) > 100f,
                         enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
                         exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),

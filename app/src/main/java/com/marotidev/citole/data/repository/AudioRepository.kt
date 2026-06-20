@@ -19,7 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.repository
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.AudioService.AudioType
 import kotlinx.coroutines.CoroutineScope
@@ -116,7 +120,17 @@ class AudioRepository @Inject constructor(
         return allArtists.value.find { it.name == artistName }
     }
 
-    init {
+    fun checkHasAudioPermission() : Boolean {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        return ContextCompat.checkSelfPermission(application, permission) ==
+                PackageManager.PERMISSION_GRANTED
+    }
+
+    fun fetchOrUpdateTracks() {
         serviceScope.launch {
             val tracks = audioService.fetchAudioFiles(application)
             allTracks.value = tracks

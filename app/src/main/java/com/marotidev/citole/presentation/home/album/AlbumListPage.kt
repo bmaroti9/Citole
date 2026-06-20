@@ -44,23 +44,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.marotidev.citole.AlbumViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.utils.tintedPainter
 import com.marotidev.citole.presentation.player.PlayerViewModel
 
 @Composable
 fun AlbumListPage(
-    libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues,
-    navController: NavController
+    navController: NavController,
+    albumListViewModel: AlbumListViewModel = hiltViewModel()
 ) {
+    val filteredAlbums by albumListViewModel.filteredAlbums.collectAsStateWithLifecycle()
+
     LazyVerticalGrid(
-        //columns = GridCells.Adaptive(minSize = 180.dp),
         columns = GridCells.Fixed(2),
         modifier = Modifier
             .imePadding()
@@ -69,7 +72,7 @@ fun AlbumListPage(
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp)
     ) {
         itemsIndexed(
-            libraryViewModel.filteredAlbums,
+            filteredAlbums,
             key = { index, album -> album.albumId }
         ) { index, album ->
             AlbumItem(
@@ -84,7 +87,7 @@ fun AlbumListPage(
                     placementSpec = spring(stiffness = Spring.StiffnessMedium)
                 ),
                 index,
-                libraryViewModel.filteredAlbums.count()
+                filteredAlbums.count()
             )
         }
     }

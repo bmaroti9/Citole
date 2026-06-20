@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.artist
 
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -69,17 +70,22 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
-import com.marotidev.citole.ArtistViewDestination
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.marotidev.citole.presentation.app.ArtistViewDestination
+import com.marotidev.citole.presentation.utils.ArtworkCollage
 import kotlin.math.max
 import kotlin.math.min
 
 @Composable
 fun ArtistListPage(
-    libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues,
-    navController: NavController
+    navController: NavController,
+    artistListViewModel: ArtistListViewModel = hiltViewModel()
 ) {
+    val filteredArtists by artistListViewModel.filteredArtists.collectAsStateWithLifecycle()
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
@@ -89,7 +95,7 @@ fun ArtistListPage(
         contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp)
     ) {
         itemsIndexed(
-            libraryViewModel.filteredArtists,
+            filteredArtists,
             key = { index, artist -> artist.name }
         ) { index, artist ->
             ArtistItem(
@@ -104,7 +110,7 @@ fun ArtistListPage(
                     placementSpec = spring(stiffness = Spring.StiffnessMedium)
                 ),
                 index,
-                libraryViewModel.filteredArtists.count()
+                filteredArtists.count()
             )
         }
     }
@@ -149,7 +155,10 @@ fun ArtistItem(
             modifier = Modifier.padding(18.dp).aspectRatio(0.78f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ArtistCollage(artist.name, artist.allAlbums)
+            ArtworkCollage(
+                hash = artist.name.hashCode(),
+                artworkUris = artist.allAlbums.map { it.artworkUri ?: Uri.EMPTY }
+            )
             Text(
                 text = artist.name,
                 style = MaterialTheme.typography.labelLarge,
@@ -157,184 +166,4 @@ fun ArtistItem(
             )
         }
     }
-}
-
-data class Point(val x: Float = 0.5f, val y: Float = 0.5f, val r: Float = 1f, val shape: Int = 0)
-
-fun getIntersectionPoints(A: Point, B: Point, newR: Float, seed: Random, shapeCount: Int): List<Point> {
-
-    val k = A.r + newR + 0.05f
-    val l = B.r + newR + 0.05f
-
-    val dx = B.x - A.x
-    val dy = B.y - A.y
-    val d = sqrt(dx * dx + dy * dy)
-
-    if (d > k + l || d < abs(k - l) || d == 0f) {
-        return emptyList()
-    }
-
-    val a = (k * k - l * l + d * d) / (2 * d)
-    val hSq = k * k - a * a
-    val h = if (hSq < 0) 0f else sqrt(hSq)
-
-    val x0 = A.x + (a * dx) / d
-    val y0 = A.y + (a * dy) / d
-
-    if (h == 0f) {
-        return listOf(Point(x0, y0, newR, seed.nextInt(shapeCount)))
-    }
-
-    val p1 = Point(x0 + (h * dy) / d, y0 - (h * dx) / d, newR, seed.nextInt(shapeCount))
-    val p2 = Point(x0 - (h * dy) / d, y0 + (h * dx) / d, newR, seed.nextInt(shapeCount))
-
-    return listOf(p1, p2)
-}
-
-fun getDistance(A: Point, B: Point) : Float {
-    return sqrt((A.x - B.x).pow(2) + (A.y - B.y).pow(2))
-}
-
-@Composable
-fun ArtistCollage(artistName: String, albums: List<AudioService.AlbumData>) {
-
-    if (albums.isEmpty()) return
-
-    val hash = artistName.hashCode()
-    val seed = Random(hash)
-
-    val shapeList = listOf(
-        MaterialShapes.Circle.toShape(),
-        MaterialShapes.Circle.toShape(),
-        MaterialShapes.Circle.toShape(),
-        MaterialShapes.Circle.toShape(),
-        MaterialShapes.Circle.toShape(),
-        MaterialShapes.VerySunny.toShape(),
-        MaterialShapes.Cookie12Sided.toShape(),
-        MaterialShapes.Square.toShape()
-    )
-    val shapeSizeScale = listOf(
-        1f,
-        1f,
-        1f,
-        1f,
-        1f,
-        1f,
-        1f,
-        0.9f
-    )
-    val sizeList = listOf(1f, 1f, 0.5f, 0.5f, 0.5f, 0.2f, 0.25f, 0.25f, 0.25f, 0.25f)
-
-    //Generate a list of coordinates Using Wang's circle packing algorithm with the seed
-
-    val points: MutableList<Point> = mutableListOf(Point(shape = seed.nextInt(shapeList.size)))
-
-    if (albums.size > 1) {
-
-        val newR = sizeList.random(seed)
-        val newA = seed.nextFloat() * 2 * 3.14159f
-        val dis = points[0].r + newR + 0.05f
-        points.add(Point(points[0].x + cos(newA) * dis, points[0].y + sin(newA) * dis, newR))
-
-        var index = 0
-
-        //start the packing
-        loop@ while (index < 200 && points.size < min(albums.size, 7)) {
-            index++
-
-            val newR = sizeList.random(seed)
-
-            val randomTwo = mutableListOf(points.random(seed))
-            while (randomTwo.size < 2) {
-                val newPoint = points.random(seed)
-                if (newPoint != randomTwo[0]) {
-                    randomTwo.add(newPoint)
-                }
-            }
-
-            val newPoints = getIntersectionPoints(randomTwo[0], randomTwo[1], newR, seed, shapeList.size)
-
-            newPoints.forEach { newPoint ->
-                var good = true
-                points.forEach { oldPoint ->
-                    if (oldPoint !in randomTwo && getDistance(newPoint, oldPoint) < newPoint.r + oldPoint.r + 0.05f) {
-                        good = false
-                    }
-                }
-                if (good) {
-                    points.add(newPoint)
-                    continue@loop
-                }
-            }
-        }
-    }
-
-    var smallestX = 100f
-    var largestX = -100f
-    var smallestY = 100f
-    var largestY = -100f
-
-    points.forEach {
-        smallestX = min(smallestX, it.x - it.r * shapeSizeScale[it.shape])
-        largestX = max(largestX, it.x + it.r * shapeSizeScale[it.shape])
-        smallestY = min(smallestY, it.y - it.r * shapeSizeScale[it.shape])
-        largestY = max(largestY, it.y + it.r * shapeSizeScale[it.shape])
-    }
-
-    val globalScaler = 1f / max(largestX - smallestX, largestY - smallestY)
-
-    val scaledClusterWidth = (largestX - smallestX) * globalScaler
-    val scaledClusterHeight = (largestY - smallestY) * globalScaler
-
-    val offsetX = (1f - scaledClusterWidth) / 2f
-    val offsetY = (1f - scaledClusterHeight) / 2f
-
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
-    val baseSizeDp = 100.dp
-    val baseSizePx = with(LocalDensity.current) { baseSizeDp.toPx() }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .onSizeChanged { containerSize = it }
-    ) {
-        if (containerSize != IntSize.Zero) {
-            for (index in 0..min(points.size - 1, 8)) {
-                val point = points[index]
-                val album = albums[index]
-                val rotate = if (albums.size > 1) (seed.nextFloat() - 0.5f) * 145 else 0f
-
-                val newX = ((point.x - smallestX) * globalScaler) + offsetX
-                val newY = ((point.y - smallestY) * globalScaler) + offsetY
-                val newScale = if (albums.size > 1) (point.r * 2 * globalScaler * shapeSizeScale[point.shape])
-                    else 0.7f / shapeSizeScale[point.shape]
-                Box(
-                    modifier = Modifier
-                        .size(baseSizeDp)
-                        .graphicsLayer {
-                            translationX = (newX * containerSize.width) - (baseSizePx / 2f)
-                            translationY = (newY * containerSize.height) - (baseSizePx / 2f)
-                            rotationZ = rotate
-                            scaleX = (containerSize.width * newScale * shapeSizeScale[point.shape]) / baseSizePx
-                            scaleY = (containerSize.height * newScale * shapeSizeScale[point.shape]) / baseSizePx
-                        },
-                ) {
-                    AsyncImage(
-                        model = album.artworkUri,
-                        contentDescription = "Album artwork",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(shapeList[point.shape])
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-
-            }
-        }
-
-    }
-
 }

@@ -54,14 +54,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.marotidev.citole.R
 import com.marotidev.citole.presentation.player.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FixedTopBar(
-    libraryViewModel: LibraryViewModel,
-    playerViewModel: PlayerViewModel,
+    browseViewModel: BrowseViewModel = hiltViewModel(),
     onMenuClick: () -> Unit,
     onPrimaryClick : () -> Unit,
 ) {
@@ -69,7 +69,7 @@ fun FixedTopBar(
     var isFocused by remember { mutableStateOf(false) }
 
     BackHandler(enabled = isFocused) {
-        libraryViewModel.onSearchQueryChanged("")
+        browseViewModel.onQueryChange("")
         focusManager.clearFocus()
     }
 
@@ -80,8 +80,8 @@ fun FixedTopBar(
         ),
         title = {
             TextField(
-                value = libraryViewModel.searchQuery,
-                onValueChange = { query -> libraryViewModel.onSearchQueryChanged(query)},
+                value = browseViewModel.query,
+                onValueChange = { query -> browseViewModel.onQueryChange(query)},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -92,13 +92,13 @@ fun FixedTopBar(
                 trailingIcon = {
                     AnimatedVisibility(
                         modifier = Modifier.padding(end = 2.dp),
-                        visible = libraryViewModel.searchQuery.isNotEmpty(),
+                        visible = browseViewModel.query.isNotEmpty(),
                         enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
                         exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioLowBouncy)),
                     ) {
                         IconButton(
                             onClick = {
-                                libraryViewModel.onSearchQueryChanged("")
+                                browseViewModel.onQueryChange("")
                                 focusManager.clearFocus()
                             }
                         ) {
@@ -110,16 +110,6 @@ fun FixedTopBar(
                         }
                     }
                 },
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (libraryViewModel.filteredTracks.isNotEmpty()) {
-                            val topTrack = libraryViewModel.filteredTracks.first()
-                            playerViewModel.addToQueue(topTrack)
-                        }
-                        libraryViewModel.onSearchQueryChanged("")
-                        focusManager.clearFocus()
-                    },
-                ),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,

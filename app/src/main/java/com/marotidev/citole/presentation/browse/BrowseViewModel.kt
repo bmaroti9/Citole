@@ -54,6 +54,10 @@ class BrowseViewModel @Inject constructor(
         viewModelScope.launch { dataStoreRepository.saveChipSortReversed(to) }
     }
 
+    fun onQueryChange(to: String) {
+        query = to
+    }
+
     init {
         combine(
             searchQueryStateHolder.query,

@@ -55,7 +55,7 @@ enum class SortChip {
 @Composable
 fun FilterDialog(
     onDismissRequest: () -> Unit,
-    libraryViewModel: LibraryViewModel
+    browseViewModel: BrowseViewModel
 ) {
 
     AlertDialog(
@@ -77,8 +77,8 @@ fun FilterDialog(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     ToggleButton(
-                        checked = libraryViewModel.showSongs,
-                        onCheckedChange = { libraryViewModel.setChipShowSongs(it) },
+                        checked = browseViewModel.showSongs,
+                        onCheckedChange = { browseViewModel.setChipShowSongs(it) },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -88,8 +88,8 @@ fun FilterDialog(
                         Text("Songs", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = libraryViewModel.showPodcasts,
-                        onCheckedChange = { libraryViewModel.setChipShowPodcasts(it) },
+                        checked = browseViewModel.showPodcasts,
+                        onCheckedChange = { browseViewModel.setChipShowPodcasts(it) },
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -99,8 +99,8 @@ fun FilterDialog(
                         Text("Podcasts", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = libraryViewModel.showAudiobooks,
-                        onCheckedChange = { libraryViewModel.setChipShowAudiobooks(it)},
+                        checked = browseViewModel.showAudiobooks,
+                        onCheckedChange = { browseViewModel.setChipShowAudiobooks(it)},
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -110,8 +110,8 @@ fun FilterDialog(
                         Text("Audiobooks", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = libraryViewModel.showOther,
-                        onCheckedChange = { libraryViewModel.setChipShowOther(it) },
+                        checked = browseViewModel.showOther,
+                        onCheckedChange = { browseViewModel.setChipShowOther(it) },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -130,8 +130,8 @@ fun FilterDialog(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     ToggleButton(
-                        checked = libraryViewModel.selectedSortChip == SortChip.Name,
-                        onCheckedChange = { libraryViewModel.setSortChipSort(SortChip.Name) },
+                        checked = browseViewModel.selectedSortChip == SortChip.Name,
+                        onCheckedChange = { browseViewModel.setSortChipSort(SortChip.Name) },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -141,8 +141,8 @@ fun FilterDialog(
                         Text("Name", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = libraryViewModel.selectedSortChip == SortChip.Album,
-                        onCheckedChange = { libraryViewModel.setSortChipSort(SortChip.Album) },
+                        checked = browseViewModel.selectedSortChip == SortChip.Album,
+                        onCheckedChange = { browseViewModel.setSortChipSort(SortChip.Album) },
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -152,8 +152,8 @@ fun FilterDialog(
                         Text("Album", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = libraryViewModel.selectedSortChip == SortChip.Artist,
-                        onCheckedChange = { libraryViewModel.setSortChipSort(SortChip.Artist) },
+                        checked = browseViewModel.selectedSortChip == SortChip.Artist,
+                        onCheckedChange = { browseViewModel.setSortChipSort(SortChip.Artist) },
                         shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -163,8 +163,8 @@ fun FilterDialog(
                         Text("Artist", style = MaterialTheme.typography.labelSmall)
                     }
                     ToggleButton(
-                        checked = libraryViewModel.selectedSortChip == SortChip.DateAdded,
-                        onCheckedChange = { libraryViewModel.setSortChipSort(SortChip.DateAdded) },
+                        checked = browseViewModel.selectedSortChip == SortChip.DateAdded,
+                        onCheckedChange = { browseViewModel.setSortChipSort(SortChip.DateAdded) },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -183,8 +183,8 @@ fun FilterDialog(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     ToggleButton(
-                        checked = !libraryViewModel.reverseSortOrder,
-                        onCheckedChange = { libraryViewModel.onReverseSortOrderChanged(false) },
+                        checked = !browseViewModel.reverseSortOrder,
+                        onCheckedChange = { browseViewModel.onReverseSortOrderChanged(false) },
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -192,8 +192,8 @@ fun FilterDialog(
                         Icon(painterResource(R.drawable.ic_arrow_down), contentDescription = null, modifier = Modifier.size(18.dp))
                     }
                     ToggleButton(
-                        checked = libraryViewModel.reverseSortOrder,
-                        onCheckedChange = { libraryViewModel.onReverseSortOrderChanged(true) },
+                        checked = browseViewModel.reverseSortOrder,
+                        onCheckedChange = { browseViewModel.onReverseSortOrderChanged(true) },
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                         colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer)

@@ -48,10 +48,9 @@ import kotlin.collections.get
 
 @Composable
 fun ForYouListPage(
-    libraryViewModel: LibraryViewModel,
     playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues,
-    navController: NavController
+    navController: NavController,
 ) {
 
     val recentlyAdded = libraryViewModel.allTracks.sortedByDescending { it.dateAdded }.take(14)
