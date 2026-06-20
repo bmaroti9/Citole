@@ -45,7 +45,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.marotidev.citole.R
 import com.marotidev.citole.presentation.browse.BrowseViewModel
 import com.marotidev.citole.presentation.browse.FilterDialog

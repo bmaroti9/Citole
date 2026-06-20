@@ -4,11 +4,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
-import com.marotidev.citole.data.repository.DataStoreRepository
-import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -32,9 +29,5 @@ class OnboardViewModel @Inject constructor(
 
     fun onPermissionGranted() {
         audioRepository.fetchOrUpdateTracks()
-    }
-
-    fun checkHasAudioPermission() : Boolean {
-        return audioRepository.checkHasAudioPermission()
     }
 }

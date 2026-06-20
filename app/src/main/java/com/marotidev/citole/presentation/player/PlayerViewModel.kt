@@ -30,6 +30,7 @@ import com.marotidev.citole.data.service.PlaybackService
 import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.local.TrackPlayLogDao
 import com.materialkolor.ktx.themeColor
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -42,6 +43,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
+@HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val application: Application,
     private val trackPlayLogDao: TrackPlayLogDao,

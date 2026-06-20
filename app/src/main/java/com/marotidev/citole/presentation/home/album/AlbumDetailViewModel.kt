@@ -1,6 +1,5 @@
 package com.marotidev.citole.presentation.home.album
 
-import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

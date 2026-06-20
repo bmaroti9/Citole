@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.marotidev.citole.data.repository.AudioRepository
-import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted

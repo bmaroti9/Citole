@@ -59,7 +59,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -72,11 +71,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
-import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
-import com.marotidev.citole.presentation.utils.tintedPainter
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.tintedPainter
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

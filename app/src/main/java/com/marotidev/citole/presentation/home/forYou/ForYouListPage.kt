@@ -45,9 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
-import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.tintedPainter
-import kotlin.collections.get
 
 @Composable
 fun ForYouListPage(
