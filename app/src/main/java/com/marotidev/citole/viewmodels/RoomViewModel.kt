@@ -20,15 +20,12 @@ package com.marotidev.citole.viewmodels
 
 import android.app.Application
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
-import com.marotidev.citole.services.AppDatabase
-import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.services.TrackPlayLog
+import com.marotidev.citole.data.service.AppDatabase
+import com.marotidev.citole.data.service.TrackPlayLog
 import kotlinx.coroutines.launch
 
 class RoomViewModel(application: Application) : AndroidViewModel(application) {

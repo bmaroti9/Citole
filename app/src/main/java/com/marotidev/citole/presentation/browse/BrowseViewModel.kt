@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.SortChip
-import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
+import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -16,8 +16,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BrowseViewModel @Inject constructor(
-    private val dataStoreRepository: DataStoreRepository
+    private val dataStoreRepository: DataStoreRepository,
+    private val searchQueryStateHolder: SearchQueryStateHolder
 ) : ViewModel() {
+
+    var query by mutableStateOf("")
 
     var showSongs by mutableStateOf(true)
     var showPodcasts by mutableStateOf(false)
@@ -54,6 +57,7 @@ class BrowseViewModel @Inject constructor(
 
     init {
         combine(
+            searchQueryStateHolder.query,
             dataStoreRepository.chipSortChip,
             dataStoreRepository.chipSortReversed,
             combine(
@@ -65,7 +69,8 @@ class BrowseViewModel @Inject constructor(
                 listOf(songs, podcasts, audiobooks, other)
             }
 
-        ) { sortChip, sortReversed, types ->
+        ) { queryState, sortChip, sortReversed, types ->
+            query = queryState
             selectedSortChip = sortChip
             reverseSortOrder = sortReversed
             showSongs = types[0]

@@ -44,9 +44,9 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
-import com.marotidev.citole.services.AppDatabase
+import com.marotidev.citole.data.service.AppDatabase
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.services.PlaybackService
+import com.marotidev.citole.data.service.PlaybackService
 import com.materialkolor.ktx.themeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.marotidev.citole.data.service.AudioService.toAudioData
 import com.marotidev.citole.data.service.AudioService.toMediaItem
-import com.marotidev.citole.services.TrackPlayLog
+import com.marotidev.citole.data.service.TrackPlayLog
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 

@@ -19,9 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package com.marotidev.citole.data.di
 
 import android.app.Application
+import androidx.room.Room
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
+import com.marotidev.citole.data.service.AppDatabase
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.data.service.TrackPlayLogDao
+import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,5 +52,27 @@ class AppModule {
     @Singleton
     fun provideDataStoreRepository(app: Application) : DataStoreRepository {
         return DataStoreRepository(app)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchQueryStateHolder() : SearchQueryStateHolder {
+        return SearchQueryStateHolder()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(app: Application): AppDatabase {
+        return Room.databaseBuilder(
+            app,
+            AppDatabase::class.java,
+            "app-database"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTrackPlayLogDao(database: AppDatabase): TrackPlayLogDao {
+        return database.trackPlayLogDao()
     }
 }

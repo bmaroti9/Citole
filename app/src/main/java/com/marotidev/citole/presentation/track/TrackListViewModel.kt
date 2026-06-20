@@ -6,6 +6,7 @@ import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.AudioService.AudioType
+import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
@@ -13,10 +14,12 @@ import javax.inject.Inject
 @HiltViewModel
 class TrackListViewModel @Inject constructor(
     audioRepository : AudioRepository,
-    private val dataStoreRepository: DataStoreRepository
+    dataStoreRepository: DataStoreRepository,
+    searchQueryStateHolder: SearchQueryStateHolder
 ) : ViewModel() {
 
     var filteredTracks = combine(
+        searchQueryStateHolder.query,
         audioRepository.allTracks,
         dataStoreRepository.chipSortChip,
         dataStoreRepository.chipSortReversed,
@@ -29,8 +32,9 @@ class TrackListViewModel @Inject constructor(
             listOf(songs, podcasts, audiobooks, other)
         }
 
-    ) { allTracks, sortChip, sortReversed, types ->
+    ) { query, allTracks, sortChip, sortReversed, types ->
         allTracks
+            .filterByQuery(query)
             .filterByType(types[0], types[1], types[2], types[3])
             .sortByChip(sortChip)
             .reverseIf(sortReversed)
