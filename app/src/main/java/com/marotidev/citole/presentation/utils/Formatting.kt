@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.services
+package com.marotidev.citole.presentation.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

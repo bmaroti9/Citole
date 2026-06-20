@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 
-package com.marotidev.citole
+package com.marotidev.citole.presentation.home.forYou
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -41,8 +41,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.R
+import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.tintedPainter
 import kotlin.collections.get
 
 @Composable
@@ -86,7 +87,10 @@ fun ForYouListPage(
                                 .height(205.dp)
                                 .maskClip(MaterialTheme.shapes.extraLarge)
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                            error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
+                            error = tintedPainter(
+                                R.drawable.ic_citole_black,
+                                MaterialTheme.colorScheme.outline
+                            ),
                             contentScale = ContentScale.Crop
                         )
                         Text(track.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 6.dp))

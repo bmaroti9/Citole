@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole
+package com.marotidev.citole.presentation.player
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -82,10 +82,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.AlbumViewDestination
+import com.marotidev.citole.ArtistViewDestination
+import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.services.durationToString
-import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.presentation.utils.durationToString
+import com.marotidev.citole.presentation.utils.tintedPainter
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -104,8 +106,8 @@ fun PlayerScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (queueSheetOpen) {
-            QueueSheet (
-                onDismissRequest = {queueSheetOpen = false},
+            QueueSheet(
+                onDismissRequest = { queueSheetOpen = false },
                 playerViewModel,
                 navController
             )
@@ -330,7 +332,13 @@ fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: Aud
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            durationToString(if (isDragged) {(sliderDrag * currentlyPlaying.duration).toLong()} else {playerViewModel.progress}),
+            durationToString(
+                if (isDragged) {
+                    (sliderDrag * currentlyPlaying.duration).toLong()
+                } else {
+                    playerViewModel.progress
+                }
+            ),
             style = timerTextStyle,
             color = MaterialTheme.colorScheme.onSurface
         )

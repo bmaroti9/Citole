@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.presentation.album
+package com.marotidev.citole.presentation.home.album
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -71,9 +71,9 @@ import coil.compose.AsyncImage
 import com.marotidev.citole.ArtistViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.presentation.track.SwipeableTrackItem
-import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
+import com.marotidev.citole.presentation.utils.tintedPainter
+import com.marotidev.citole.presentation.player.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

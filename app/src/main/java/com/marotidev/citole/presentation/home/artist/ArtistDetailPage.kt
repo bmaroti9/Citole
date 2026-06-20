@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.presentation.artist
+package com.marotidev.citole.presentation.home.artist
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -72,9 +72,9 @@ import androidx.navigation.NavController
 import com.marotidev.citole.AlbumViewDestination
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.presentation.album.AlbumItem
-import com.marotidev.citole.presentation.track.SwipeableTrackItem
-import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.presentation.home.album.AlbumItem
+import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
+import com.marotidev.citole.presentation.player.PlayerViewModel
 import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

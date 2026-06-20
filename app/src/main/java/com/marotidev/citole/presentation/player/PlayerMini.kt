@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole
+package com.marotidev.citole.presentation.player
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Spring
@@ -83,9 +83,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.presentation.utils.tintedPainter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

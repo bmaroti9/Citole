@@ -1,22 +1,4 @@
-/*
-Copyright (C) <2026>  <Balint Maroti>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-*/
-
-package com.marotidev.citole.viewmodels
+package com.marotidev.citole.presentation.player
 
 import android.app.Application
 import android.content.ComponentName
@@ -33,8 +15,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.application
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -44,27 +25,28 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
-import com.marotidev.citole.data.service.AppDatabase
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
+import com.marotidev.citole.data.local.TrackPlayLog
+import com.marotidev.citole.data.local.TrackPlayLogDao
 import com.materialkolor.ktx.themeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable.isActive
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.marotidev.citole.data.service.AudioService.toAudioData
-import com.marotidev.citole.data.service.AudioService.toMediaItem
-import com.marotidev.citole.data.service.TrackPlayLog
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
-class PlayerViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val db = AppDatabase.getInstance(application)
-    private val trackPlayLogDao = db.trackPlayLogDao()
+class PlayerViewModel @Inject constructor(
+    private val application: Application,
+    private val trackPlayLogDao: TrackPlayLogDao,
+    private val audioService: AudioService
+) : ViewModel() {
 
     var playing by mutableStateOf(false)
         private set
@@ -127,8 +109,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     init {
-        val sessionToken = SessionToken(application,
-            ComponentName(application, PlaybackService::class.java))
+        val sessionToken = SessionToken(
+            application,
+            ComponentName(application, PlaybackService::class.java)
+        )
         val controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
         controllerFuture.addListener(
             {
@@ -136,7 +120,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
                 currentQueue.addAll(
                     (0 until (player?.mediaItemCount ?: 0)).map { index ->
-                        player!!.getMediaItemAt(index).toAudioData()
+                        with (audioService) {
+                            player!!.getMediaItemAt(index).toAudioData()
+                        }
                     }
                 )
 
@@ -201,9 +187,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun startProgressUpdate() {
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
-            while (isActive) {
+            while (NonCancellable.isActive) {
                 progress = player?.currentPosition ?: 0
-                delay(500)
+                delay(500.milliseconds)
             }
         }
     }
@@ -218,7 +204,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         currentIndex = startIndex
         currentlyPlaying = tracks[startIndex]
 
-        val mediaItems = tracks.map { it.toMediaItem() }
+        val mediaItems = tracks.map { with(audioService) {it.toMediaItem()} }
 
         player?.setMediaItems(mediaItems, startIndex, 0L)
         player?.prepare()
@@ -226,7 +212,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun addToQueue(track: AudioService.TrackData, index: Int = currentQueue.size) {
-        val mediaItem = track.toMediaItem()
+        val mediaItem = with(audioService) {track.toMediaItem()}
         if (currentQueue.isEmpty()) {
             currentQueue += track
             currentIndex = 0

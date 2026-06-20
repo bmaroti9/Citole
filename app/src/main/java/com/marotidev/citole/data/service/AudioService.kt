@@ -34,7 +34,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.internal.toLongOrDefault
 
 class AudioService {
-
     private val artistSplitterRegex = Regex(
         pattern = """\s*([,;\\/&]|feat\.?|ft\.?|\|)\s*""",
         options = setOf(RegexOption.IGNORE_CASE)

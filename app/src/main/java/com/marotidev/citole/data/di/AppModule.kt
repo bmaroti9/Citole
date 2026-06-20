@@ -22,9 +22,9 @@ import android.app.Application
 import androidx.room.Room
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
-import com.marotidev.citole.data.service.AppDatabase
+import com.marotidev.citole.data.local.AppDatabase
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.data.service.TrackPlayLogDao
+import com.marotidev.citole.data.local.TrackPlayLogDao
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.Module
 import dagger.Provides

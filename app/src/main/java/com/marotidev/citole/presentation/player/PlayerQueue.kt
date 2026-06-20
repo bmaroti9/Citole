@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole
+package com.marotidev.citole.presentation.player
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -58,14 +58,14 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.viewmodels.PlayerViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.math.abs
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
-import com.marotidev.citole.presentation.track.TrackItem
+import com.marotidev.citole.R
+import com.marotidev.citole.presentation.home.track.TrackItem
 import kotlin.math.sign
 
 

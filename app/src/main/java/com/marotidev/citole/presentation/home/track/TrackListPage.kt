@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.presentation.track
+package com.marotidev.citole.presentation.home.track
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -86,9 +86,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.services.durationToString
-import com.marotidev.citole.services.tintedPainter
-import com.marotidev.citole.viewmodels.PlayerViewModel
+import com.marotidev.citole.presentation.utils.durationToString
+import com.marotidev.citole.presentation.utils.tintedPainter
+import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.materialkolor.ktx.harmonize
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -1,7 +1,7 @@
-package com.marotidev.citole.presentation.track
+package com.marotidev.citole.presentation.home.artist
 
 import androidx.lifecycle.ViewModel
-import com.marotidev.citole.SortChip
+import com.marotidev.citole.presentation.browse.SortChip
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.service.AudioService
@@ -12,15 +12,15 @@ import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
 @HiltViewModel
-class TrackListViewModel @Inject constructor(
+class ArtistListViewModel @Inject constructor(
     audioRepository : AudioRepository,
     dataStoreRepository: DataStoreRepository,
     searchQueryStateHolder: SearchQueryStateHolder
 ) : ViewModel() {
 
-    var filteredTracks = combine(
+    var filteredArtists = combine(
         searchQueryStateHolder.query,
-        audioRepository.allTracks,
+        audioRepository.allArtists,
         dataStoreRepository.chipSortChip,
         dataStoreRepository.chipSortReversed,
         combine(
@@ -32,36 +32,36 @@ class TrackListViewModel @Inject constructor(
             listOf(songs, podcasts, audiobooks, other)
         }
 
-    ) { query, allTracks, sortChip, sortReversed, types ->
-        allTracks
+    ) { query, allArtists, sortChip, sortReversed, types ->
+        allArtists
             .filterByQuery(query)
             .filterByType(types[0], types[1], types[2], types[3])
             .sortByChip(sortChip)
             .reverseIf(sortReversed)
     }
 
-    fun List<AudioService.TrackData>.sortByChip(sortChip: SortChip): List<AudioService.TrackData> {
+    fun List<AudioService.ArtistData>.sortByChip(sortChip: SortChip): List<AudioService.ArtistData> {
         return if (sortChip == SortChip.DateAdded) {
             this.sortedByDescending { it.dateAdded }
         } else {
-            this.sortedBy { track ->
+            this.sortedBy { artist ->
                 when (sortChip) {
-                    SortChip.Name -> track.name
-                    SortChip.Album -> track.albumName
-                    SortChip.Artist -> track.rawArtist
+                    SortChip.Name -> artist.name
+                    SortChip.Album -> artist.albums.firstOrNull()?.albumName
+                    SortChip.Artist -> artist.name
                 }
             }
         }
     }
 
-    fun List<AudioService.TrackData>.filterByType(
+    fun List<AudioService.ArtistData>.filterByType(
         showSongs: Boolean,
         showPodcasts: Boolean,
         showAudiobooks: Boolean,
         showOther: Boolean,
-    ) : List<AudioService.TrackData> {
-        return this.filter { track ->
-            when (track.type) {
+    ) : List<AudioService.ArtistData> {
+        return this.filter { artist ->
+            when (artist.type) {
                 AudioType.Song -> showSongs
                 AudioType.Podcast -> showPodcasts
                 AudioType.Audiobook -> showAudiobooks
@@ -70,15 +70,15 @@ class TrackListViewModel @Inject constructor(
         }
     }
 
-    fun List<AudioService.TrackData>.filterByQuery(query: String) : List<AudioService.TrackData> {
-        return this.filter { track ->
-            track.name.contains(query, ignoreCase = true)
-                    || track.rawArtist.contains(query, ignoreCase = true)
-                    || track.albumName.contains(query, ignoreCase = true)
+    fun List<AudioService.ArtistData>.filterByQuery(query: String) : List<AudioService.ArtistData> {
+        return this.filter { artist ->
+            artist.name.contains(query, ignoreCase = true)
+                    || artist.tracks.any {it.name.contains(query, ignoreCase = true)}
+                    || artist.allAlbums.any {it.albumName.contains(query, ignoreCase = true)}
         }
     }
 
-    fun List<AudioService.TrackData>.reverseIf(reverse: Boolean) : List<AudioService.TrackData> {
+    fun List<AudioService.ArtistData>.reverseIf(reverse: Boolean) : List<AudioService.ArtistData> {
         return if (reverse) {
             this.reversed()
         } else {

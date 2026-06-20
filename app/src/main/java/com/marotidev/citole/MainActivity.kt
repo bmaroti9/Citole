@@ -82,16 +82,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.marotidev.citole.presentation.album.AlbumListPage
-import com.marotidev.citole.presentation.album.AlbumDetailScreen
-import com.marotidev.citole.presentation.artist.ArtistDetailScreen
-import com.marotidev.citole.presentation.artist.ArtistListPage
-import com.marotidev.citole.presentation.track.TrackListPage
+import com.marotidev.citole.presentation.home.album.AlbumListPage
+import com.marotidev.citole.presentation.home.album.AlbumDetailScreen
+import com.marotidev.citole.presentation.home.artist.ArtistDetailScreen
+import com.marotidev.citole.presentation.home.artist.ArtistListPage
+import com.marotidev.citole.presentation.browse.FilterDialog
+import com.marotidev.citole.presentation.browse.FixedTopBar
+import com.marotidev.citole.presentation.home.forYou.ForYouListPage
+import com.marotidev.citole.presentation.player.CustomFloatingToolbar
+import com.marotidev.citole.presentation.home.track.TrackListPage
 import com.marotidev.citole.ui.theme.DynamicAppTheme
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
-import com.marotidev.citole.viewmodels.PlayerViewModel
-import com.marotidev.citole.viewmodels.RoomViewModel
-import com.marotidev.citole.viewmodels.SettingsViewModel
+import com.marotidev.citole.presentation.player.PlayerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -337,7 +339,12 @@ fun CitoleScreen(
                             }
                         ) { targetPage ->
                             when (targetPage) {
-                                Page.ForYou -> ForYouListPage(libraryViewModel, playerViewModel, paddingValues, navController)
+                                Page.ForYou -> ForYouListPage(
+                                    libraryViewModel,
+                                    playerViewModel,
+                                    paddingValues,
+                                    navController
+                                )
                                 Page.Tracks -> TrackListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                                 Page.Albums -> AlbumListPage(libraryViewModel, playerViewModel, paddingValues, navController)
                                 Page.Artists -> ArtistListPage(libraryViewModel, playerViewModel, paddingValues, navController)
@@ -358,8 +365,8 @@ fun CitoleScreen(
             }
             CustomFloatingToolbar(playerViewModel, navController)
             if (openAlertDialog) {
-                FilterDialog (
-                    onDismissRequest = {openAlertDialog = false},
+                FilterDialog(
+                    onDismissRequest = { openAlertDialog = false },
                     libraryViewModel
                 )
             }

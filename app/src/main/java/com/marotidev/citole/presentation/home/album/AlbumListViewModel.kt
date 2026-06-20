@@ -1,7 +1,7 @@
-package com.marotidev.citole.presentation.album
+package com.marotidev.citole.presentation.home.album
 
 import androidx.lifecycle.ViewModel
-import com.marotidev.citole.SortChip
+import com.marotidev.citole.presentation.browse.SortChip
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.service.AudioService

@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.data.service
+package com.marotidev.citole.data.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
@@ -26,6 +26,7 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import com.marotidev.citole.data.service.AudioService
 
 @Entity
 data class TrackPlayLog(
