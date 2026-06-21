@@ -27,6 +27,30 @@ class OnboardViewModel @Inject constructor(
         initialValue = List(count) {Uri.EMPTY}
     )
 
+    val trackCount = audioRepository.allTracks.map {
+        it.size
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
+    val albumCount = audioRepository.allAlbums.map {
+        it.size
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
+    val artistCount = audioRepository.allArtists.map {
+        it.size
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
     fun onPermissionGranted() {
         audioRepository.fetchOrUpdateTracks()
     }

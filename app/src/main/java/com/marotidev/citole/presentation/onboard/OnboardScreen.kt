@@ -4,17 +4,22 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -30,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,66 +59,114 @@ fun OnboardScreen(
         }
     }
 
-    val buttonContainer = Color(0xFF72DE6E).harmonize(other = MaterialTheme.colorScheme.primary)
-    val buttonOnContainer = Color(0xFF258020).harmonize(other = MaterialTheme.colorScheme.primary)
-
     val artworkUris by onboardViewModel.artworkUris.collectAsStateWithLifecycle()
+    val trackCount by onboardViewModel.trackCount.collectAsStateWithLifecycle()
+    val albumCount by onboardViewModel.albumCount.collectAsStateWithLifecycle()
+    val artistCount by onboardViewModel.artistCount.collectAsStateWithLifecycle()
 
     Scaffold(
 
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(paddingValues).padding(horizontal = 20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 36.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text("Access Media Permission", style = MaterialTheme.typography.titleLarge)
+            Text("Access Media Permission", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(20.dp))
             Text("Citole needs media permission to access music & audio on your device",
-                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center)
             Box(
-                modifier = Modifier.padding(vertical = 40.dp, horizontal = 30.dp)
+                modifier = Modifier.padding(vertical = 58.dp, horizontal = 30.dp)
             ) {
                 ArtworkCollage(
-                    hash = 1,
+                    hash = 19, //i liked the look of this one
                     artworkUris = artworkUris
                 )
             }
-            Button(
-                enabled = !granted,
-                onClick = {
-                    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        Manifest.permission.READ_MEDIA_AUDIO
-                    } else {
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                    }
-                    launcher.launch(permission)
-                },
-                contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
-                shapes = ButtonDefaults.shapes(
-                    shape = CircleShape,
-                    pressedShape = MaterialTheme.shapes.medium
-                ),
-                colors = if (granted) ButtonDefaults.buttonColors(
-                    containerColor = buttonContainer,
-                    contentColor = buttonOnContainer
-                ) else ButtonDefaults.filledTonalButtonColors()
+            Column(
+                modifier = Modifier.height(160.dp),
+                horizontalAlignment = Alignment.Start
             ) {
-                Icon(
-                    painter = painterResource(
-                        id = if (granted) R.drawable.ic_check
-                            else R.drawable.ic_audio_file
+                FilledTonalButton(
+                    enabled = !granted,
+                    onClick = {
+                        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            Manifest.permission.READ_MEDIA_AUDIO
+                        } else {
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        }
+                        launcher.launch(permission)
+                    },
+                    contentPadding = PaddingValues(horizontal = 15.dp, vertical = 14.dp),
+                    shapes = ButtonDefaults.shapes(
+                        shape = CircleShape,
+                        pressedShape = MaterialTheme.shapes.medium
                     ),
-                    contentDescription = "Grant Permission",
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    if (granted) "Permission Granted"
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (granted) R.drawable.ic_verified
+                            else R.drawable.ic_music
+                        ),
+                        contentDescription = "Grant Permission",
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        if (granted) "Permission Granted"
                         else "Grant Permission",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.width(3.dp))
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                if (granted) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_check),
+                            contentDescription = "Check",
+                            modifier = Modifier.padding(end = 8.dp, start = 4.dp).size(16.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                        Text("$trackCount tracks", style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.outline)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_check),
+                            contentDescription = "Check",
+                            modifier = Modifier.padding(end = 8.dp, start = 4.dp).size(16.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                        Text("$albumCount albums", style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.outline)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_check),
+                            contentDescription = "Check",
+                            modifier = Modifier.padding(end = 8.dp, start = 4.dp).size(16.dp),
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                        Text("$artistCount artists", style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.outline)
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(70.dp))
+
             FilledTonalIconButton (
+                enabled = granted,
                 onClick = {  },
                 shapes = IconButtonDefaults.shapes(
                     shape = CircleShape,
