@@ -20,7 +20,10 @@ package com.marotidev.citole.presentation.utils
 
 import android.net.Uri
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
@@ -61,24 +64,33 @@ fun MorphingClipImage(
     val rotation = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        launch { progress.animateTo(0f,
-            animationSpec = keyframes {
-                durationMillis = cycleDuration
-                0f at 0
-                1f at (cycleDuration * 0.2).roundToInt() using FastOutSlowInEasing
-                1f at (cycleDuration * 0.5).roundToInt()
-                0f at (cycleDuration * 0.8).roundToInt() using FastOutSlowInEasing
-                0f at cycleDuration using FastOutSlowInEasing
-        })}
-        launch { rotation.animateTo(360f,
-            animationSpec = keyframes {
-                durationMillis = cycleDuration
-                0f at 0
-                150f at (cycleDuration * 0.2).roundToInt() using FastOutSlowInEasing
-                180f at (cycleDuration * 0.5).roundToInt()
-                330f at (cycleDuration * 0.8).roundToInt() using FastOutSlowInEasing
-                360f at cycleDuration using FastOutSlowInEasing
-        })}
+        launch {
+            progress.animateTo(
+                targetValue = 0f,
+                animationSpec = keyframes {
+                    durationMillis = cycleDuration
+                    0f at 0
+                    1f at 800 using FastOutSlowInEasing
+                    1f at 2000
+                    0f at 3200 using FastOutSlowInEasing
+                    0f at cycleDuration
+                }
+            )
+        }
+        launch {
+            rotation.animateTo(
+                targetValue = 360f,
+                animationSpec = keyframes {
+                    durationMillis = cycleDuration
+                    0f at 0
+                    65f at 800 using FastOutLinearInEasing
+                    262f at 2000 using LinearEasing
+                    360f at 3200 using LinearOutSlowInEasing
+                    360f at cycleDuration
+                }
+            )
+
+        }
     }
 
     val clipShape = remember(progress.value, rotation.value) {

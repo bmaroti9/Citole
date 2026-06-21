@@ -36,7 +36,7 @@ class ForYouViewModel @Inject constructor(
 ) : ViewModel() {
 
     val recentlyAdded = audioRepository.allTracks.map { tracks ->
-        tracks.sortedBy { it.dateAdded }.take(14)
+        tracks.sortedBy { it.dateAdded }.reversed().take(14)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

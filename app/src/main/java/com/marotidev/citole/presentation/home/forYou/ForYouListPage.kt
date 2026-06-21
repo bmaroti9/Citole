@@ -262,7 +262,7 @@ fun OfferResumePlayback(
 
     LaunchedEffect(trackWithPlaybackState) {
         if (trackWithPlaybackState != null) {
-            delay(1000.milliseconds)
+            delay(700.milliseconds)
             targetVisible = true
         } else {
             targetVisible = false
@@ -300,18 +300,6 @@ fun OfferResumePlayback(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-//                    AsyncImage(
-//                        model = track.artworkUri,
-//                        contentDescription = "Album Art",
-//                        modifier = Modifier.size(80.dp)
-//                            .clip(CircleShape)
-//                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-//                        error = tintedPainter(
-//                            R.drawable.ic_citole_black,
-//                            MaterialTheme.colorScheme.outline
-//                        ),
-//                        contentScale = ContentScale.Crop
-//                    )
                     MorphingClipImage(track.artworkUri, 80.dp)
                     Column(
                         verticalArrangement = Arrangement.Center,
