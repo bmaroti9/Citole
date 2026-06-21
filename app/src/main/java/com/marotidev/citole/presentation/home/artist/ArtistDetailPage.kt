@@ -217,9 +217,9 @@ fun ArtistDetailScreen(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            modifier = Modifier.padding(bottom = 12.dp, start = 2.dp)
                         ) {
-                            Text("Tracks", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 4.dp))
+                            Text("Tracks", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
                             Spacer(modifier = Modifier.weight(1f))
                             Button(
                                 onClick = {
@@ -442,6 +442,9 @@ fun ArtistDetailScreen(
                         }
                     }
                 }
+            }
+            item {
+                Spacer(modifier = Modifier.height(72.dp))
             }
         }
     }

@@ -120,7 +120,7 @@ fun CustomNavigationDrawerItem(
 }
 
 @Serializable
-object TracksViewDestination
+object LibraryViewDestination
 
 @Serializable
 data class AlbumViewDestination(
@@ -151,7 +151,7 @@ fun CitoleNavHost(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var openAlertDialog by remember { mutableStateOf(false) }
 
-    var selectedPage by remember { mutableStateOf(Page.Tracks) }
+    var selectedPage by remember { mutableStateOf(Page.ForYou) }
 
     val scope = rememberCoroutineScope()
 
@@ -228,7 +228,7 @@ fun CitoleNavHost(
                 popEnterTransition = M3ExpressiveTransitions.popEnter,
                 popExitTransition = M3ExpressiveTransitions.popExit
             ) {
-                composable<TracksViewDestination> {
+                composable<LibraryViewDestination> {
                     Scaffold(
                         topBar = {
                             FixedTopBar(
