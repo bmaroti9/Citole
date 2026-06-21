@@ -1,3 +1,21 @@
+/*
+Copyright (C) <2026>  <Balint Maroti>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+*/
+
 package com.marotidev.citole.presentation.onboard
 
 import android.Manifest
@@ -39,13 +57,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.marotidev.citole.R
+import com.marotidev.citole.presentation.app.AlbumViewDestination
+import com.marotidev.citole.presentation.app.TracksViewDestination
 import com.marotidev.citole.presentation.utils.ArtworkCollage
 import com.materialkolor.ktx.harmonize
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardScreen(
+    navController: NavController,
     onboardViewModel: OnboardViewModel = hiltViewModel()
 ) {
     var granted by remember { mutableStateOf(false) }
@@ -167,7 +189,9 @@ fun OnboardScreen(
 
             FilledTonalIconButton (
                 enabled = granted,
-                onClick = {  },
+                onClick = {
+                    navController.navigate(TracksViewDestination)
+                },
                 shapes = IconButtonDefaults.shapes(
                     shape = CircleShape,
                     pressedShape = MaterialTheme.shapes.medium
