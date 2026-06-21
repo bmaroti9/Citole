@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.forYou
 
+import android.util.Size
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -79,6 +80,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.utils.MorphingClipImage
 import com.marotidev.citole.presentation.utils.durationToString
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
@@ -298,18 +300,19 @@ fun OfferResumePlayback(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AsyncImage(
-                        model = track.artworkUri,
-                        contentDescription = "Album Art",
-                        modifier = Modifier.size(80.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        error = tintedPainter(
-                            R.drawable.ic_citole_black,
-                            MaterialTheme.colorScheme.outline
-                        ),
-                        contentScale = ContentScale.Crop
-                    )
+//                    AsyncImage(
+//                        model = track.artworkUri,
+//                        contentDescription = "Album Art",
+//                        modifier = Modifier.size(80.dp)
+//                            .clip(CircleShape)
+//                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+//                        error = tintedPainter(
+//                            R.drawable.ic_citole_black,
+//                            MaterialTheme.colorScheme.outline
+//                        ),
+//                        contentScale = ContentScale.Crop
+//                    )
+                    MorphingClipImage(track.artworkUri, 80.dp)
                     Column(
                         verticalArrangement = Arrangement.Center,
                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
