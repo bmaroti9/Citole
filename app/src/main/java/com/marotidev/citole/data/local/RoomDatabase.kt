@@ -46,7 +46,7 @@ interface TrackPlayLogDao {
     suspend fun getLastProgress(trackId: Long): TrackPlayLog
 
     @Query("SELECT * FROM trackplaylog WHERE track_type = :type ORDER BY playback_ended_ms DESC LIMIT 1")
-    suspend fun getLastByType(type: AudioService.AudioType): TrackPlayLog
+    suspend fun getLastByType(type: Int): TrackPlayLog?
 
     @Insert
     suspend fun insertAll(vararg trackPlayLogs: TrackPlayLog)

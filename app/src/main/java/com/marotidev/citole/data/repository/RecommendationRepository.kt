@@ -15,7 +15,13 @@ class RecommendationRepository @Inject constructor(
     private val trackPlayLogDao: TrackPlayLogDao,
 ) {
 
+    data class TrackWithPlaybackState(
+        val track: AudioService.TrackData,
+        val log: TrackPlayLog
+    )
+
     var allLogs: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+    var lastPodcast: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -35,6 +41,7 @@ class RecommendationRepository @Inject constructor(
     fun fetchLogs() {
         serviceScope.launch {
             allLogs.value = trackPlayLogDao.getAll().reversed()
+            lastPodcast.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Podcast.ordinal)
         }
     }
 }

@@ -206,13 +206,13 @@ class PlayerViewModel @Inject constructor(
         progressJob?.cancel()
     }
 
-    fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0) {
+    fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0, startPosition: Long = 0) {
         currentQueue.clear()
         currentQueue.addAll(tracks)
 
         val mediaItems = tracks.map { with(audioService) {it.toMediaItem()} }
 
-        player?.setMediaItems(mediaItems, startIndex, 0L)
+        player?.setMediaItems(mediaItems, startIndex, startPosition)
         player?.prepare()
         player?.play()
     }
