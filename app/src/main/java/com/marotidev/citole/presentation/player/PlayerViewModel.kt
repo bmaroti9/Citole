@@ -47,6 +47,7 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
 import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.local.TrackPlayLogDao
+import com.marotidev.citole.data.repository.RecommendationRepository
 import com.materialkolor.ktx.themeColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -64,8 +65,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val application: Application,
-    private val trackPlayLogDao: TrackPlayLogDao,
-    private val audioService: AudioService
+    private val audioService: AudioService,
+    private val recommendationRepository: RecommendationRepository,
 ) : ViewModel() {
 
     var playing by mutableStateOf(false)
@@ -88,19 +89,6 @@ class PlayerViewModel @Inject constructor(
     val themeColor: StateFlow<Color> = _themeColor.asStateFlow()
 
     private val imageLoader = ImageLoader(application)
-
-    fun addToPlayLog(track: AudioService.TrackData, playbackDurationMs: Long) {
-        viewModelScope.launch {
-            val trackPlayLog = TrackPlayLog(
-                trackId = track.id,
-                playbackEndedMs = System.currentTimeMillis(),
-                playbackDurationMs = playbackDurationMs,
-                trackType = track.type.ordinal
-            )
-            trackPlayLogDao.insertAll(trackPlayLog)
-            Log.i("AddedToLog", "${track.id}, $playbackDurationMs")
-        }
-    }
 
     private suspend fun updateColorFromAlbumArt(artworkUri: Uri?, context: Context) {
         if (artworkUri == null) {
@@ -181,7 +169,7 @@ class PlayerViewModel @Inject constructor(
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 //log the previous play
                 currentlyPlaying?.let {
-                    addToPlayLog(it, progress)
+                    recommendationRepository.addToPlayLog(it, progress)
                 }
 
                 currentIndex = player?.currentMediaItemIndex ?: 0
@@ -221,8 +209,6 @@ class PlayerViewModel @Inject constructor(
     fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0) {
         currentQueue.clear()
         currentQueue.addAll(tracks)
-        currentIndex = startIndex
-        currentlyPlaying = tracks[startIndex]
 
         val mediaItems = tracks.map { with(audioService) {it.toMediaItem()} }
 
@@ -235,8 +221,6 @@ class PlayerViewModel @Inject constructor(
         val mediaItem = with(audioService) {track.toMediaItem()}
         if (currentQueue.isEmpty()) {
             currentQueue += track
-            currentIndex = 0
-            currentlyPlaying = track
 
             player?.setMediaItem(mediaItem)
             player?.prepare()
@@ -289,15 +273,26 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun dismissPlayer() {
-        player?.stop()
-        player?.clearMediaItems()
+        currentlyPlaying?.let {
+            recommendationRepository.addToPlayLog(it, progress)
+        }
+
         currentQueue.clear()
+        progress = 0
         currentIndex = 0
         currentlyPlaying = null
+
+        player?.stop()
+        player?.clearMediaItems()
     }
 
     override fun onCleared() {
         super.onCleared()
+
+        currentlyPlaying?.let {
+            recommendationRepository.addToPlayLog(it, progress)
+        }
+
         player?.release()
     }
 }

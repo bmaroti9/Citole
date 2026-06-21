@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.forYou
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -45,16 +47,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
+import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
+import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.tintedPainter
 
 @Composable
 fun ForYouListPage(
+    playerViewModel: PlayerViewModel,
     paddingValues: PaddingValues,
     navController: NavController,
     forYouViewModel: ForYouViewModel = hiltViewModel()
 ) {
 
     val recentlyAdded by forYouViewModel.recentlyAdded.collectAsStateWithLifecycle()
+    val recentlyPlayed by forYouViewModel.recentlyPlayed.collectAsStateWithLifecycle()
+
     val carouselState = rememberCarouselState { recentlyAdded.size }
 
     LazyColumn(
@@ -97,7 +104,26 @@ fun ForYouListPage(
                     }
                 }
             }
+        }
 
+        item {
+            Column() {
+                Text("Recently Played", style = MaterialTheme.typography.titleSmall)
+                recentlyPlayed.forEachIndexed { index, track ->
+                    if (track != null) {
+                        SwipeableTrackItem (
+                            track = track,
+                            playerViewModel = playerViewModel,
+                            index = index,
+                            count = recentlyPlayed.size,
+                            navController = navController
+                        ) {
+                            playerViewModel.playQueue(listOf(track))
+                        }
+                    }
+
+                }
+            }
         }
 
     }

@@ -21,8 +21,10 @@ package com.marotidev.citole.presentation.home.forYou
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
+import com.marotidev.citole.data.repository.RecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -30,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ForYouViewModel @Inject constructor(
     audioRepository : AudioRepository,
+    recommendationRepository: RecommendationRepository
 ) : ViewModel() {
 
     val recentlyAdded = audioRepository.allTracks.map { tracks ->
@@ -39,5 +42,20 @@ class ForYouViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    val recentlyPlayed = combine(
+        recommendationRepository.allLogs,
+        audioRepository.allTracks
+    ) { logs, tracks ->
+        logs.map { log -> tracks.find { it.id == log.trackId } }.take(10)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    init {
+        recommendationRepository.fetchLogs()
+    }
 
 }

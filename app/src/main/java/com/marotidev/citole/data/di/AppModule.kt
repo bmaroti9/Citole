@@ -25,6 +25,7 @@ import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.local.AppDatabase
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.local.TrackPlayLogDao
+import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.Module
 import dagger.Provides
@@ -74,5 +75,11 @@ class AppModule {
     @Singleton
     fun provideTrackPlayLogDao(database: AppDatabase): TrackPlayLogDao {
         return database.trackPlayLogDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecommendationRepository(trackPlayLogDao: TrackPlayLogDao) : RecommendationRepository {
+        return RecommendationRepository(trackPlayLogDao)
     }
 }
