@@ -1,6 +1,8 @@
 package com.marotidev.citole.data.repository
 
 import android.util.Log
+import androidx.room.Index
+import androidx.room.Transaction
 import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.local.TrackPlayLogDao
 import com.marotidev.citole.data.service.AudioService
@@ -91,7 +93,14 @@ class RecommendationRepository @Inject constructor(
 
     fun deleteLogFromQueue(index: Int, queueId: Long) {
         serviceScope.launch {
-            trackPlayLogDao.deleteLogFromQueue(index, queueId)
+            deleteFromQueueAndReIndex(index, queueId)
         }
+    }
+
+    //they both have to succeed or fail
+    @Transaction
+    suspend fun deleteFromQueueAndReIndex(index: Int, queueId: Long) {
+        trackPlayLogDao.deleteLogFromQueue(index, queueId)
+        trackPlayLogDao.decreaseIndexAfter(index, queueId)
     }
 }
