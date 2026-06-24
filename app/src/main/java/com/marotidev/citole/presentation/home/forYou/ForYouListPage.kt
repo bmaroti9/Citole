@@ -278,7 +278,8 @@ fun OfferResumePlayback(
                             playerViewModel.playQueue(
                                 queueWithPlaybackState.tracks,
                                 startIndex = queueWithPlaybackState.queueIndex,
-                                startPosition = queueWithPlaybackState.playbackDurationMs
+                                startPosition = queueWithPlaybackState.playbackDurationMs,
+                                givenQueueId = queueWithPlaybackState.queueId
                             )
                         }
                     )

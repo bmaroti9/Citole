@@ -23,7 +23,8 @@ class RecommendationRepository @Inject constructor(
     data class QueueWithPlaybackState(
         val tracks: List<AudioService.TrackData>,
         val queueIndex: Int,
-        val playbackDurationMs: Long
+        val playbackDurationMs: Long,
+        val queueId: Long
     )
 
     var allLogs: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())

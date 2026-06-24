@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.log
 import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
@@ -54,7 +55,9 @@ class ForYouViewModel @Inject constructor(
         recommendationRepository.allLogs,
         audioRepository.allTracks
     ) { logs, tracks ->
-        logs.mapNotNull { log -> tracks.find { it.id == log.trackId } }.take(10)
+            logs
+            .filter { log -> log.playbackDurationMs > 0 }
+            .mapNotNull { log -> tracks.find { it.id == log.trackId } }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -91,7 +94,8 @@ class ForYouViewModel @Inject constructor(
             RecommendationRepository.QueueWithPlaybackState(
                 tracks = tracks,
                 queueIndex = it.queueIndex.coerceIn(0, tracks.size - 1),
-                playbackDurationMs = it.playbackDurationMs
+                playbackDurationMs = it.playbackDurationMs,
+                queueId = it.queueId
             )
         }
     }.stateIn(

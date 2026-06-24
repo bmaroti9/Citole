@@ -210,10 +210,11 @@ class PlayerViewModel @Inject constructor(
         progressJob?.cancel()
     }
 
-    fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0, startPosition: Long = 0) {
+    fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0, startPosition: Long = 0,
+                  givenQueueId: Long = System.currentTimeMillis()) {
 
-        //I'm id-ing them based on the time the queue was created
-        queueId = System.currentTimeMillis()
+        queueId = givenQueueId
+
         recommendationRepository.addInitialEmptyQueueLog(queueId, tracks)
 
         currentQueue.clear()
