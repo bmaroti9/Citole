@@ -44,7 +44,7 @@ class ForYouViewModel @Inject constructor(
 ) : ViewModel() {
 
     val recentlyAdded = audioRepository.allTracks.map { tracks ->
-        tracks.sortedBy { it.dateAdded }.reversed().take(14)
+        tracks.sortedBy { it.dateAdded }.reversed().take(16)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -58,6 +58,7 @@ class ForYouViewModel @Inject constructor(
             logs
             .filter { log -> log.playbackDurationMs > 0 }
             .mapNotNull { log -> tracks.find { it.id == log.trackId } }
+            .take(10)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

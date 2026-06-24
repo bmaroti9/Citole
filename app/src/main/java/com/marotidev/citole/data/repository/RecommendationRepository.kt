@@ -100,6 +100,8 @@ class RecommendationRepository @Inject constructor(
     //they both have to succeed or fail
     @Transaction
     suspend fun deleteFromQueueAndReIndex(index: Int, queueId: Long) {
+        //detach and delete are opposites and both will never run at the same time
+        trackPlayLogDao.detachLogFromQueue(index, queueId, System.currentTimeMillis())
         trackPlayLogDao.deleteLogFromQueue(index, queueId)
         trackPlayLogDao.decreaseIndexAfter(index, queueId)
     }

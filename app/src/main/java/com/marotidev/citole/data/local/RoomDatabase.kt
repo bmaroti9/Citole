@@ -66,8 +66,11 @@ interface TrackPlayLogDao {
     @Query("UPDATE trackplaylog SET queue_index = queue_index - 1 WHERE queue_id = :queueId AND queue_index > :fromIndex")
     suspend fun decreaseIndexAfter(fromIndex: Int, queueId: Long, )
 
-    @Query("DELETE FROM trackplaylog WHERE queue_index = :index AND queue_id = :queueId")
+    @Query("DELETE FROM trackplaylog WHERE queue_index = :index AND queue_id = :queueId AND playback_duration_ms = 0")
     suspend fun deleteLogFromQueue(index: Int, queueId: Long)
+
+    @Query("UPDATE trackplaylog SET queue_id = :newQueueId WHERE queue_index = :index AND queue_id = :queueId AND playback_duration_ms > 0")
+    suspend fun detachLogFromQueue(index: Int, queueId: Long, newQueueId: Long)
 
     @Insert
     suspend fun insertAll(trackPlayLogs: List<TrackPlayLog>)

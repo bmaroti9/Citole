@@ -211,11 +211,13 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0, startPosition: Long = 0,
-                  givenQueueId: Long = System.currentTimeMillis()) {
-
-        queueId = givenQueueId
-
-        recommendationRepository.addInitialEmptyQueueLog(queueId, tracks)
+                  givenQueueId: Long? = null) {
+        if (givenQueueId == null) {
+            queueId = System.currentTimeMillis()
+            recommendationRepository.addInitialEmptyQueueLog(queueId, tracks)
+        } else {
+            queueId = givenQueueId
+        }
 
         currentQueue.clear()
         currentQueue.addAll(tracks)
