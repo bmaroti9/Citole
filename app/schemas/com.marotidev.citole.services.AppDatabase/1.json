@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "095d7e51dc533063601549e8b14c925b",
+    "identityHash": "a5f239d7166c86f91be3218b7cb0051a",
     "entities": [
       {
         "tableName": "TrackPlayLog",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `track_id` INTEGER NOT NULL, `queue_id` INTEGER NOT NULL, `queue_index` INTEGER NOT NULL, `playback_ended_ms` INTEGER NOT NULL, `playback_duration_ms` INTEGER NOT NULL, `track_type` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `track_id` INTEGER NOT NULL, `playback_ended_ms` INTEGER NOT NULL, `playback_duration_ms` INTEGER NOT NULL, `track_type` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -17,18 +17,6 @@
           {
             "fieldPath": "trackId",
             "columnName": "track_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "queueId",
-            "columnName": "queue_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "queueIndex",
-            "columnName": "queue_index",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -61,7 +49,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '095d7e51dc533063601549e8b14c925b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a5f239d7166c86f91be3218b7cb0051a')"
     ]
   }
 }

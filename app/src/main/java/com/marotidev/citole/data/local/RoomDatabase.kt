@@ -26,14 +26,20 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Update
 import com.marotidev.citole.data.service.AudioService
 
 @Entity
 data class TrackPlayLog(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "track_id") val trackId: Long,
-    @ColumnInfo(name = "playback_ended_ms") val playbackEndedMs: Long,
-    @ColumnInfo(name = "playback_duration_ms") val playbackDurationMs: Long,
+    @ColumnInfo(name = "queue_id") val queueId: Long,
+
+    @ColumnInfo(name = "queue_index") val queueIndex: Int,
+
+    @ColumnInfo(name = "playback_ended_ms") val playbackEndedMs: Long = 0,
+    @ColumnInfo(name = "playback_duration_ms") val playbackDurationMs: Long = 0,
+
     @ColumnInfo(name = "track_type") val trackType: Int,
 )
 
@@ -42,14 +48,26 @@ interface TrackPlayLogDao {
     @Query("SELECT * FROM trackplaylog")
     suspend fun getAll(): List<TrackPlayLog>
 
+    @Query("SELECT * FROM trackplaylog WHERE queue_id = :queueId GROUP BY queue_index")
+    suspend fun getAllByQueueId(queueId: Long) : List<TrackPlayLog>
+
     @Query("SELECT * FROM trackplaylog WHERE track_id = :trackId ORDER BY playback_ended_ms DESC LIMIT 1")
     suspend fun getLastProgress(trackId: Long): TrackPlayLog
 
     @Query("SELECT * FROM trackplaylog WHERE track_type = :type ORDER BY playback_ended_ms DESC LIMIT 1")
     suspend fun getLastByType(type: Int): TrackPlayLog?
 
+    @Query("UPDATE trackplaylog SET playback_ended_ms = :playbackEndedMs, playback_duration_ms = :playbackDurationMs WHERE track_id = :trackId AND queue_id = :queueId")
+    suspend fun updateLogTimeValues(queueId: Long, trackId: Long, playbackEndedMs: Long, playbackDurationMs: Long)
+
+    @Query("UPDATE trackplaylog SET queue_index = :newIndex WHERE track_id = :trackId AND queue_id = :queueId")
+    suspend fun updateLogQueueIndex(queueId: Long, trackId: Long, newIndex: Int)
+
+    @Query("DELETE FROM trackplaylog WHERE queue_index = :index AND queue_id = :queueId")
+    suspend fun deleteLogFromQueue(index: Int, queueId: Long)
+
     @Insert
-    suspend fun insertAll(vararg trackPlayLogs: TrackPlayLog)
+    suspend fun insertAll(trackPlayLogs: List<TrackPlayLog>)
 }
 
 @Database(entities = [TrackPlayLog::class], version = 1)

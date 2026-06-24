@@ -18,16 +18,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.forYou
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.RecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ForYouViewModel @Inject constructor(
@@ -47,7 +54,7 @@ class ForYouViewModel @Inject constructor(
         recommendationRepository.allLogs,
         audioRepository.allTracks
     ) { logs, tracks ->
-        logs.map { log -> tracks.find { it.id == log.trackId } }.take(10)
+        logs.mapNotNull { log -> tracks.find { it.id == log.trackId } }.take(10)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -65,19 +72,45 @@ class ForYouViewModel @Inject constructor(
         } else {
             RecommendationRepository.TrackWithPlaybackState(
                 track,
-                lastPodcast
+                lastPodcast.playbackDurationMs
             )
         }
-
-
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
+    val lastAudiobook = combine(
+        recommendationRepository.lastAudiobook,
+        recommendationRepository.lastAudiobookQueue,
+        audioRepository.allTracks
+    ) { lastAudioBook, lastAudiobookQueue, allTracks ->
+        lastAudioBook?.let {
+            val tracks = lastAudiobookQueue.mapNotNull { log -> allTracks.find { track -> track.id == log.trackId } }
+            RecommendationRepository.QueueWithPlaybackState(
+                tracks = tracks,
+                queueIndex = it.queueIndex.coerceIn(0, tracks.size - 1),
+                playbackDurationMs = it.playbackDurationMs
+            )
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    var resumePlaybackAnimationState by mutableIntStateOf(0)
+
     init {
         recommendationRepository.fetchLogs()
+        viewModelScope.launch {
+            delay(700.milliseconds)
+            resumePlaybackAnimationState = 1
+            delay(1000.milliseconds)
+            resumePlaybackAnimationState = 2
+        }
+
     }
 
 }

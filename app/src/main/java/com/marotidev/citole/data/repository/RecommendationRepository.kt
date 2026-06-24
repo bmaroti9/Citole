@@ -17,24 +17,59 @@ class RecommendationRepository @Inject constructor(
 
     data class TrackWithPlaybackState(
         val track: AudioService.TrackData,
-        val log: TrackPlayLog
+        val playbackDurationMs: Long
+    )
+
+    data class QueueWithPlaybackState(
+        val tracks: List<AudioService.TrackData>,
+        val queueIndex: Int,
+        val playbackDurationMs: Long
     )
 
     var allLogs: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
     var lastPodcast: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
 
+    var lastAudiobook: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
+    var lastAudiobookQueue: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun addToPlayLog(track: AudioService.TrackData, playbackDurationMs: Long) {
+    fun addInitialEmptyQueueLog(queueId: Long, tracks: List<AudioService.TrackData>) {
+        serviceScope.launch {
+            val logs = List(tracks.size) { index ->
+                val track = tracks[index]
+                TrackPlayLog(
+                    trackId = track.id,
+                    queueId = queueId,
+                    trackType = track.type.ordinal,
+                    queueIndex = index,
+                )
+            }
+            trackPlayLogDao.insertAll(logs)
+        }
+    }
+
+    fun updateLogTimeValues(queueId: Long, trackId: Long, playbackEndedMs: Long, playbackDurationMs: Long) {
+        serviceScope.launch {
+            trackPlayLogDao.updateLogTimeValues(queueId, trackId, playbackEndedMs, playbackDurationMs)
+        }
+    }
+
+    fun updateLogQueueIndex(queueId: Long, trackId: Long, newIndex: Int) {
+        serviceScope.launch {
+            trackPlayLogDao.updateLogQueueIndex(queueId, trackId, newIndex)
+        }
+    }
+
+    fun addEmptyPlayLog(track: AudioService.TrackData, queueIndex: Int, queueId: Long) {
         serviceScope.launch {
             val trackPlayLog = TrackPlayLog(
                 trackId = track.id,
-                playbackEndedMs = System.currentTimeMillis(),
-                playbackDurationMs = playbackDurationMs,
-                trackType = track.type.ordinal
+                trackType = track.type.ordinal,
+                queueIndex = queueIndex,
+                queueId = queueId
             )
-            trackPlayLogDao.insertAll(trackPlayLog)
-            Log.i("AddedToLog", "${track.id}, $playbackDurationMs")
+            trackPlayLogDao.insertAll(listOf(trackPlayLog))
         }
     }
 
@@ -42,6 +77,20 @@ class RecommendationRepository @Inject constructor(
         serviceScope.launch {
             allLogs.value = trackPlayLogDao.getAll().reversed()
             lastPodcast.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Podcast.ordinal)
+            fetchLastAudiobookQueue()
+        }
+    }
+
+    suspend fun fetchLastAudiobookQueue() {
+        lastAudiobook.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Audiobook.ordinal)
+        lastAudiobook.value?.let {
+            lastAudiobookQueue.value = trackPlayLogDao.getAllByQueueId(it.queueId)
+        }
+    }
+
+    fun deleteLogFromQueue(index: Int, queueId: Long) {
+        serviceScope.launch {
+            trackPlayLogDao.deleteLogFromQueue(index, queueId)
         }
     }
 }

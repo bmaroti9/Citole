@@ -23,6 +23,7 @@ import android.util.Size
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -57,6 +58,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,10 +78,13 @@ import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.tintedPainter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.utils.ArtworkCollage
 import com.marotidev.citole.presentation.utils.MorphingClipImage
 import com.marotidev.citole.presentation.utils.durationToString
 import kotlinx.coroutines.delay
@@ -96,6 +101,7 @@ fun ForYouListPage(
     val recentlyAdded by forYouViewModel.recentlyAdded.collectAsStateWithLifecycle()
     val recentlyPlayed by forYouViewModel.recentlyPlayed.collectAsStateWithLifecycle()
     val lastPodcast by forYouViewModel.lastPodcast.collectAsStateWithLifecycle()
+    val lastAudiobook by forYouViewModel.lastAudiobook.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier
@@ -110,26 +116,23 @@ fun ForYouListPage(
         }
 
         item {
-            OfferResumePlayback(lastPodcast, playerViewModel)
+            OfferResumePlayback(forYouViewModel.resumePlaybackAnimationState,lastAudiobook, playerViewModel)
         }
 
         item {
             Column() {
                 Text("Recently Played", style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp))
+                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp), color = MaterialTheme.colorScheme.onSurface)
                 recentlyPlayed.forEachIndexed { index, track ->
-                    if (track != null) {
-                        SwipeableTrackItem (
-                            track = track,
-                            playerViewModel = playerViewModel,
-                            index = index,
-                            count = recentlyPlayed.size,
-                            navController = navController
-                        ) {
-                            playerViewModel.playQueue(listOf(track))
-                        }
+                    SwipeableTrackItem (
+                        track = track,
+                        playerViewModel = playerViewModel,
+                        index = index,
+                        count = recentlyPlayed.size,
+                        navController = navController
+                    ) {
+                        playerViewModel.playQueue(listOf(track))
                     }
-
                 }
             }
         }
@@ -139,138 +142,119 @@ fun ForYouListPage(
 
 @Composable
 fun TrackCarousel(tracks: List<AudioService.TrackData>, playerViewModel: PlayerViewModel) {
+    val haptic = LocalHapticFeedback.current
 
-    AnimatedVisibility(
-        visible = tracks.isNotEmpty(),
-        enter = expandVertically(
-            expandFrom = Alignment.Top,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)),
+    val carouselState = rememberCarouselState { tracks.size }
+
+    Column(
+        modifier = Modifier
+            .padding(vertical = 12.dp)
+            .background(MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(34.dp))
+            .padding(12.dp)
     ) {
-        val carouselState = rememberCarouselState { tracks.size }
+        Text("Recently Added", style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = 8.dp, start = 2.dp), color = MaterialTheme.colorScheme.onSurface)
 
-        Column(
+        HorizontalMultiBrowseCarousel(
+            state = carouselState,
             modifier = Modifier
-                .padding(vertical = 12.dp)
-                .background(MaterialTheme.colorScheme.surface,
-                    RoundedCornerShape(34.dp))
-                .padding(12.dp)
-        ) {
-            Text("Recently Added", style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(bottom = 8.dp, start = 2.dp))
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            preferredItemWidth = 180.dp,
+            flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(carouselState),
+            itemSpacing = 6.dp,
+        ) { i ->
+            val track = tracks[i]
 
-            HorizontalMultiBrowseCarousel(
-                state = carouselState,
+            val drawInfo = carouselItemDrawInfo
+
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                preferredItemWidth = 180.dp,
-                flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(carouselState),
-                itemSpacing = 6.dp,
-            ) { i ->
-                val track = tracks[i]
-
-                val drawInfo = carouselItemDrawInfo
+                    .height(205.dp)
+                    .maskClip(RoundedCornerShape(22.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .clickable(
+                        onClick = {
+                            playerViewModel.playQueue(listOf(track))
+                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        }
+                    )
+            ) {
+                AsyncImage(
+                    model = track.artworkUri,
+                    contentDescription = "Album Art",
+                    modifier = Modifier.fillMaxSize(),
+                    error = tintedPainter(
+                        R.drawable.ic_citole_black,
+                        MaterialTheme.colorScheme.outline
+                    ),
+                    contentScale = ContentScale.Crop
+                )
 
                 Box(
                     modifier = Modifier
-                        .height(205.dp)
-                        .maskClip(RoundedCornerShape(22.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .clickable(
-                            onClick = {
-                                playerViewModel.playQueue(listOf(track))
-                            }
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f)),
+                                startY = 250f
+                            )
                         )
-                ) {
-                    AsyncImage(
-                        model = track.artworkUri,
-                        contentDescription = "Album Art",
-                        modifier = Modifier.fillMaxSize(),
-                        error = tintedPainter(
-                            R.drawable.ic_citole_black,
-                            MaterialTheme.colorScheme.outline
-                        ),
-                        contentScale = ContentScale.Crop
-                    )
+                )
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f)),
-                                    startY = 250f
-                                )
-                            )
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                val currentWidth = drawInfo.size
-                                val maxWidth = drawInfo.maxSize
-                                val fadeThreshold = maxWidth * 0.8f
-                                alpha = if (maxWidth <= 0f || currentWidth < fadeThreshold) {
-                                    0f
-                                } else {
-                                    ((currentWidth - fadeThreshold) / (maxWidth - fadeThreshold)).coerceIn(0f, 1f)
-                                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            val currentWidth = drawInfo.size
+                            val maxWidth = drawInfo.maxSize
+                            val fadeThreshold = maxWidth * 0.8f
+                            alpha = if (maxWidth <= 0f || currentWidth < fadeThreshold) {
+                                0f
+                            } else {
+                                ((currentWidth - fadeThreshold) / (maxWidth - fadeThreshold)).coerceIn(0f, 1f)
                             }
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.Bottom,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(14.dp)
-                        ) {
-                            Text(
-                                text = track.title,
-                                style = MaterialTheme.typography.titleMedium
-                                    .copy(color = Color.White),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = track.artists.joinToString(", "),
-                                style = MaterialTheme.typography.labelMedium
-                                    .copy(color = Color.White, fontWeight = FontWeight.W700),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
                         }
-
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = track.title,
+                            style = MaterialTheme.typography.titleMedium
+                                .copy(color = Color.White),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = track.artists.joinToString(", "),
+                            style = MaterialTheme.typography.labelMedium
+                                .copy(color = Color.White, fontWeight = FontWeight.W700),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
+
                 }
             }
         }
     }
-
 }
 
 @Composable
 fun OfferResumePlayback(
-    trackWithPlaybackState: RecommendationRepository.TrackWithPlaybackState?,
+    animationState: Int,
+    queueWithPlaybackState: RecommendationRepository.QueueWithPlaybackState?,
     playerViewModel: PlayerViewModel
 ) {
-    var targetVisible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(trackWithPlaybackState) {
-        if (trackWithPlaybackState != null) {
-            delay(700.milliseconds)
-            targetVisible = true
-        } else {
-            targetVisible = false
-        }
-    }
 
     AnimatedVisibility(
-        visible = targetVisible,
+        visible = animationState > 0,
         enter = expandVertically(
             expandFrom = Alignment.Top,
             animationSpec = spring(
@@ -280,11 +264,10 @@ fun OfferResumePlayback(
         ) + fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)),
     ) {
 
-        if (trackWithPlaybackState == null) {
+        if (queueWithPlaybackState?.tracks.isNullOrEmpty()) {
             Spacer(modifier = Modifier)
         } else {
-            val track = trackWithPlaybackState.track
-            val log = trackWithPlaybackState.log
+            val track = queueWithPlaybackState.tracks[queueWithPlaybackState.queueIndex]
 
             Box(
                 modifier = Modifier
@@ -292,7 +275,11 @@ fun OfferResumePlayback(
                     .background(MaterialTheme.colorScheme.surface)
                     .clickable(
                         onClick = {
-                            playerViewModel.playQueue(listOf(track), startPosition = log.playbackDurationMs)
+                            playerViewModel.playQueue(
+                                queueWithPlaybackState.tracks,
+                                startIndex = queueWithPlaybackState.queueIndex,
+                                startPosition = queueWithPlaybackState.playbackDurationMs
+                            )
                         }
                     )
                     .padding(12.dp)
@@ -300,27 +287,30 @@ fun OfferResumePlayback(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    MorphingClipImage(track.artworkUri, 80.dp)
+                    MorphingClipImage(track.artworkUri, 80.dp, runAnimation = animationState == 1)
                     Column(
                         verticalArrangement = Arrangement.Center,
                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 4.dp)
+                            modifier = Modifier.padding(bottom = 2.dp)
                         ) {
-                            Text("Resume playback of", style = MaterialTheme.typography.labelSmall)
+                            Text("Resume playback of", style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface)
                             Box(
                                 modifier = Modifier
                                     .padding(horizontal = 6.dp)
                                     .size(3.dp)
-                                    .background(MaterialTheme.colorScheme.outline, CircleShape)
+                                    .background(MaterialTheme.colorScheme.onSurface, CircleShape)
                             )
-                            Text(durationToString(log.playbackDurationMs), style = MaterialTheme.typography.labelSmall,
+                            Text(durationToString(queueWithPlaybackState.playbackDurationMs), style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary)
                         }
-                        Text(track.title, style = MaterialTheme.typography.titleSmall)
-                        Text(track.artists.joinToString(", "), style = MaterialTheme.typography.labelMedium)
+                        Text(track.title, style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface)
+                        Text(track.artists.joinToString(", "), style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

@@ -78,6 +78,8 @@ class PlayerViewModel @Inject constructor(
     var currentlyPlaying by mutableStateOf<AudioService.TrackData?>(null)
     var currentIndex by mutableIntStateOf(0)
 
+    private var queueId : Long = 0
+
     var progress by mutableLongStateOf(0L)
 
     private var player : MediaController? = null
@@ -89,6 +91,7 @@ class PlayerViewModel @Inject constructor(
     val themeColor: StateFlow<Color> = _themeColor.asStateFlow()
 
     private val imageLoader = ImageLoader(application)
+
 
     private suspend fun updateColorFromAlbumArt(artworkUri: Uri?, context: Context) {
         if (artworkUri == null) {
@@ -167,9 +170,10 @@ class PlayerViewModel @Inject constructor(
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                //log the previous play
+                //log the play times
                 currentlyPlaying?.let {
-                    recommendationRepository.addToPlayLog(it, progress)
+                    recommendationRepository.updateLogTimeValues(queueId, it.id,
+                        playbackEndedMs = System.currentTimeMillis(), playbackDurationMs = progress)
                 }
 
                 currentIndex = player?.currentMediaItemIndex ?: 0
@@ -207,6 +211,11 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun playQueue(tracks: List<AudioService.TrackData>, startIndex: Int = 0, startPosition: Long = 0) {
+
+        //I'm id-ing them based on the time the queue was created
+        queueId = System.currentTimeMillis()
+        recommendationRepository.addInitialEmptyQueueLog(queueId, tracks)
+
         currentQueue.clear()
         currentQueue.addAll(tracks)
 
@@ -220,6 +229,8 @@ class PlayerViewModel @Inject constructor(
     fun addToQueue(track: AudioService.TrackData, index: Int = currentQueue.size) {
         val mediaItem = with(audioService) {track.toMediaItem()}
         if (currentQueue.isEmpty()) {
+            queueId = System.currentTimeMillis()
+
             currentQueue += track
 
             player?.setMediaItem(mediaItem)
@@ -230,14 +241,21 @@ class PlayerViewModel @Inject constructor(
             currentQueue.add(index, track)
             player?.addMediaItem(index, mediaItem)
         }
+
+        recommendationRepository.addEmptyPlayLog(track, index, queueId)
     }
 
     fun removeFromQueue(index: Int) {
+        recommendationRepository.deleteLogFromQueue(index, queueId)
+
         currentQueue.removeAt(index)
         player?.removeMediaItem(index)
     }
 
     fun reorderInQueue(from: Int, to: Int) {
+        recommendationRepository.updateLogQueueIndex(queueId, currentQueue[from].id, to)
+        recommendationRepository.updateLogQueueIndex(queueId, currentQueue[to].id, from)
+
         currentQueue.add(to, currentQueue.removeAt(from))
         player?.moveMediaItem(from, to)
     }
@@ -274,7 +292,8 @@ class PlayerViewModel @Inject constructor(
 
     fun dismissPlayer() {
         currentlyPlaying?.let {
-            recommendationRepository.addToPlayLog(it, progress)
+            recommendationRepository.updateLogTimeValues(queueId, trackId = it.id,
+                System.currentTimeMillis(), progress)
         }
 
         currentQueue.clear()
@@ -288,11 +307,6 @@ class PlayerViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-
-        currentlyPlaying?.let {
-            recommendationRepository.addToPlayLog(it, progress)
-        }
-
         player?.release()
     }
 }

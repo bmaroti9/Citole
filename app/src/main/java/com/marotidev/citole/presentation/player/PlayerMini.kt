@@ -194,10 +194,8 @@ fun CustomFloatingToolbar(
         val collapsedAlpha = ((fraction - 0.8f) / 0.2f).coerceIn(0f, 1f)
         val expandedAlpha = ((0.5f - fraction) / 0.5f).coerceIn(0f, 1f)
 
-        val fabInteractionSource = remember { MutableInteractionSource() }
         var fabIsPressed by remember { mutableStateOf(false) }
         var releasePressJob by remember { mutableStateOf<Job?>(null) }
-        //val fabIsPressed by fabInteractionSource.collectIsPressedAsState()
 
         val fabCornerRadius by animateDpAsState(
             targetValue = if (fabIsPressed || playerViewModel.playing) 16.dp else 28.dp,
