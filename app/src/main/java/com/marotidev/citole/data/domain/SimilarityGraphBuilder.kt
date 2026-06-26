@@ -1,10 +1,13 @@
 package com.marotidev.citole.data.domain
 
+import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.service.AudioService
 
 class SimilarityGraphBuilder {
 
     val sharedArtistWeight = 10f
+    val sharedAlbumWeight = 15f
+    val sharedQueueWeight = 5f
 
     //a map of the trackIds with the weight of the connection
     private val edges = mutableMapOf<Long, MutableMap<Long, Float>>()
@@ -20,6 +23,26 @@ class SimilarityGraphBuilder {
             artist.tracks.forEach { a ->
                 artist.tracks.forEach { b ->
                     addEdge(a.id, b.id, sharedArtistWeight)
+                }
+            }
+        }
+    }
+
+    fun connectBySharedAlbum(albums: List<AudioService.AlbumData>) {
+        albums.forEach { album ->
+            album.tracks.forEach { a ->
+                album.tracks.forEach { b ->
+                    addEdge(a.id, b.id, sharedAlbumWeight)
+                }
+            }
+        }
+    }
+
+    fun connectBySharedQueueLog(allLogs: List<TrackPlayLog>) {
+        allLogs.groupBy { it.queueId }.forEach { (id, logs) ->
+            logs.forEach { a ->
+                logs.forEach { b ->
+                    addEdge(a.trackId, b.trackId, sharedQueueWeight)
                 }
             }
         }

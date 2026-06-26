@@ -116,7 +116,7 @@ class TrackLogRepository @Inject constructor(
 
     fun fetchLogs() {
         serviceScope.launch {
-            allLogs.value = trackPlayLogDao.getAll().reversed()
+            allLogs.value = trackPlayLogDao.getAllPlayedLogs().reversed()
             lastPodcast.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Podcast.ordinal)
             fetchLastAudiobookQueue()
         }

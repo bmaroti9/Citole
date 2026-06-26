@@ -54,7 +54,6 @@ class ForYouViewModel @Inject constructor(
         audioRepository.allTracks
     ) { logs, tracks ->
             logs
-            .filter { log -> log.playbackDurationMs > 0 }
             .mapNotNull { log -> tracks.find { it.id == log.trackId } }
             .take(10)
     }.stateIn(

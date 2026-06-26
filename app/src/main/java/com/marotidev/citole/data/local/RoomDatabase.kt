@@ -45,8 +45,8 @@ data class TrackPlayLog(
 
 @Dao
 interface TrackPlayLogDao {
-    @Query("SELECT * FROM trackplaylog")
-    suspend fun getAll(): List<TrackPlayLog>
+    @Query("SELECT * FROM trackplaylog WHERE playback_duration_ms > 5000")
+    suspend fun getAllPlayedLogs(): List<TrackPlayLog>
 
     @Query("SELECT * FROM trackplaylog WHERE queue_id = :queueId GROUP BY queue_index")
     suspend fun getAllByQueueId(queueId: Long) : List<TrackPlayLog>

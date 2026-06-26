@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.repository
 
-import android.util.Log
 import com.marotidev.citole.data.domain.SimilarityGraphBuilder
 import com.marotidev.citole.data.service.AudioService
 import kotlinx.coroutines.CoroutineScope
@@ -35,17 +34,20 @@ class RecommendationRepository @Inject constructor(
     private val audioRepository: AudioRepository
 ) {
 
-    val stopMultiplier = 0.02f
+    val stopMultiplier = 0.01f
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var similarityGraph : Flow<Map<Long, Map<Long, Float>>> = combine(
         audioRepository.allArtists,
+        audioRepository.allAlbums,
         trackLogRepository.allLogs
-    ) { artists, logs ->
+    ) { artists, albums, allLogs ->
         SimilarityGraphBuilder()
             .apply {
                 connectBySharedArtist(artists)
+                connectBySharedAlbum(albums)
+                connectBySharedQueueLog(allLogs)
             }
             .build()
     }
@@ -80,9 +82,11 @@ class RecommendationRepository @Inject constructor(
                 }
             }
 
-            picked.add(currentNode)
-            if (picked.size == count) {
-                break
+            if (currentNode !in picked) {
+                picked.add(currentNode)
+                if (picked.size == count) {
+                    break
+                }
             }
         }
 
