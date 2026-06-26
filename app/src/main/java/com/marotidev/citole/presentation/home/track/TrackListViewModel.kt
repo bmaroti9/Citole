@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
+import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.AudioService.AudioType
 import com.marotidev.citole.data.state.SearchQueryStateHolder
@@ -30,13 +31,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class TrackListViewModel @Inject constructor(
     audioRepository : AudioRepository,
     dataStoreRepository: DataStoreRepository,
-    searchQueryStateHolder: SearchQueryStateHolder
+    searchQueryStateHolder: SearchQueryStateHolder,
+    private val recommendationRepository: RecommendationRepository
 ) : ViewModel() {
 
     var filteredTracks = combine(
@@ -109,6 +112,10 @@ class TrackListViewModel @Inject constructor(
         } else {
             this
         }
+    }
+
+    suspend fun generateQueueFromSeed(seedId: Long) : List<AudioService.TrackData> {
+        return recommendationRepository.generateQueueFromSeed(seedId, 20)
     }
 
 }

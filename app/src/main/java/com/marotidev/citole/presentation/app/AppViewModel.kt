@@ -20,15 +20,18 @@ package com.marotidev.citole.presentation.app
 
 import androidx.lifecycle.ViewModel
 import com.marotidev.citole.data.repository.AudioRepository
+import com.marotidev.citole.data.repository.TrackLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
-    audioRepository: AudioRepository
+    audioRepository: AudioRepository,
+    trackLogRepository: TrackLogRepository
 ) : ViewModel() {
     val startDestination = if (audioRepository.checkHasAudioPermission()) {
         audioRepository.fetchOrUpdateTracks()
+        trackLogRepository.fetchLogs()
         LibraryViewDestination
     } else {
         OnboardViewDestination

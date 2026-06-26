@@ -22,7 +22,6 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -45,9 +44,7 @@ import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
-import com.marotidev.citole.data.local.TrackPlayLog
-import com.marotidev.citole.data.local.TrackPlayLogDao
-import com.marotidev.citole.data.repository.RecommendationRepository
+import com.marotidev.citole.data.repository.TrackLogRepository
 import com.materialkolor.ktx.themeColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +63,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class PlayerViewModel @Inject constructor(
     private val application: Application,
     private val audioService: AudioService,
-    private val recommendationRepository: RecommendationRepository,
+    private val trackLogRepository: TrackLogRepository,
 ) : ViewModel() {
 
     var playing by mutableStateOf(false)
@@ -172,7 +169,7 @@ class PlayerViewModel @Inject constructor(
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 //log the play times
                 currentlyPlaying?.let {
-                    recommendationRepository.updateLogTimeValues(queueId, it.id,
+                    trackLogRepository.updateLogTimeValues(queueId, it.id,
                         playbackEndedMs = System.currentTimeMillis(), playbackDurationMs = progress)
                 }
 
@@ -214,7 +211,7 @@ class PlayerViewModel @Inject constructor(
                   givenQueueId: Long? = null) {
         if (givenQueueId == null) {
             queueId = System.currentTimeMillis()
-            recommendationRepository.addInitialEmptyQueueLog(queueId, tracks)
+            trackLogRepository.addInitialEmptyQueueLog(queueId, tracks)
         } else {
             queueId = givenQueueId
         }
@@ -245,19 +242,19 @@ class PlayerViewModel @Inject constructor(
             player?.addMediaItem(index, mediaItem)
         }
 
-        recommendationRepository.addEmptyPlayLog(track, index, queueId)
+        trackLogRepository.addEmptyPlayLog(track, index, queueId)
     }
 
     fun removeFromQueue(index: Int) {
-        recommendationRepository.deleteLogFromQueue(index, queueId)
+        trackLogRepository.deleteLogFromQueue(index, queueId)
 
         currentQueue.removeAt(index)
         player?.removeMediaItem(index)
     }
 
     fun reorderInQueue(from: Int, to: Int) {
-        recommendationRepository.updateLogQueueIndex(queueId, currentQueue[from].id, to)
-        recommendationRepository.updateLogQueueIndex(queueId, currentQueue[to].id, from)
+        trackLogRepository.updateLogQueueIndex(queueId, currentQueue[from].id, to)
+        trackLogRepository.updateLogQueueIndex(queueId, currentQueue[to].id, from)
 
         currentQueue.add(to, currentQueue.removeAt(from))
         player?.moveMediaItem(from, to)
@@ -295,7 +292,7 @@ class PlayerViewModel @Inject constructor(
 
     fun dismissPlayer() {
         currentlyPlaying?.let {
-            recommendationRepository.updateLogTimeValues(queueId, trackId = it.id,
+            trackLogRepository.updateLogTimeValues(queueId, trackId = it.id,
                 System.currentTimeMillis(), progress)
         }
 

@@ -108,6 +108,8 @@ fun TrackListPage(
 ) {
     val filteredTracks by trackListViewModel.filteredTracks.collectAsStateWithLifecycle()
 
+    val scope = rememberCoroutineScope()
+
     LazyColumn(
         modifier = Modifier
             .imePadding()
@@ -132,7 +134,10 @@ fun TrackListPage(
                 count = filteredTracks.size,
                 navController = navController
             ) {
-                playerViewModel.playQueue(listOf(track))
+                scope.launch {
+                    val generatedQueue = trackListViewModel.generateQueueFromSeed(track.id)
+                    playerViewModel.playQueue(generatedQueue)
+                }
             }
         }
     }
@@ -300,6 +305,7 @@ fun TrackItem(
             ListItemDefaults.segmentedShapes(index = index, count = count)
         },
         elevation = ListItemElevation(draggedElevation = 0.dp, elevation = elevation),
+        verticalAlignment = Alignment.CenterVertically,
         leadingContent = {
             Row(
                 verticalAlignment = Alignment.CenterVertically

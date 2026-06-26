@@ -101,10 +101,14 @@ class AudioRepository @Inject constructor(
                 albums = ownAlbums.subtract(singles.toSet()).toList(),
                 allAlbums = allAlbums,
                 appearsIn = allAlbums.subtract(ownAlbums.toSet()).toList(),
-                dateAdded = tracks.minByOrNull { it.dateAdded }?.dateAdded ?: 0,
+                dateAdded = tracks.maxByOrNull { it.dateAdded }?.dateAdded ?: 0,
                 type = tracks.firstOrNull()?.type ?: AudioType.Other
             )
         }
+    }
+
+    fun findTrackById(id: Long?) : AudioService.TrackData? {
+        return allTracks.value.find { it.id == id }
     }
 
     fun checkHasAudioPermission() : Boolean {

@@ -90,7 +90,7 @@ fun ArtistDetailScreen(
     val artistState by artistDetailViewModel.artist.collectAsStateWithLifecycle()
     val artist = artistState ?: return Box(modifier = Modifier.fillMaxSize()) {
         Text(
-            "Album not found",
+            "Artist not found",
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.align(Alignment.Center)
         )

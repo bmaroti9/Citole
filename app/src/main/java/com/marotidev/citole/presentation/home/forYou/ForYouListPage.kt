@@ -19,17 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.forYou
 
-import android.util.Size
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,17 +48,11 @@ import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -82,13 +70,10 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import com.marotidev.citole.data.repository.RecommendationRepository
+import com.marotidev.citole.data.repository.TrackLogRepository
 import com.marotidev.citole.data.service.AudioService
-import com.marotidev.citole.presentation.utils.ArtworkCollage
 import com.marotidev.citole.presentation.utils.MorphingClipImage
 import com.marotidev.citole.presentation.utils.durationToString
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ForYouListPage(
@@ -249,7 +234,7 @@ fun TrackCarousel(tracks: List<AudioService.TrackData>, playerViewModel: PlayerV
 @Composable
 fun OfferResumePlayback(
     animationState: Int,
-    queueWithPlaybackState: RecommendationRepository.QueueWithPlaybackState?,
+    queueWithPlaybackState: TrackLogRepository.QueueWithPlaybackState?,
     playerViewModel: PlayerViewModel
 ) {
 

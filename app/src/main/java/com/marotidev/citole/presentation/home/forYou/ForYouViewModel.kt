@@ -20,12 +20,11 @@ package com.marotidev.citole.presentation.home.forYou
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
-import com.marotidev.citole.data.repository.RecommendationRepository
+import com.marotidev.citole.data.repository.TrackLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,13 +33,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.log
 import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ForYouViewModel @Inject constructor(
     audioRepository : AudioRepository,
-    recommendationRepository: RecommendationRepository
+    trackLogRepository: TrackLogRepository
 ) : ViewModel() {
 
     val recentlyAdded = audioRepository.allTracks.map { tracks ->
@@ -52,7 +50,7 @@ class ForYouViewModel @Inject constructor(
     )
 
     val recentlyPlayed = combine(
-        recommendationRepository.allLogs,
+        trackLogRepository.allLogs,
         audioRepository.allTracks
     ) { logs, tracks ->
             logs
@@ -66,7 +64,7 @@ class ForYouViewModel @Inject constructor(
     )
 
     val lastPodcast = combine(
-        recommendationRepository.lastPodcast,
+        trackLogRepository.lastPodcast,
         audioRepository.allTracks
     ) { lastPodcast, tracks ->
         val track = tracks.findLast { it.id == lastPodcast?.trackId }
@@ -74,7 +72,7 @@ class ForYouViewModel @Inject constructor(
         if (track == null || lastPodcast == null) {
             null
         } else {
-            RecommendationRepository.TrackWithPlaybackState(
+            TrackLogRepository.TrackWithPlaybackState(
                 track,
                 lastPodcast.playbackDurationMs
             )
@@ -86,13 +84,13 @@ class ForYouViewModel @Inject constructor(
     )
 
     val lastAudiobook = combine(
-        recommendationRepository.lastAudiobook,
-        recommendationRepository.lastAudiobookQueue,
+        trackLogRepository.lastAudiobook,
+        trackLogRepository.lastAudiobookQueue,
         audioRepository.allTracks
     ) { lastAudioBook, lastAudiobookQueue, allTracks ->
         lastAudioBook?.let {
             val tracks = lastAudiobookQueue.mapNotNull { log -> allTracks.find { track -> track.id == log.trackId } }
-            RecommendationRepository.QueueWithPlaybackState(
+            TrackLogRepository.QueueWithPlaybackState(
                 tracks = tracks,
                 queueIndex = it.queueIndex.coerceIn(0, tracks.size - 1),
                 playbackDurationMs = it.playbackDurationMs,
@@ -108,14 +106,12 @@ class ForYouViewModel @Inject constructor(
     var resumePlaybackAnimationState by mutableIntStateOf(0)
 
     init {
-        recommendationRepository.fetchLogs()
         viewModelScope.launch {
             delay(700.milliseconds)
             resumePlaybackAnimationState = 1
             delay(1000.milliseconds)
             resumePlaybackAnimationState = 2
         }
-
     }
 
 }
