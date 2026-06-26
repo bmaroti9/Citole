@@ -34,20 +34,21 @@ class RecommendationRepository @Inject constructor(
     private val audioRepository: AudioRepository
 ) {
 
-    val stopMultiplier = 0.01f
+    val explorationFactor = 1.5f
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var similarityGraph : Flow<Map<Long, Map<Long, Float>>> = combine(
-        audioRepository.allArtists,
+        audioRepository.allTracks,
         audioRepository.allAlbums,
+        audioRepository.allArtists,
         trackLogRepository.allLogs
-    ) { artists, albums, allLogs ->
+    ) { tracks, albums, artists, allLogs ->
         SimilarityGraphBuilder()
             .apply {
                 connectBySharedArtist(artists)
                 connectBySharedAlbum(albums)
-                connectBySharedQueueLog(allLogs)
+                connectBySharedQueueLog(allLogs, tracks)
             }
             .build()
     }
@@ -59,7 +60,7 @@ class RecommendationRepository @Inject constructor(
         val picked = mutableListOf(seedId)
 
         for (i in 1..200) {
-            var currentNode = picked.random()
+            var currentNode = picked.last()
 
             for (j in 1..100) {
                 graph[currentNode]?.let { node ->
@@ -75,7 +76,7 @@ class RecommendationRepository @Inject constructor(
 
                     newNode?.let {
                         currentNode = newNode.key
-                        if (newNode.value * stopMultiplier < Random.nextFloat() && it.key !in picked) {
+                        if (newNode.value / totalWeight / explorationFactor < Random.nextFloat() && it.key !in picked) {
                             break
                         }
                     }

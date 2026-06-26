@@ -38,11 +38,15 @@ class SimilarityGraphBuilder {
         }
     }
 
-    fun connectBySharedQueueLog(allLogs: List<TrackPlayLog>) {
+    fun connectBySharedQueueLog(allLogs: List<TrackPlayLog>, tracks: List<AudioService.TrackData>) {
         allLogs.groupBy { it.queueId }.forEach { (id, logs) ->
             logs.forEach { a ->
+                val totalDuration = tracks.find { it.id == a.trackId }?.duration
+                val durationMultiplier = totalDuration?.let {
+                    a.playbackDurationMs / it
+                } ?: 0
                 logs.forEach { b ->
-                    addEdge(a.trackId, b.trackId, sharedQueueWeight)
+                    addEdge(a.trackId, b.trackId, sharedQueueWeight * durationMultiplier)
                 }
             }
         }

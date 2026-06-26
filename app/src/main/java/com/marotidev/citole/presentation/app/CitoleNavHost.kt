@@ -33,10 +33,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -76,6 +79,8 @@ import com.marotidev.citole.presentation.home.track.TrackListPage
 import com.marotidev.citole.presentation.onboard.OnboardScreen
 import com.marotidev.citole.presentation.player.CustomFloatingToolbar
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.settings.SettingsMainScreen
+import com.marotidev.citole.presentation.settings.subpages.ShuffleEnginePage
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -115,7 +120,7 @@ fun CustomNavigationDrawerItem(
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, end = 4.dp))
+            modifier = Modifier.padding(start = 6.dp, end = 4.dp))
     }
 }
 
@@ -134,6 +139,13 @@ data class ArtistViewDestination(
 
 @Serializable
 object OnboardViewDestination
+
+@Serializable
+object SettingsViewDestination
+
+
+@Serializable
+object SettingsShuffleEngineViewDestination
 
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class,
@@ -209,6 +221,19 @@ fun CitoleNavHost(
                     iconId = R.drawable.ic_person,
                     text = "Artists"
                 )
+
+                CustomNavigationDrawerItem(
+                    selected = false,
+                    onSelected =  {
+                        navController.navigate(SettingsViewDestination)
+                        scope.launch {
+                            delay(200.milliseconds)
+                            drawerState.close()
+                        }
+                    },
+                    iconId = R.drawable.ic_settings,
+                    text = "Settings"
+                )
             }
         },
     ) {
@@ -271,6 +296,14 @@ fun CitoleNavHost(
 
                 composable <OnboardViewDestination> {
                     OnboardScreen(navController)
+                }
+
+                composable <SettingsViewDestination> {
+                    SettingsMainScreen(navController)
+                }
+
+                composable <SettingsShuffleEngineViewDestination> {
+                    ShuffleEnginePage(navController)
                 }
             }
             CustomFloatingToolbar(playerViewModel, navController)
