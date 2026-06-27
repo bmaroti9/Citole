@@ -85,6 +85,7 @@ fun ForYouListPage(
 
     val recentlyAdded by forYouViewModel.recentlyAdded.collectAsStateWithLifecycle()
     val recentlyPlayed by forYouViewModel.recentlyPlayed.collectAsStateWithLifecycle()
+    val mostPlayed by forYouViewModel.mostPlayed.collectAsStateWithLifecycle()
     val lastPodcast by forYouViewModel.lastPodcast.collectAsStateWithLifecycle()
     val lastAudiobook by forYouViewModel.lastAudiobook.collectAsStateWithLifecycle()
 
@@ -105,21 +106,11 @@ fun ForYouListPage(
         }
 
         item {
-            Column() {
-                Text("Recently Played", style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp), color = MaterialTheme.colorScheme.onSurface)
-                recentlyPlayed.forEachIndexed { index, track ->
-                    SwipeableTrackItem (
-                        track = track,
-                        playerViewModel = playerViewModel,
-                        index = index,
-                        count = recentlyPlayed.size,
-                        navController = navController
-                    ) {
-                        playerViewModel.playQueue(listOf(track))
-                    }
-                }
-            }
+            RecentlyPlayedTracks(recentlyPlayed, playerViewModel, navController)
+        }
+
+        item {
+            MostPlayedTracks(mostPlayed, playerViewModel, navController)
         }
 
     }
@@ -299,6 +290,52 @@ fun OfferResumePlayback(
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecentlyPlayedTracks(
+    recentlyPlayed: List<AudioService.TrackData>,
+    playerViewModel: PlayerViewModel,
+    navController: NavController
+) {
+    Column() {
+        Text("Recently Played", style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+        recentlyPlayed.forEachIndexed { index, track ->
+            SwipeableTrackItem (
+                track = track,
+                playerViewModel = playerViewModel,
+                index = index,
+                count = recentlyPlayed.size,
+                navController = navController
+            ) {
+                playerViewModel.playQueue(listOf(track))
+            }
+        }
+    }
+}
+
+@Composable
+fun MostPlayedTracks(
+    mostPlayed: List<AudioService.TrackData>,
+    playerViewModel: PlayerViewModel,
+    navController: NavController
+) {
+    Column() {
+        Text("Most Played", style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+        mostPlayed.forEachIndexed { index, track ->
+            SwipeableTrackItem (
+                track = track,
+                playerViewModel = playerViewModel,
+                index = index,
+                count = mostPlayed.size,
+                navController = navController
+            ) {
+                playerViewModel.playQueue(listOf(track))
             }
         }
     }

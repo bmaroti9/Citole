@@ -62,6 +62,17 @@ class ForYouViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    val mostPlayed = combine(
+        trackLogRepository.mostPlayedRecentTracks,
+        audioRepository.allTracks
+    ) { mostPlayed, tracks ->
+        mostPlayed.mapNotNull { log -> tracks.find { it.id == log.trackId } }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     val lastPodcast = combine(
         trackLogRepository.lastPodcast,
         audioRepository.allTracks

@@ -28,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.days
 
 class TrackLogRepository @Inject constructor(
     private val trackPlayLogDao: TrackPlayLogDao,
@@ -46,6 +47,9 @@ class TrackLogRepository @Inject constructor(
     )
 
     var allLogs: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+
+    var mostPlayedRecentTracks : MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+
     var lastPodcast: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
 
     var lastAudiobook: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
@@ -118,6 +122,8 @@ class TrackLogRepository @Inject constructor(
         serviceScope.launch {
             allLogs.value = trackPlayLogDao.getAllPlayedLogs().reversed()
             lastPodcast.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Podcast.ordinal)
+            mostPlayedRecentTracks.value = trackPlayLogDao.getMostPlayedFromDate(
+                System.currentTimeMillis().minus(7.days.inWholeMilliseconds))
             fetchLastAudiobookQueue()
         }
     }
