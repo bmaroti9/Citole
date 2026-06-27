@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -38,6 +39,10 @@ class RecommendationRepository @Inject constructor(
 
     val explorationFactor = dataStoreRepository.shuffleDiscoveryRadius.map {
         0.5f + it * 1.5f
+    }
+
+    val trajectoryRange = dataStoreRepository.shuffleQueueTrajectory.map {
+        Pair(((it - 0.5f) * 2f).coerceIn(0f, 1f), (it * 2f).coerceIn(0f, 1f))
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -60,13 +65,16 @@ class RecommendationRepository @Inject constructor(
     suspend fun generateQueueFromSeed(seedId: Long, count: Int) : List<AudioService.TrackData> {
 
         val currentExplorationFactor = explorationFactor.first()
+        val currentTrajectoryRange = trajectoryRange.first()
 
         val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
 
         val picked = mutableListOf(seedId)
 
         for (i in 1..200) {
-            var currentNode = picked.last()
+            var currentNode = picked
+                .filterIndexed { index, lng ->  (picked.size - 1) * currentTrajectoryRange.first <= index && index <= (picked.size - 1) * currentTrajectoryRange.second}
+                .randomOrNull()
 
             for (j in 1..100) {
                 graph[currentNode]?.let { node ->
@@ -75,7 +83,6 @@ class RecommendationRepository @Inject constructor(
 
                     var sum = 0f
                     val newNode = node.entries.firstOrNull { entry ->
-                        println("$sum, ${entry.value}, $r, ${entry.key}")
                         sum += entry.value
                         sum >= r
                     }
@@ -89,7 +96,7 @@ class RecommendationRepository @Inject constructor(
                 }
             }
 
-            if (currentNode !in picked) {
+            if (currentNode != null && currentNode !in picked) {
                 picked.add(currentNode)
                 if (picked.size == count) {
                     break

@@ -26,26 +26,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -56,18 +52,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.marotidev.citole.R
-import com.marotidev.citole.presentation.player.SheetState
+import com.materialkolor.ktx.harmonize
+import kotlinx.coroutines.flow.map
 import kotlin.math.min
-import kotlin.math.roundToInt
 
 @Composable
 fun ShuffleEnginePage(
@@ -112,6 +114,7 @@ fun ShuffleEnginePage(
             modifier = Modifier.padding(paddingValues).padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 50.dp),
         ) {
             DiscoveryRadiusItem(shuffleEngineViewModel)
+            QueueTrajectoryItem(shuffleEngineViewModel)
         }
     }
 }
@@ -123,21 +126,21 @@ fun DiscoveryRadiusItem(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    val label = when((shuffleEngineViewModel.sliderValue * 4).toInt()) {
+    val label = when((shuffleEngineViewModel.discoveryRadiusValue * 4).toInt()) {
         0 -> "Local"
         1 -> "District"
         2 -> "Regional"
         else -> "Global"
     }
 
-    val subLabel = when((shuffleEngineViewModel.sliderValue * 4).toInt()) {
+    val subLabel = when((shuffleEngineViewModel.discoveryRadiusValue * 4).toInt()) {
         0 -> "stays within the immediate album or artist"
         1 -> "branches out to highly related albums or artists"
         2 -> "bridges genres using your past queue history"
         else -> "spans your entire library for maximum variety"
     }
 
-    LaunchedEffect((shuffleEngineViewModel.sliderValue * 4).toInt()) {
+    LaunchedEffect((shuffleEngineViewModel.discoveryRadiusValue * 4).toInt()) {
         haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
     }
 
@@ -158,7 +161,7 @@ fun DiscoveryRadiusItem(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_radar),
-                    contentDescription = "Palette",
+                    contentDescription = "Radar",
                     modifier = Modifier.size(26.dp).padding(end = 6.dp)
                 )
                 Text(
@@ -167,20 +170,20 @@ fun DiscoveryRadiusItem(
                 )
             }
             DiscoveryRadiusVisualization(
-                shuffleEngineViewModel.sliderValue,
-                modifier = Modifier.size(170.dp).padding(vertical = 20.dp)
+                shuffleEngineViewModel.discoveryRadiusValue,
+                modifier = Modifier.size(160.dp).padding(vertical = 20.dp)
             )
-            Text(label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
             Text(subLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 28.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 32.dp, bottom = 8.dp)
             ) {
-                Text("Strict", style = MaterialTheme.typography.labelMedium)
+                Text("Strict", style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(50.dp), textAlign = TextAlign.Center)
                 Slider(
-                    value = shuffleEngineViewModel.sliderValue,
-                    onValueChange = {shuffleEngineViewModel.updateLocalSliderValue(it)},
-                    onValueChangeFinished = {shuffleEngineViewModel.updateDataStoreSliderValue()},
+                    value = shuffleEngineViewModel.discoveryRadiusValue,
+                    onValueChange = {shuffleEngineViewModel.updateDiscoveryRadiusSliderValue(it)},
+                    onValueChangeFinished = {shuffleEngineViewModel.updateDataStoreDiscoveryRadiusSliderValue()},
                     track = { sliderState ->
                         SliderDefaults.Track(
                             sliderState = sliderState,
@@ -192,9 +195,9 @@ fun DiscoveryRadiusItem(
                             )
                         )
                     },
-                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp)
+                    modifier = Modifier.weight(1f).padding(start = 16.dp, end = 12.dp)
                 )
-                Text("Lenient", style = MaterialTheme.typography.labelMedium)
+                Text("Lenient", style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(50.dp), textAlign = TextAlign.Center)
             }
         }
     }
@@ -215,7 +218,7 @@ fun DiscoveryRadiusVisualization(originalValue: Float, modifier: Modifier = Modi
             Offset(0.35f, 0.6f), Offset(0.7f, 0.4f),
             Offset(0.2f, 0.3f), Offset(0.78f, 0.78f),
             Offset(0.25f, 0.75f), Offset(0.58f, 0.6f),
-            Offset(0.6f, 0.15f),
+            Offset(0.62f, 0.15f),
         )
     }
 
@@ -253,11 +256,145 @@ fun DiscoveryRadiusVisualization(originalValue: Float, modifier: Modifier = Modi
                 normalizedOffset.y * canvasHeight
             )
             if (drawOffset.minus(center).getDistance() > dynamicRadius) {
-                drawCircle(color = outsidePointColor, radius = 4.dp.toPx(), center = drawOffset)
+                drawCircle(color = outsidePointColor, radius = 3.dp.toPx(), center = drawOffset)
             } else {
-                drawCircle(color = insidePointColor, radius = 4.dp.toPx(), center = drawOffset)
+                drawCircle(color = insidePointColor, radius = 3.5.dp.toPx(), center = drawOffset)
             }
 
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun QueueTrajectoryItem(
+    shuffleEngineViewModel: ShuffleEngineViewModel
+) {
+    val haptic = LocalHapticFeedback.current
+
+    val label = when((shuffleEngineViewModel.queueTrajectoryValue * 4).toInt()) {
+        0 -> "Static"
+        1 -> "Focused"
+        2 -> "Adaptive"
+        else -> "Evolving"
+    }
+
+    val subLabel = when((shuffleEngineViewModel.queueTrajectoryValue * 4).toInt()) {
+        0 -> "locks the playlist flow tightly to your initial track"
+        1 -> "favors your session's starting vibe with subtle variations"
+        2 -> "balances your current mood with organic changes"
+        else -> "allows the music to continuously evolve into new styles"
+    }
+
+    LaunchedEffect((shuffleEngineViewModel.queueTrajectoryValue * 4).toInt()) {
+        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+    }
+
+    val colors = listOf(
+        Color(0xFF82B9F5).harmonize(MaterialTheme.colorScheme.primary),
+        Color(0xFFB882F5).harmonize(MaterialTheme.colorScheme.primary),
+        Color(0xFFF5B082).harmonize(MaterialTheme.colorScheme.primary),
+        Color(0xFFB7DA6C).harmonize(MaterialTheme.colorScheme.primary),
+    )
+
+    val colorFlows = listOf(
+        listOf(0, 0, 0, 0),
+        listOf(0, 1, 1, 0),
+        listOf(0, 1, 2, 1),
+        listOf(0, 1, 2, 3)
+    )
+
+    val below = colorFlows[(shuffleEngineViewModel.queueTrajectoryValue * 3).toInt().coerceIn(0, 3)]
+    val above = colorFlows[((shuffleEngineViewModel.queueTrajectoryValue * 3).toInt() + 1).coerceIn(0, 3)]
+
+    val fraction = (shuffleEngineViewModel.queueTrajectoryValue * 3) % 1
+
+    val gradientColors = listOf(
+        lerp(colors[below[0]], colors[above[0]], fraction),
+        lerp(colors[below[1]], colors[above[1]], fraction),
+        lerp(colors[below[2]], colors[above[2]], fraction),
+        lerp(colors[below[3]], colors[above[3]], fraction)
+    )
+
+    Box(
+        modifier = Modifier
+            .padding(vertical = 1.dp)
+            .background(MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
+            .padding(vertical = 14.dp, horizontal = 14.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_hourglass_arrow),
+                    contentDescription = "Hourglass",
+                    modifier = Modifier.size(26.dp).padding(end = 6.dp)
+                )
+                Text(
+                    text = "Queue trajectory",
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 62.dp, end = 62.dp, top = 38.dp, bottom = 24.dp)
+                    .height(6.dp)
+            ) {
+                val gradientBrush = Brush.linearGradient(
+                    0.0f to gradientColors[0],
+                    0.1f to gradientColors[0],
+
+                    0.3f to gradientColors[1],
+                    0.4f to gradientColors[1],
+
+                    0.6f to gradientColors[2],
+                    0.7f to gradientColors[2],
+
+                    0.9f to gradientColors[3],
+                    1.0f to gradientColors[3]
+                )
+
+                drawLine(
+                    brush = gradientBrush,
+                    start = Offset(0f, size.height / 2),
+                    end = Offset(size.width, size.height / 2),
+                    cap = StrokeCap.Round,
+                    strokeWidth = size.height
+                )
+            }
+            Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            Text(subLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 32.dp, bottom = 8.dp)
+            ) {
+                Text("Lock", style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(50.dp), textAlign = TextAlign.Center)
+                Slider(
+                    value = shuffleEngineViewModel.queueTrajectoryValue,
+                    onValueChange = {shuffleEngineViewModel.updateQueueTrajectorySliderValue(it)},
+                    onValueChangeFinished = {shuffleEngineViewModel.updateDataStoreQueueTrajectorySliderValue()},
+                    track = { sliderState ->
+                        SliderDefaults.Track(
+                            sliderState = sliderState,
+                            modifier = Modifier.height(40.dp),
+                            trackCornerSize = 12.dp,
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    },
+                    modifier = Modifier.weight(1f).padding(start = 16.dp, end = 12.dp)
+                )
+                Text("Drift", style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(50.dp), textAlign = TextAlign.Center)
+            }
         }
     }
 }

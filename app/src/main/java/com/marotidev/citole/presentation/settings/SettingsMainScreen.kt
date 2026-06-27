@@ -141,7 +141,7 @@ fun SettingsMainScreen(
                 },
                 supportingContent = {
                     Text(
-                        text = "Discovery radius, Anchor mode",
+                        text = "Discovery radius, Queue trajectory",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -44,6 +44,7 @@ class DataStoreRepository @Inject constructor(
         val CHIP_SORT_CHIP = intPreferencesKey("chip_sort_chip")
         val CHIP_SORT_REVERSED = booleanPreferencesKey("chip_sort_reversed")
         val SHUFFLE_DISCOVERY_RADIUS = floatPreferencesKey("shuffle_discovery_radius")
+        val SHUFFLE_QUEUE_TRAJECTORY = floatPreferencesKey("shuffle_queue_trajectory")
     }
 
     suspend fun saveChipShowSongs(to: Boolean) {
@@ -88,6 +89,12 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
+    suspend fun saveShuffleQueueTrajectory(to: Float) {
+        application.dataStore.edit { preferences ->
+            preferences[SHUFFLE_QUEUE_TRAJECTORY] = to
+        }
+    }
+
     val chipShowSongs: Flow<Boolean> = application.dataStore.data
         .map { preferences -> preferences[CHIP_SHOW_SONGS] ?: true}
 
@@ -109,5 +116,9 @@ class DataStoreRepository @Inject constructor(
 
     val shuffleDiscoveryRadius: Flow<Float> = application.dataStore.data.map { preferences ->
         preferences[SHUFFLE_DISCOVERY_RADIUS] ?: 0.5f
+    }
+
+    val shuffleQueueTrajectory: Flow<Float> = application.dataStore.data.map { preferences ->
+        preferences[SHUFFLE_QUEUE_TRAJECTORY] ?: 0.7f
     }
 }

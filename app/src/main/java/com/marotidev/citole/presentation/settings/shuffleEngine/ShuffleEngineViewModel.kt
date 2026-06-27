@@ -33,22 +33,36 @@ import javax.inject.Inject
 class ShuffleEngineViewModel @Inject constructor(
     private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
-    var sliderValue by mutableFloatStateOf(0f)
+    var discoveryRadiusValue by mutableFloatStateOf(0f)
+        private set
+
+    var queueTrajectoryValue by mutableFloatStateOf(0f)
         private set
 
     init {
         viewModelScope.launch {
-            sliderValue = dataStoreRepository.shuffleDiscoveryRadius.first()
+            discoveryRadiusValue = dataStoreRepository.shuffleDiscoveryRadius.first()
+            queueTrajectoryValue = dataStoreRepository.shuffleQueueTrajectory.first()
         }
     }
 
-    fun updateLocalSliderValue(to: Float) {
-        sliderValue = to
+    fun updateDiscoveryRadiusSliderValue(to: Float) {
+        discoveryRadiusValue = to
     }
 
-    fun updateDataStoreSliderValue() {
+    fun updateQueueTrajectorySliderValue(to: Float) {
+        queueTrajectoryValue = to
+    }
+
+    fun updateDataStoreDiscoveryRadiusSliderValue() {
         viewModelScope.launch {
-            dataStoreRepository.saveShuffleDiscoveryRadius(sliderValue)
+            dataStoreRepository.saveShuffleDiscoveryRadius(discoveryRadiusValue)
+        }
+    }
+
+    fun updateDataStoreQueueTrajectorySliderValue() {
+        viewModelScope.launch {
+            dataStoreRepository.saveShuffleQueueTrajectory(queueTrajectoryValue)
         }
     }
 }
