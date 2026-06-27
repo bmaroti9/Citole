@@ -22,6 +22,7 @@ import android.app.Application
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.marotidev.citole.presentation.browse.SortChip
@@ -42,6 +43,7 @@ class DataStoreRepository @Inject constructor(
         val CHIP_SHOW_OTHER = booleanPreferencesKey("chip_show_other")
         val CHIP_SORT_CHIP = intPreferencesKey("chip_sort_chip")
         val CHIP_SORT_REVERSED = booleanPreferencesKey("chip_sort_reversed")
+        val SHUFFLE_DISCOVERY_RADIUS = floatPreferencesKey("shuffle_discovery_radius")
     }
 
     suspend fun saveChipShowSongs(to: Boolean) {
@@ -80,6 +82,12 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
+    suspend fun saveShuffleDiscoveryRadius(to: Float) {
+        application.dataStore.edit { preferences ->
+            preferences[SHUFFLE_DISCOVERY_RADIUS] = to
+        }
+    }
+
     val chipShowSongs: Flow<Boolean> = application.dataStore.data
         .map { preferences -> preferences[CHIP_SHOW_SONGS] ?: true}
 
@@ -98,4 +106,8 @@ class DataStoreRepository @Inject constructor(
 
     val chipSortReversed: Flow<Boolean> = application.dataStore.data
         .map { preferences -> preferences[CHIP_SORT_REVERSED] ?: false}
+
+    val shuffleDiscoveryRadius: Flow<Float> = application.dataStore.data.map { preferences ->
+        preferences[SHUFFLE_DISCOVERY_RADIUS] ?: 0.5f
+    }
 }

@@ -16,17 +16,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package com.marotidev.citole.presentation.settings
+package com.marotidev.citole.presentation.settings.shuffleEngine
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.marotidev.citole.data.repository.AudioRepository
+import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.DataStoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
+class ShuffleEngineViewModel @Inject constructor(
     private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
+    var sliderValue by mutableFloatStateOf(0f)
+        private set
 
+    init {
+        viewModelScope.launch {
+            sliderValue = dataStoreRepository.shuffleDiscoveryRadius.first()
+        }
+    }
+
+    fun updateLocalSliderValue(to: Float) {
+        sliderValue = to
+    }
+
+    fun updateDataStoreSliderValue() {
+        viewModelScope.launch {
+            dataStoreRepository.saveShuffleDiscoveryRadius(sliderValue)
+        }
+    }
 }

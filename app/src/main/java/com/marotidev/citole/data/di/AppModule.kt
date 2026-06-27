@@ -86,7 +86,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideRecommendationRepository(trackLogRepository: TrackLogRepository, audioRepository: AudioRepository) : RecommendationRepository {
-        return RecommendationRepository(trackLogRepository, audioRepository)
+    fun provideRecommendationRepository(trackLogRepository: TrackLogRepository, audioRepository: AudioRepository,
+            dataStoreRepository: DataStoreRepository) : RecommendationRepository {
+        return RecommendationRepository(trackLogRepository, audioRepository, dataStoreRepository)
     }
 }

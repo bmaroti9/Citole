@@ -92,7 +92,7 @@ class AudioRepository @Inject constructor(
 
         return artistTracks.map { (artistName, tracks) ->
             val allAlbums =  albums.filter { artistName in it.allArtists }
-            val singles = allAlbums.filter { it.tracks.size == 1 && it.albumName == it.tracks.firstOrNull()?.title }
+            val singles = allAlbums.filter { it.tracks.size == 1 && it.tracks.firstOrNull()?.title?.contains(it.albumName) ?: false}
             val ownAlbums = albums.filter { artistName in it.ownerArtists }
             AudioService.ArtistData(
                 name = artistName,

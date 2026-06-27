@@ -54,7 +54,6 @@ import com.materialkolor.ktx.harmonize
 @Composable
 fun SettingsMainScreen(
     navController: NavController,
-    settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
 
     val appearanceIconContainer = Color(0xFF3FDAEE).harmonize(other = MaterialTheme.colorScheme.primaryContainer, true)

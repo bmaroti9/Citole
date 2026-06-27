@@ -26,15 +26,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import kotlin.random.Random
 
 class RecommendationRepository @Inject constructor(
     trackLogRepository: TrackLogRepository,
-    private val audioRepository: AudioRepository
+    private val audioRepository: AudioRepository,
+    dataStoreRepository: DataStoreRepository
 ) {
 
-    val explorationFactor = 1.5f
+    val explorationFactor = dataStoreRepository.shuffleDiscoveryRadius.map {
+        0.5f + it * 1.5f
+    }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -54,6 +58,8 @@ class RecommendationRepository @Inject constructor(
     }
 
     suspend fun generateQueueFromSeed(seedId: Long, count: Int) : List<AudioService.TrackData> {
+
+        val currentExplorationFactor = explorationFactor.first()
 
         val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
 
@@ -76,7 +82,7 @@ class RecommendationRepository @Inject constructor(
 
                     newNode?.let {
                         currentNode = newNode.key
-                        if (newNode.value / totalWeight / explorationFactor < Random.nextFloat() && it.key !in picked) {
+                        if (newNode.value / totalWeight * currentExplorationFactor < Random.nextFloat() && it.key !in picked) {
                             break
                         }
                     }

@@ -33,13 +33,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -80,7 +77,7 @@ import com.marotidev.citole.presentation.onboard.OnboardScreen
 import com.marotidev.citole.presentation.player.CustomFloatingToolbar
 import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.settings.SettingsMainScreen
-import com.marotidev.citole.presentation.settings.subpages.ShuffleEnginePage
+import com.marotidev.citole.presentation.settings.shuffleEngine.ShuffleEnginePage
 import com.marotidev.citole.ui.theme.M3ExpressiveTransitions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
