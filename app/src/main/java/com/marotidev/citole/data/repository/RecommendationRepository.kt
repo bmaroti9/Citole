@@ -38,14 +38,12 @@ class RecommendationRepository @Inject constructor(
 ) {
 
     val explorationFactor = dataStoreRepository.shuffleDiscoveryRadius.map {
-        0.5f + it * 1.5f
+        0.3f + it * 3f
     }
 
     val trajectoryRange = dataStoreRepository.shuffleQueueTrajectory.map {
         Pair(((it - 0.5f) * 2f).coerceIn(0f, 1f), (it * 2f).coerceIn(0f, 1f))
     }
-
-    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var similarityGraph : Flow<Map<Long, Map<Long, Float>>> = combine(
         audioRepository.allTracks,
@@ -58,6 +56,7 @@ class RecommendationRepository @Inject constructor(
                 connectBySharedArtist(artists)
                 connectBySharedAlbum(albums)
                 connectBySharedQueueLog(allLogs, tracks)
+                connectBySharedReleaseYear(tracks)
             }
             .build()
     }

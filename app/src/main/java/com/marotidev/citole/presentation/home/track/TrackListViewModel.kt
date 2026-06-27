@@ -115,7 +115,7 @@ class TrackListViewModel @Inject constructor(
     }
 
     suspend fun generateQueueFromSeed(seedId: Long) : List<AudioService.TrackData> {
-        return recommendationRepository.generateQueueFromSeed(seedId, 20)
+        return recommendationRepository.generateQueueFromSeed(seedId, 40)
     }
 
 }

@@ -64,6 +64,8 @@ class AudioService {
         val duration: Long,
 
         val dateAdded: Int,
+        val releaseYear: Int,
+
         val trackNumber: Int,
 
         val type: AudioType
@@ -123,6 +125,7 @@ class AudioService {
                     .setAlbumTitle(albumName)
                     .setDurationMs(duration)
                     .setTrackNumber(trackNumber)
+                    .setReleaseYear(releaseYear)
                     .setExtras(Bundle().apply {
                         putLong("albumId", albumId)
                         putInt("dateAdded", dateAdded)
@@ -148,6 +151,7 @@ class AudioService {
             dateAdded = mediaMetadata.extras?.getInt("dateAdded") ?: 0,
             trackNumber = mediaMetadata.trackNumber ?: 0,
             type = mediaMetadata.extras?.getInt("audioType")?.toAudioType() ?: AudioType.Other,
+            releaseYear = mediaMetadata.releaseYear ?: 0
         )
     }
 
@@ -184,6 +188,7 @@ class AudioService {
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.TRACK,
+            MediaStore.Audio.Media.YEAR,
 
             MediaStore.Audio.Media.IS_MUSIC,
             MediaStore.Audio.Media.IS_PODCAST,
@@ -213,6 +218,7 @@ class AudioService {
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val trackNumberColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
+            val releaseYearColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
 
             val isMusicRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_MUSIC)
             val isPodcastRow = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)
@@ -229,6 +235,7 @@ class AudioService {
                 val duration = cursor.getLong(durationColumn)
                 val dateAdded = cursor.getInt(dateAddedColumn)
                 val trackNumber = cursor.getInt(trackNumberColumn) % 1000
+                val releaseYear = cursor.getString(releaseYearColumn)
 
                 val isMusic = cursor.getInt(isMusicRow)
                 val isPodcast = cursor.getInt(isPodcastRow)
@@ -261,6 +268,7 @@ class AudioService {
                     trackNumber = trackNumber,
                     type = audioType,
                     artists = artists,
+                    releaseYear = releaseYear?.toIntOrNull() ?: 0
                 )
             }
         }

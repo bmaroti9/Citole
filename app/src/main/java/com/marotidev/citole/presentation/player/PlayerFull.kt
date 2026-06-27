@@ -47,6 +47,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
@@ -512,6 +513,9 @@ fun PlayerBottomBar(onOpenDialog: () -> Unit) {
             onClick = {onOpenDialog()},
             modifier = Modifier.padding(vertical = 10.dp),
             contentPadding = PaddingValues(vertical = 18.dp, horizontal = 18.dp),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.onSecondary
+            )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_queue_music),

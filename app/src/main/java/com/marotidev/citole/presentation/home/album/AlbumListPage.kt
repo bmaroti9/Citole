@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -129,7 +130,7 @@ fun AlbumItem(
         onClick = {onClicked()},
     ) {
         Column(
-            modifier = Modifier.padding(22.dp).aspectRatio(0.69f)
+            modifier = Modifier.padding(22.dp)
         ) {
             AsyncImage(
                 model = album.artworkUri,
@@ -142,17 +143,20 @@ fun AlbumItem(
                 error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
                 contentScale = ContentScale.Crop
             )
-            Text(
-                text = album.albumName,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(top = 12.dp, start = 1.dp)
-            )
-            Text(
-                text = album.ownerArtists.joinToString(", "),
-                color = MaterialTheme.colorScheme.secondary,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(top = 4.dp, start = 1.dp)
-            )
+            Column(modifier = Modifier.height(67.dp)) {
+                Text(
+                    text = album.albumName,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(top = 12.dp, start = 1.dp)
+                )
+                Text(
+                    text = album.ownerArtists.joinToString(", "),
+                    color = MaterialTheme.colorScheme.secondary,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 1.dp)
+                )
+            }
+
         }
     }
 }

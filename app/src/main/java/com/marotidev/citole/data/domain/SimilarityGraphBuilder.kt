@@ -8,6 +8,7 @@ class SimilarityGraphBuilder {
     val sharedArtistWeight = 10f
     val sharedAlbumWeight = 15f
     val sharedQueueWeight = 5f
+    val sharedReleaseYearWeight = 2f
 
     //a map of the trackIds with the weight of the connection
     private val edges = mutableMapOf<Long, MutableMap<Long, Float>>()
@@ -15,7 +16,7 @@ class SimilarityGraphBuilder {
     fun addEdge(id1: Long, id2: Long, weight: Float) {
         if (id1 == id2) return
         edges.getOrPut(id1) { mutableMapOf() }.merge(id2, weight, Float::plus)
-        edges.getOrPut(id2) { mutableMapOf() }.merge(id1, weight, Float::plus)
+        //edges.getOrPut(id2) { mutableMapOf() }.merge(id1, weight, Float::plus)
     }
 
     fun connectBySharedArtist(artists: List<AudioService.ArtistData>) {
@@ -47,6 +48,16 @@ class SimilarityGraphBuilder {
                 } ?: 0
                 logs.forEach { b ->
                     addEdge(a.trackId, b.trackId, sharedQueueWeight * durationMultiplier)
+                }
+            }
+        }
+    }
+
+    fun connectBySharedReleaseYear(tracks: List<AudioService.TrackData>) {
+        tracks.forEach { a ->
+            tracks.forEach { b ->
+                if (a.releaseYear == b.releaseYear) {
+                    addEdge(a.id, b.id, sharedReleaseYearWeight)
                 }
             }
         }

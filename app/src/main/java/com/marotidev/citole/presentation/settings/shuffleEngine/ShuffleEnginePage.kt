@@ -140,7 +140,7 @@ fun DiscoveryRadiusItem(
         else -> "spans your entire library for maximum variety"
     }
 
-    LaunchedEffect((shuffleEngineViewModel.discoveryRadiusValue * 4).toInt()) {
+    LaunchedEffect((shuffleEngineViewModel.discoveryRadiusValue * 4).toInt().coerceIn(0, 3)) {
         haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
     }
 
@@ -286,7 +286,7 @@ fun QueueTrajectoryItem(
         else -> "allows the music to continuously evolve into new styles"
     }
 
-    LaunchedEffect((shuffleEngineViewModel.queueTrajectoryValue * 4).toInt()) {
+    LaunchedEffect((shuffleEngineViewModel.queueTrajectoryValue * 4).toInt().coerceIn(0, 3)) {
         haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
     }
 
