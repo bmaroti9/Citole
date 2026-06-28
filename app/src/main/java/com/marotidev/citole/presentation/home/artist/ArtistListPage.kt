@@ -94,7 +94,7 @@ fun ArtistItem(
     artist: AudioService.ArtistData,
     playerViewModel: PlayerViewModel,
     onClicked: () -> Unit,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     index: Int,
     count: Int
 ) {

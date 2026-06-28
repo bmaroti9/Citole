@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.repository
 
+import android.provider.MediaStore
 import com.marotidev.citole.data.domain.SimilarityGraphBuilder
 import com.marotidev.citole.data.service.AudioService
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.PriorityQueue
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -38,7 +40,7 @@ class RecommendationRepository @Inject constructor(
 ) {
 
     val explorationFactor = dataStoreRepository.shuffleDiscoveryRadius.map {
-        0.3f + it * 3f
+        0.1f + it * 4f
     }
 
     val trajectoryRange = dataStoreRepository.shuffleQueueTrajectory.map {
@@ -62,7 +64,6 @@ class RecommendationRepository @Inject constructor(
     }
 
     suspend fun generateQueueFromSeed(seedId: Long, count: Int) : List<AudioService.TrackData> {
-
         val currentExplorationFactor = explorationFactor.first()
         val currentTrajectoryRange = trajectoryRange.first()
 
@@ -108,5 +109,59 @@ class RecommendationRepository @Inject constructor(
         }
 
         return selectedTracks
+    }
+
+    suspend fun findSimilarArtists(artist: AudioService.ArtistData?, artists: List<AudioService.ArtistData>,
+        tracks: List<AudioService.TrackData>, count: Int) : List<AudioService.ArtistData> {
+        if (artist == null) return emptyList()
+
+        val trackMap = tracks.associateBy { it.id }
+        val artistMap = artists.associateBy { it.name }
+
+        val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
+
+        //sort of reverse Dijkstra where we are looking for the largest weights
+
+        val ids = artist.tracks.map { Pair(it.id, 1f) }
+
+        val pq = PriorityQueue<Pair<Long, Float>> {a, b -> b.second.compareTo(a.second)}
+        pq.addAll(ids)
+
+        val maxWeights = mutableMapOf<Long, Float>()
+        ids.forEach { maxWeights[it.first] = it.second }
+
+        for (k in 0..500) {
+            //guaranteed to be the best way to get there since all weights beneath it are smaller
+            val top = pq.poll() ?: break
+
+            if (top.second < 0.005f || top.second != maxWeights[top.first]) continue
+            
+            graph[top.first]?.let { node ->
+                val totalWeight = node.values.sumOf { it.toDouble() }.toFloat()
+
+                node.entries.forEach { n ->
+                    val newWeight = n.value / totalWeight * top.second
+
+                    if (newWeight > (maxWeights[n.key] ?: 0f)) {
+                        pq.add(Pair(n.key, newWeight))
+                        maxWeights[n.key] = newWeight
+                    }
+                }
+            }
+        }
+
+        val selectedArtists = mutableMapOf<String, Float>()
+
+        maxWeights.entries.forEach { weight ->
+            trackMap[weight.key]?.let { track ->
+                track.artists.forEach { a ->
+                    selectedArtists.merge(a, weight.value, Float::plus)
+                }
+            }
+        }
+
+        return selectedArtists.toList().sortedByDescending { it.second }.take(count).mapNotNull { a ->
+            if (a.first != artist.name) artistMap[a.first] else null
+        }
     }
 }

@@ -40,6 +40,9 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -73,6 +76,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.marotidev.citole.R
 import com.marotidev.citole.presentation.app.AlbumViewDestination
+import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.home.album.AlbumItem
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
@@ -88,6 +92,8 @@ fun ArtistDetailScreen(
 ) {
 
     val artistState by artistDetailViewModel.artist.collectAsStateWithLifecycle()
+    val similarArtists by artistDetailViewModel.similarArtists.collectAsStateWithLifecycle()
+
     val artist = artistState ?: return Box(modifier = Modifier.fillMaxSize()) {
         Text(
             "Artist not found",
@@ -121,6 +127,7 @@ fun ArtistDetailScreen(
     val chunkedAlbums = artist.albums.chunked(2)
     val chunkedSingles = artist.singles.chunked(2)
     val chunkedAppearsIn = artist.appearsIn.chunked(2)
+    val chunkedSimilarArtists = similarArtists.chunked(2)
 
     Scaffold(
         modifier = Modifier
@@ -438,6 +445,46 @@ fun ArtistDetailScreen(
                                 if (rowAlbums.size < 2) {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+            item {
+                if (similarArtists.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Text("Similar Artists", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
+                        }
+
+                        LazyRow(
+                            modifier = Modifier.height(180.dp)
+                        ) {
+                            itemsIndexed(
+                                similarArtists,
+                                key = { index, artist -> artist.name }
+                            ) { index, artist ->
+                                ArtistItem(
+                                    artist = artist,
+                                    playerViewModel = playerViewModel,
+                                    onClicked = {
+                                        navController.navigate(ArtistViewDestination(artistName = artist.name))
+                                    },
+                                    index = when (index) { //a little bit hacky, i designed it for 2x2 grid, will need proper corner radii logic eventually
+                                        0 -> 0
+                                        similarArtists.size - 1 -> 1
+                                        else -> 2
+                                    },
+                                    count = if (index == 0 || index == similarArtists.size - 1) 2 else 5
+                                )
                             }
                         }
                     }

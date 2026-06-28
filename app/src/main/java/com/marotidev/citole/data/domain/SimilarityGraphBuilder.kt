@@ -5,10 +5,10 @@ import com.marotidev.citole.data.service.AudioService
 
 class SimilarityGraphBuilder {
 
-    val sharedArtistWeight = 10f
+    val sharedArtistWeight = 13f
     val sharedAlbumWeight = 15f
-    val sharedQueueWeight = 5f
-    val sharedReleaseYearWeight = 2f
+    val sharedQueueWeight = 3f
+    val sharedReleaseYearWeight = 0.03f
 
     //a map of the trackIds with the weight of the connection
     private val edges = mutableMapOf<Long, MutableMap<Long, Float>>()
@@ -47,7 +47,9 @@ class SimilarityGraphBuilder {
                     a.playbackDurationMs / it
                 } ?: 0
                 logs.forEach { b ->
-                    addEdge(a.trackId, b.trackId, sharedQueueWeight * durationMultiplier)
+                    if (a.trackType == b.trackType) {
+                        addEdge(a.trackId, b.trackId, sharedQueueWeight * durationMultiplier)
+                    }
                 }
             }
         }
@@ -56,7 +58,7 @@ class SimilarityGraphBuilder {
     fun connectBySharedReleaseYear(tracks: List<AudioService.TrackData>) {
         tracks.forEach { a ->
             tracks.forEach { b ->
-                if (a.releaseYear == b.releaseYear) {
+                if (a.releaseYear == b.releaseYear && a.type == b.type) {
                     addEdge(a.id, b.id, sharedReleaseYearWeight)
                 }
             }

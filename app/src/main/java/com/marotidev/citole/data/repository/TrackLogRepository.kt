@@ -123,7 +123,7 @@ class TrackLogRepository @Inject constructor(
             allLogs.value = trackPlayLogDao.getAllPlayedLogs().reversed()
             lastPodcast.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Podcast.ordinal)
             mostPlayedRecentTracks.value = trackPlayLogDao.getMostPlayedFromDate(
-                System.currentTimeMillis().minus(7.days.inWholeMilliseconds))
+                System.currentTimeMillis().minus(7.days.inWholeMilliseconds), AudioService.AudioType.Song.ordinal)
             fetchLastAudiobookQueue()
         }
     }

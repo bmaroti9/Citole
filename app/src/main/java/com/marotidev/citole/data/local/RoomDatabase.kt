@@ -51,8 +51,8 @@ interface TrackPlayLogDao {
     @Query("SELECT * FROM trackplaylog WHERE queue_id = :queueId GROUP BY queue_index")
     suspend fun getAllByQueueId(queueId: Long) : List<TrackPlayLog>
 
-    @Query("SELECT * FROM trackplaylog WHERE playback_ended_ms > :lastDate GROUP BY track_id ORDER BY SUM(playback_duration_ms) LIMIT 10")
-    suspend fun getMostPlayedFromDate(lastDate: Long) : List<TrackPlayLog>
+    @Query("SELECT * FROM trackplaylog WHERE playback_ended_ms > :lastDate AND track_type == :type GROUP BY track_id ORDER BY SUM(playback_duration_ms) DESC LIMIT 10")
+    suspend fun getMostPlayedFromDate(lastDate: Long, type: Int) : List<TrackPlayLog>
 
     @Query("SELECT * FROM trackplaylog WHERE track_id = :trackId ORDER BY playback_ended_ms DESC LIMIT 1")
     suspend fun getLastProgress(trackId: Long): TrackPlayLog
