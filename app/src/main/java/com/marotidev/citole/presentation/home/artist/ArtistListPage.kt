@@ -23,9 +23,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -49,6 +50,7 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.ArtworkCollage
+import com.marotidev.citole.presentation.utils.calculateBorderRadiusForGridItem
 
 @Composable
 fun ArtistListPage(
@@ -96,20 +98,21 @@ fun ArtistItem(
     onClicked: () -> Unit,
     modifier: Modifier = Modifier,
     index: Int,
-    count: Int
+    count: Int,
+    columns : Int = 2
 ) {
     val checked = playerViewModel.currentlyPlaying?.artists?.contains(artist.name) ?: false
 
-    val roundedCornerDp = 16.dp
-    val flatCornerDp = 4.dp
+    val corners = calculateBorderRadiusForGridItem(index, count, columns)
+
     val topStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
+        targetValue = corners[0])
     val topEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index == 1 || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
-    val bottomStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index >= count + (count % 2) - 2 && index % 2 == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
+        targetValue = corners[1])
     val bottomEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if ((index >= count + (count % 2) - 2 && index % 2 == 1) || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
+        targetValue = corners[2])
+    val bottomStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = corners[3])
 
     val containerColor by animateColorAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
         targetValue = if (checked) {MaterialTheme.colorScheme.secondaryContainer}
@@ -125,17 +128,21 @@ fun ArtistItem(
         onClick = {onClicked()},
     ) {
         Column(
-            modifier = Modifier.padding(18.dp).aspectRatio(0.78f),
+            modifier = Modifier.padding(18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ArtworkCollage(
-                hash = artist.name.hashCode(),
-                artworkUris = artist.allAlbums.map { it.artworkUri ?: Uri.EMPTY }
-            )
+            Box(
+                modifier = Modifier.padding(bottom = 14.dp, start = 12.dp, end = 12.dp).align(Alignment.CenterHorizontally)
+            ) {
+                ArtworkCollage(
+                    hash = artist.name.hashCode(),
+                    artworkUris = artist.allAlbums.map { it.artworkUri ?: Uri.EMPTY }
+                )
+            }
             Text(
                 text = artist.name,
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(top = 12.dp, start = 1.dp)
+                modifier = Modifier.height(36.dp)
             )
         }
     }

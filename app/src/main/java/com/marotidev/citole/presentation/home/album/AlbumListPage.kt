@@ -54,6 +54,7 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.utils.tintedPainter
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.calculateBorderRadiusForGridItem
 
 @Composable
 fun AlbumListPage(
@@ -101,20 +102,21 @@ fun AlbumItem(
     onClicked: () -> Unit,
     modifier: Modifier = Modifier,
     index: Int,
-    count: Int
+    count: Int,
+    columns: Int = 2,
 ) {
     val checked = playerViewModel.currentlyPlaying?.albumId == album.albumId
 
-    val roundedCornerDp = 16.dp
-    val flatCornerDp = 4.dp
+    val corners = calculateBorderRadiusForGridItem(index, count, columns)
+
     val topStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
+        targetValue = corners[0])
     val topEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index == 1 || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
-    val bottomStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if (index >= count + (count % 2) - 2 && index % 2 == 0 || checked) {roundedCornerDp} else {flatCornerDp},)
+        targetValue = corners[1])
     val bottomEndShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        targetValue = if ((index >= count + (count % 2) - 2 && index % 2 == 1) || count == 1 || checked) {roundedCornerDp} else {flatCornerDp},)
+        targetValue = corners[2])
+    val bottomStartShape by animateDpAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        targetValue = corners[3])
 
     val containerColor by animateColorAsState(animationSpec = spring(stiffness = Spring.StiffnessMedium),
         targetValue = if (checked) {MaterialTheme.colorScheme.secondaryContainer}

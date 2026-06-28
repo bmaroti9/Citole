@@ -26,9 +26,35 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.room.Index
+import kotlin.math.ceil
+import kotlin.math.min
 
 fun durationToString(duration: Long) : String {
     return "%01d:%02d".format((duration / 1000) / 60, (duration / 1000) % 60)
+}
+
+fun calculateBorderRadiusForGridItem(index: Int, count: Int, columnCount: Int) : List<Dp> {
+    val roundedCornerDp = 16.dp
+    val flatCornerDp = 4.dp
+
+    val columns = min(count, columnCount)
+    val rows = ceil(count * 1.0 / columns).toInt()
+
+    val isLeftEdge = index % columns == 0
+    val isRightEdge = index % columns == columns - 1
+
+    val isTopEdge = index.floorDiv(columns) == 0
+    val isBottomEdge = index.floorDiv(columns) == rows - 1
+
+    return listOf(
+        if (isTopEdge && isLeftEdge) roundedCornerDp else flatCornerDp,
+        if (isTopEdge && isRightEdge) roundedCornerDp else flatCornerDp,
+        if (isBottomEdge && isRightEdge) roundedCornerDp else flatCornerDp,
+        if (isBottomEdge && isLeftEdge) roundedCornerDp else flatCornerDp,
+    )
 }
 
 @Composable

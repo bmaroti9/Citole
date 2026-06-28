@@ -106,7 +106,7 @@ fun ArtistDetailScreen(
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
 
     val density = LocalDensity.current
-    val expandedHeight = 400.dp + statusBarTopDp
+    val expandedHeight = 420.dp + statusBarTopDp
     val collapsedHeight = 64.dp + statusBarTopDp
 
     val expandedHeightPx = with(density) { expandedHeight.toPx() }
@@ -465,9 +465,7 @@ fun ArtistDetailScreen(
                             Text("Similar Artists", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
                         }
 
-                        LazyRow(
-                            modifier = Modifier.height(180.dp)
-                        ) {
+                        LazyRow {
                             itemsIndexed(
                                 similarArtists,
                                 key = { index, artist -> artist.name }
@@ -478,12 +476,10 @@ fun ArtistDetailScreen(
                                     onClicked = {
                                         navController.navigate(ArtistViewDestination(artistName = artist.name))
                                     },
-                                    index = when (index) { //a little bit hacky, i designed it for 2x2 grid, will need proper corner radii logic eventually
-                                        0 -> 0
-                                        similarArtists.size - 1 -> 1
-                                        else -> 2
-                                    },
-                                    count = if (index == 0 || index == similarArtists.size - 1) 2 else 5
+                                    index = index,
+                                    count = similarArtists.size,
+                                    columns = similarArtists.size,
+                                    modifier = Modifier.size(170.dp, 200.dp)
                                 )
                             }
                         }
