@@ -34,10 +34,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -71,7 +74,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
+import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
+import com.marotidev.citole.presentation.home.artist.ArtistItem
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.tintedPainter
@@ -84,6 +89,8 @@ fun AlbumDetailScreen(
     albumDetailViewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val albumState by albumDetailViewModel.album.collectAsStateWithLifecycle()
+    val similarAlbums by albumDetailViewModel.similarAlbums.collectAsStateWithLifecycle()
+
     val album = albumState ?: return Box(modifier = Modifier.fillMaxSize()) {
         Text(
             "Album not found",
@@ -272,6 +279,42 @@ fun AlbumDetailScreen(
                             navController = navController
                         ) {
                             playerViewModel.playQueue(album.tracks, index)
+                        }
+                    }
+                }
+            }
+            item {
+                if (similarAlbums.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Text("Similar Albums", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
+                        }
+
+                        LazyRow {
+                            itemsIndexed(
+                                similarAlbums,
+                                key = { index, album -> album.albumId }
+                            ) { index, album ->
+                                AlbumItem(
+                                    album = album,
+                                    playerViewModel = playerViewModel,
+                                    onClicked = {
+                                        navController.navigate(AlbumViewDestination(album.albumId))
+                                    },
+                                    index = index,
+                                    count = similarAlbums.size,
+                                    columns = similarAlbums.size,
+                                    modifier = Modifier.size(155.dp, 220.dp)
+                                )
+                            }
                         }
                     }
                 }

@@ -18,15 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.repository
 
-import android.provider.MediaStore
 import com.marotidev.citole.data.domain.SimilarityGraphBuilder
 import com.marotidev.citole.data.service.AudioService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.PriorityQueue
@@ -118,37 +113,9 @@ class RecommendationRepository @Inject constructor(
         val trackMap = tracks.associateBy { it.id }
         val artistMap = artists.associateBy { it.name }
 
-        val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
-
-        //sort of reverse Dijkstra where we are looking for the largest weights
-
         val ids = artist.tracks.map { Pair(it.id, 1f) }
 
-        val pq = PriorityQueue<Pair<Long, Float>> {a, b -> b.second.compareTo(a.second)}
-        pq.addAll(ids)
-
-        val maxWeights = mutableMapOf<Long, Float>()
-        ids.forEach { maxWeights[it.first] = it.second }
-
-        for (k in 0..500) {
-            //guaranteed to be the best way to get there since all weights beneath it are smaller
-            val top = pq.poll() ?: break
-
-            if (top.second < 0.005f || top.second != maxWeights[top.first]) continue
-            
-            graph[top.first]?.let { node ->
-                val totalWeight = node.values.sumOf { it.toDouble() }.toFloat()
-
-                node.entries.forEach { n ->
-                    val newWeight = n.value / totalWeight * top.second
-
-                    if (newWeight > (maxWeights[n.key] ?: 0f)) {
-                        pq.add(Pair(n.key, newWeight))
-                        maxWeights[n.key] = newWeight
-                    }
-                }
-            }
-        }
+        val maxWeights = findMaxWeightsFromStartingIds(ids)
 
         val selectedArtists = mutableMapOf<String, Float>()
 
@@ -163,5 +130,63 @@ class RecommendationRepository @Inject constructor(
         return selectedArtists.toList().sortedByDescending { it.second }.take(count).mapNotNull { a ->
             if (a.first != artist.name) artistMap[a.first] else null
         }
+    }
+
+    suspend fun findSimilarAlbums(album: AudioService.AlbumData?, albums: List<AudioService.AlbumData>,
+                                   tracks: List<AudioService.TrackData>, count: Int) : List<AudioService.AlbumData> {
+        if (album == null) return emptyList()
+
+        val trackMap = tracks.associateBy { it.id }
+        val albumMap = albums.associateBy { it.albumId }
+
+        val ids = album.tracks.map { Pair(it.id, 1f) }
+
+        val maxWeights = findMaxWeightsFromStartingIds(ids)
+
+        val selectedAlbums = mutableMapOf<Long, Float>()
+
+        maxWeights.entries.forEach { weight ->
+            trackMap[weight.key]?.let { track ->
+                selectedAlbums.merge(track.albumId, weight.value, Float::plus)
+            }
+        }
+
+        return selectedAlbums.toList().sortedByDescending { it.second }.take(count).mapNotNull { a ->
+            if (a.first != album.albumId) albumMap[a.first] else null
+        }
+    }
+
+    suspend fun findMaxWeightsFromStartingIds(ids: List<Pair<Long, Float>>) : Map<Long, Float> {
+        //sort of reverse Dijkstra where we are looking for the largest weights
+
+        val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
+
+        val pq = PriorityQueue<Pair<Long, Float>> {a, b -> b.second.compareTo(a.second)}
+        pq.addAll(ids)
+
+        val maxWeights = mutableMapOf<Long, Float>()
+        ids.forEach { maxWeights[it.first] = it.second }
+
+        for (k in 0..500) {
+            //guaranteed to be the best way to get there since all weights beneath it are smaller
+            val top = pq.poll() ?: break
+
+            if (top.second < 0.005f || top.second != maxWeights[top.first]) continue
+
+            graph[top.first]?.let { node ->
+                val totalWeight = node.values.sumOf { it.toDouble() }.toFloat()
+
+                node.entries.forEach { n ->
+                    val newWeight = n.value / totalWeight * top.second
+
+                    if (newWeight > (maxWeights[n.key] ?: 0f)) {
+                        pq.add(Pair(n.key, newWeight))
+                        maxWeights[n.key] = newWeight
+                    }
+                }
+            }
+        }
+
+        return maxWeights
     }
 }
