@@ -18,9 +18,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.utils
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -30,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.room.Index
 import kotlin.math.ceil
+import kotlin.math.max
 import kotlin.math.min
 
 fun durationToString(duration: Long) : String {
@@ -69,4 +81,59 @@ fun tintedPainter(id: Int, color: Color): Painter {
             }
         }
     }
+}
+
+fun Modifier.verticalScrollbar(
+    state: LazyListState,
+    thumbColor: Color,
+    barColor: Color,
+): Modifier {
+    return this.then(
+        Modifier.drawWithContent {
+            drawContent()
+
+            val verticalPadding = 12.dp.toPx()
+            val width = 6.dp.toPx()
+            val thumbPadding = 4.dp.toPx()
+
+            val layoutInfo = state.layoutInfo
+            val contentPadding = layoutInfo.beforeContentPadding + layoutInfo.afterContentPadding
+            val items = layoutInfo.visibleItemsInfo
+            if (items.isEmpty()) return@drawWithContent
+
+            val viewportHeight = layoutInfo.viewportSize.height.toFloat() - verticalPadding * 2
+            val itemsCount = layoutInfo.totalItemsCount
+            val visibleHeight = items.sumOf { it.size }
+            val avgItemSize = visibleHeight / items.size
+            val totalHeight = avgItemSize * itemsCount
+
+            val scrollOffset = state.firstVisibleItemIndex * avgItemSize + state.firstVisibleItemScrollOffset
+
+            val thumbHeight = 46.dp.toPx()
+            val maxOffset = viewportHeight - thumbHeight
+            val thumbOffsetY = (scrollOffset * 1f / (totalHeight - viewportHeight + contentPadding) * maxOffset)
+                .coerceIn(0f, maxOffset)
+
+            drawRoundRect(
+                color = thumbColor,
+                topLeft = Offset(size.width - width - 10.dp.toPx(), thumbOffsetY + verticalPadding),
+                size = Size(width, thumbHeight),
+                cornerRadius = CornerRadius(width / 2)
+            )
+
+            drawRoundRect(
+                color = barColor,
+                topLeft = Offset(size.width - width - 10.dp.toPx(), verticalPadding),
+                size = Size(width, max(thumbOffsetY - thumbPadding, 0f)),
+                cornerRadius = CornerRadius(width / 2)
+            )
+
+            drawRoundRect(
+                color = barColor,
+                topLeft = Offset(size.width - width - 10.dp.toPx(), thumbOffsetY + thumbHeight + verticalPadding + thumbPadding),
+                size = Size(width, max(viewportHeight - verticalPadding - thumbPadding - thumbOffsetY - thumbHeight, 0f)),
+                cornerRadius = CornerRadius(width / 2)
+            )
+        }
+    )
 }

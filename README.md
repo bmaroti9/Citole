@@ -18,3 +18,4 @@ Lightweight Material 3 Expressive Offline Music Player
 - Room
 - Hilt
 - DataStore
+- Coil
