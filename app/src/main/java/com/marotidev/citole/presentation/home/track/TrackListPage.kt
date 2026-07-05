@@ -92,10 +92,9 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.DraggableScrollbar
 import com.marotidev.citole.presentation.utils.durationToString
 import com.marotidev.citole.presentation.utils.tintedPainter
-import com.marotidev.citole.presentation.utils.verticalScrollbar
-import com.materialkolor.ktx.darken
 import com.materialkolor.ktx.harmonize
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -115,43 +114,57 @@ fun TrackListPage(
 
     val listState = rememberLazyListState()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding()
-            .verticalScrollbar(
-                state = listState,
-                thumbColor = MaterialTheme.colorScheme.tertiaryContainer.darken(1.25f),
-                barColor = MaterialTheme.colorScheme.surfaceContainerHighest
-            )
-            .padding(start = 16.dp, end = 24.dp)
-            .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
-        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp),
-        state = listState
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(
-            items = filteredTracks,
-            key = { index, track -> track.id }
-        ) { index, track ->
-            SwipeableTrackItem (
-                track = track,
-                modifier = Modifier.animateItem(
-                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                ),
-                playerViewModel = playerViewModel,
-                index = index,
-                count = filteredTracks.size,
-                navController = navController
-            ) {
-                scope.launch {
-                    val generatedQueue = trackListViewModel.generateQueueFromSeed(track.id)
-                    playerViewModel.playQueue(generatedQueue)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .padding(start = 16.dp, end = 24.dp)
+                .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
+            contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp),
+            state = listState
+        ) {
+            itemsIndexed(
+                items = filteredTracks,
+                key = { index, track -> track.id }
+            ) { index, track ->
+                SwipeableTrackItem (
+                    track = track,
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                        fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                        placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                    ),
+                    playerViewModel = playerViewModel,
+                    index = index,
+                    count = filteredTracks.size,
+                    navController = navController
+                ) {
+                    scope.launch {
+                        val generatedQueue = trackListViewModel.generateQueueFromSeed(track.id)
+                        playerViewModel.playQueue(generatedQueue)
+                    }
                 }
             }
         }
+
+        if (filteredTracks.isNotEmpty()) {
+            DraggableScrollbar(
+                listState = listState,
+                itemCount = filteredTracks.size,
+                labelForIndex = { index ->
+                    filteredTracks[index].title.uppercase().first().toString()
+                },
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight()
+                    .width(24.dp),
+            )
+        }
     }
+
 }
 
 @Composable
