@@ -50,9 +50,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.materialkolor.ktx.darken
 import kotlinx.coroutines.launch
@@ -66,11 +68,12 @@ fun DraggableScrollbar(
     labelForIndex: (Int) -> String,
     modifier: Modifier = Modifier,
 ) {
-    val coroutineScope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
     var isDragging by remember { mutableStateOf(false) }
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
     var thumbOffsetY by remember { mutableFloatStateOf(0f) }
+    var maxScrollableHeightPx by remember { mutableFloatStateOf(0f) }
 
     val density = LocalDensity.current
     val thumbWidthPx = with(density) { 6.dp.toPx() }
@@ -95,18 +98,23 @@ fun DraggableScrollbar(
                         val contentPadding = layoutInfo.beforeContentPadding + layoutInfo.afterContentPadding
 
                         val itemsCount = layoutInfo.totalItemsCount
-                        val visibleHeight = items.sumOf { it.size }
-                        val avgItemSize = visibleHeight / items.size
+                        val avgItemSize = items.sumOf { it.size } / items.size.toFloat()
                         val totalHeight = avgItemSize * itemsCount
+
+                        maxScrollableHeightPx = totalHeight - currentHeightPx + contentPadding
 
                         val scrollOffset = listState.firstVisibleItemIndex * avgItemSize + listState.firstVisibleItemScrollOffset
 
                         val maxOffset = currentHeightPx - thumbHeightPx
-                        thumbOffsetY = (scrollOffset * 1f / (totalHeight - currentHeightPx + contentPadding) * maxOffset)
+                        thumbOffsetY = (scrollOffset * 1f / maxScrollableHeightPx * maxOffset)
                             .coerceIn(0f, maxOffset)
                     }
                 }
         }
+    }
+
+    LaunchedEffect(currentLabel) {
+        haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
     Box(
@@ -123,18 +131,16 @@ fun DraggableScrollbar(
                         if (!isDragging) return@detectDragGestures
                         change.consume()
 
-                        val maxOffset = viewportHeightPx - thumbHeightPx
+                        val maxOffset = viewportHeightPx - thumbHeightPx - verticalPaddingPx
+
                         thumbOffsetY = (thumbOffsetY + dragAmount.y).coerceIn(0f, maxOffset)
 
+                        val scrollDeltaPx = dragAmount.y / maxOffset * maxScrollableHeightPx
+                        listState.dispatchRawDelta(scrollDeltaPx)
+
                         val fraction = thumbOffsetY / maxOffset
-                        val targetIndex = (fraction * (itemCount - 1)).roundToInt()
-                            .coerceIn(0, itemCount - 1)
-
+                        val targetIndex = (fraction * (itemCount - 1)).roundToInt().coerceIn(0, itemCount - 1)
                         currentLabel = labelForIndex(targetIndex)
-
-                        coroutineScope.launch {
-                            listState.scrollToItem(targetIndex)
-                        }
                     }
                 )
             }
