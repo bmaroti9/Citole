@@ -86,7 +86,6 @@ fun DraggableScrollbar(
     val labelPaddingPx = with(density) {32.dp.toPx()}
 
     val haptic = LocalHapticFeedback.current
-    //val scope = rememberCoroutineScope()
 
     var isDragging by remember { mutableStateOf(false) }
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
@@ -140,7 +139,7 @@ fun DraggableScrollbar(
 
                         val scrollOffset = listState.firstVisibleItemIndex * avgItemSize + listState.firstVisibleItemScrollOffset
 
-                        val maxOffset = currentHeightPx - thumbHeightPx
+                        val maxOffset = currentHeightPx - thumbHeightPx - verticalPaddingPx * 2
                         thumbOffsetY = (scrollOffset * 1f / maxScrollableHeightPx * maxOffset)
                             .coerceIn(0f, maxOffset)
                     }
@@ -148,8 +147,13 @@ fun DraggableScrollbar(
         }
     }
 
+    var isFirstLoad by remember { mutableStateOf(true) }
     LaunchedEffect(currentLabel) {
-        haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        if (isFirstLoad) {
+            isFirstLoad = false
+        } else {
+            haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
     }
 
     Box(
@@ -175,9 +179,11 @@ fun DraggableScrollbar(
                         //val scrollDeltaPx = dragAmount.y / maxOffset * maxScrollableHeightPx
                         //listState.dispatchRawDelta(scrollDeltaPx)
 
-                        scrollTargetIndex = (fraction * (maxVisibleScrollableCount)).roundToInt().coerceIn(0, maxVisibleScrollableCount.roundToInt())
+                        scrollTargetIndex = (fraction * (maxVisibleScrollableCount)).roundToInt()
+                            .coerceIn(0, maxVisibleScrollableCount.roundToInt())
 
-                        val labelTargetIndex = (fraction * (itemCount - 1)).roundToInt().coerceIn(0, itemCount - 1)
+                        val labelTargetIndex =
+                            (fraction * (itemCount - 1)).roundToInt().coerceIn(0, itemCount - 1)
                         currentLabel = labelForIndex(labelTargetIndex)
                     }
                 )
@@ -244,7 +250,8 @@ fun DraggableScrollbar(
                 .wrapContentSize(unbounded = true)
                 .graphicsLayer {
                     translationX = -(thumbWidthPx + size.width / 2f + labelPaddingPx)
-                    translationY = thumbOffsetY + (thumbHeightPx / 2f) - (size.height / 2f) + verticalPaddingPx
+                    translationY =
+                        thumbOffsetY + (thumbHeightPx / 2f) - (size.height / 2f) + verticalPaddingPx
                 }
         ) {
             Text(

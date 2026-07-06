@@ -48,7 +48,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -286,8 +288,11 @@ fun QueueTrajectoryItem(
         else -> "allows the music to continuously evolve into new styles"
     }
 
+    var isFirstLoad by remember { mutableStateOf(true) }
     LaunchedEffect((shuffleEngineViewModel.queueTrajectoryValue * 4).toInt().coerceIn(0, 3)) {
-        haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+        if (isFirstLoad) { isFirstLoad = false } else {
+            haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
     }
 
     val colors = listOf(
