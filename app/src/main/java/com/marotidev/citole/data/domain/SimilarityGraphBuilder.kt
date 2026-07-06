@@ -55,15 +55,5 @@ class SimilarityGraphBuilder {
         }
     }
 
-    fun connectBySharedReleaseYear(tracks: List<AudioService.TrackData>) {
-        tracks.forEach { a ->
-            tracks.forEach { b ->
-                if (a.releaseYear == b.releaseYear && a.type == b.type) {
-                    addEdge(a.id, b.id, sharedReleaseYearWeight)
-                }
-            }
-        }
-    }
-
     fun build() = edges
 }
