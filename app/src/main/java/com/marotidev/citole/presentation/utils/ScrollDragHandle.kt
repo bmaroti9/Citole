@@ -83,13 +83,13 @@ fun DraggableScrollbar(
 
     val density = LocalDensity.current
     val thumbWidthPx = with(density) { 6.dp.toPx() }
-    val thumbExpandedWidthPx = with(density) {22.dp.toPx()}
+    val thumbExpandedWidthPx = with(density) {26.dp.toPx()}
     val thumbHeightPx = with(density) {46.dp.toPx()}
     val verticalPaddingPx = with(density) {12.dp.toPx()}
     val thumbPaddingPx = with(density) {4.dp.toPx()}
 
     val haptic = LocalHapticFeedback.current
-    val scope = rememberCoroutineScope()
+    //val scope = rememberCoroutineScope()
 
     var isDragging by remember { mutableStateOf(false) }
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
@@ -169,7 +169,7 @@ fun DraggableScrollbar(
                         if (!isDragging) return@detectDragGestures
                         change.consume()
 
-                        val maxOffset = viewportHeightPx - thumbHeightPx - verticalPaddingPx
+                        val maxOffset = viewportHeightPx - thumbHeightPx - verticalPaddingPx * 2f
 
                         thumbOffsetY = (thumbOffsetY + dragAmount.y).coerceIn(0f, maxOffset)
 
@@ -217,21 +217,21 @@ fun DraggableScrollbar(
             drawRoundRect(
                 color = barColor,
                 topLeft = Offset(size.width - thumbWidthPx - 10.dp.toPx(), thumbOffsetY + thumbHeightPx + verticalPaddingPx + thumbPaddingPx),
-                size = Size(thumbWidthPx, max(viewportHeightPx - verticalPaddingPx - thumbPaddingPx - thumbOffsetY - thumbHeightPx, 0f)),
+                size = Size(thumbWidthPx, max(viewportHeightPx - verticalPaddingPx * 2 - thumbPaddingPx - thumbOffsetY - thumbHeightPx, 0f)),
                 cornerRadius = CornerRadius(thumbWidthPx / 2)
             )
 
             if (iconAlpha > 0f) {
-                val iconSizePx = 14.dp.toPx()
+                val iconSizePx = 18.dp.toPx()
 
-                val iconX = size.width - 10.dp.toPx() - (thumbAnimatedWidthPx - iconSizePx) / 2f
+                val iconX = size.width - 10.dp.toPx() - thumbAnimatedWidthPx / 2f - iconSizePx / 2f
                 val iconY = thumbOffsetY + verticalPaddingPx + (thumbHeightPx - iconSizePx) / 2f
 
                 translate(left = iconX, top = iconY) {
                     with(iconPainter) {
                         draw(
                             size = Size(iconSizePx, iconSizePx),
-                            alpha = iconAlpha
+                            alpha = iconAlpha,
                         )
                     }
                 }
@@ -253,10 +253,9 @@ fun DraggableScrollbar(
             Text(
                 text = currentLabel,
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.tertiary,
+                color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier
-                    .shadow(2.dp, MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.inverseSurface, MaterialTheme.shapes.large)
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             )
         }

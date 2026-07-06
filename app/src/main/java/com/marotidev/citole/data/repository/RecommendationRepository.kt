@@ -171,7 +171,7 @@ class RecommendationRepository @Inject constructor(
             //guaranteed to be the best way to get there since all weights beneath it are smaller
             val top = pq.poll() ?: break
 
-            if (top.second < 0.005f || top.second != maxWeights[top.first]) continue
+            if (top.second < 0.05f || top.second != maxWeights[top.first]) continue
 
             graph[top.first]?.let { node ->
                 val totalWeight = node.values.sumOf { it.toDouble() }.toFloat()
