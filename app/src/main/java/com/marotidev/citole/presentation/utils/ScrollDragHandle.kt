@@ -52,15 +52,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.marotidev.citole.R
 import com.materialkolor.ktx.darken
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -76,7 +83,7 @@ fun DraggableScrollbar(
 
     val density = LocalDensity.current
     val thumbWidthPx = with(density) { 6.dp.toPx() }
-    val thumbExpandedWidthPx = with(density) {12.dp.toPx()}
+    val thumbExpandedWidthPx = with(density) {22.dp.toPx()}
     val thumbHeightPx = with(density) {46.dp.toPx()}
     val verticalPaddingPx = with(density) {12.dp.toPx()}
     val thumbPaddingPx = with(density) {4.dp.toPx()}
@@ -95,7 +102,23 @@ fun DraggableScrollbar(
         animationSpec = spring(stiffness = Spring.StiffnessMedium)
     )
 
+    val thumbPath = remember { Path() }
+
+    val iconPainter = painterResource(id = R.drawable.ic_unfold_more)
+    val iconAlpha by animateFloatAsState(
+        targetValue = if (isDragging) 1f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "ScrollbarIconAlpha"
+    )
+
     var currentLabel by remember {mutableStateOf("")}
+
+    var scrollTargetIndex by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(scrollTargetIndex) {
+        if (scrollTargetIndex >= 0) {
+            listState.scrollToItem(scrollTargetIndex)
+        }
+    }
 
     val thumbColor = MaterialTheme.colorScheme.tertiaryContainer.darken(1.25f)
     val barColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -155,9 +178,7 @@ fun DraggableScrollbar(
                         //val scrollDeltaPx = dragAmount.y / maxOffset * maxScrollableHeightPx
                         //listState.dispatchRawDelta(scrollDeltaPx)
 
-                        val scrollTargetIndex = (fraction * (maxVisibleScrollableCount)).roundToInt().coerceIn(0, maxVisibleScrollableCount.roundToInt())
-
-                        scope.launch { listState.scrollToItem(scrollTargetIndex) }
+                        scrollTargetIndex = (fraction * (maxVisibleScrollableCount)).roundToInt().coerceIn(0, maxVisibleScrollableCount.roundToInt())
 
                         val labelTargetIndex = (fraction * (itemCount - 1)).roundToInt().coerceIn(0, itemCount - 1)
                         currentLabel = labelForIndex(labelTargetIndex)
@@ -166,12 +187,24 @@ fun DraggableScrollbar(
             }
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRoundRect(
-                color = thumbColor,
-                topLeft = Offset(size.width - 10.dp.toPx() - thumbAnimatedWidthPx,
-                    thumbOffsetY + verticalPaddingPx),
-                size = Size(thumbAnimatedWidthPx, thumbHeightPx),
-                cornerRadius = CornerRadius(thumbWidthPx / 2)
+            thumbPath.reset()
+            thumbPath.addRoundRect(
+                RoundRect(
+                    rect = Rect(
+                        offset = Offset(size.width - 10.dp.toPx() - thumbAnimatedWidthPx,
+                            thumbOffsetY + verticalPaddingPx),
+                        size = Size(thumbAnimatedWidthPx, thumbHeightPx),
+                    ),
+                    topLeft = CornerRadius(thumbAnimatedWidthPx / 2),
+                    topRight = CornerRadius(thumbWidthPx / 2),
+                    bottomRight = CornerRadius(thumbWidthPx / 2),
+                    bottomLeft = CornerRadius(thumbAnimatedWidthPx / 2)
+                )
+            )
+
+            drawPath(
+                path = thumbPath,
+                color = thumbColor
             )
 
             drawRoundRect(
@@ -187,6 +220,22 @@ fun DraggableScrollbar(
                 size = Size(thumbWidthPx, max(viewportHeightPx - verticalPaddingPx - thumbPaddingPx - thumbOffsetY - thumbHeightPx, 0f)),
                 cornerRadius = CornerRadius(thumbWidthPx / 2)
             )
+
+            if (iconAlpha > 0f) {
+                val iconSizePx = 14.dp.toPx()
+
+                val iconX = size.width - 10.dp.toPx() - (thumbAnimatedWidthPx - iconSizePx) / 2f
+                val iconY = thumbOffsetY + verticalPaddingPx + (thumbHeightPx - iconSizePx) / 2f
+
+                translate(left = iconX, top = iconY) {
+                    with(iconPainter) {
+                        draw(
+                            size = Size(iconSizePx, iconSizePx),
+                            alpha = iconAlpha
+                        )
+                    }
+                }
+            }
         }
 
         AnimatedVisibility(
@@ -197,7 +246,7 @@ fun DraggableScrollbar(
                 .align(Alignment.TopEnd)
                 .wrapContentSize(unbounded = true)
                 .graphicsLayer {
-                    translationX = -(thumbWidthPx + 44.dp.toPx())
+                    translationX = -(thumbWidthPx + 64.dp.toPx())
                     translationY = thumbOffsetY + (thumbHeightPx / 2f) - (size.height / 2f) + verticalPaddingPx
                 }
         ) {
