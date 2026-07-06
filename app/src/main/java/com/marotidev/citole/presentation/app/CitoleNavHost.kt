@@ -275,7 +275,7 @@ fun CitoleNavHost(
                         ) { targetPage ->
                             when (targetPage) {
                                 Page.ForYou -> ForYouListPage(playerViewModel, paddingValues, navController)
-                                Page.Tracks -> TrackListPage(playerViewModel, paddingValues, navController)
+                                Page.Tracks -> TrackListPage(playerViewModel, browseViewModel, paddingValues, navController)
                                 Page.Albums -> AlbumListPage(playerViewModel, paddingValues, navController)
                                 Page.Artists -> ArtistListPage(playerViewModel, paddingValues, navController)
                             }

@@ -19,17 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package com.marotidev.citole.presentation.home.track
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -99,9 +96,12 @@ import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
+import com.marotidev.citole.presentation.browse.BrowseViewModel
+import com.marotidev.citole.presentation.browse.SortChip
 import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.DraggableScrollbar
 import com.marotidev.citole.presentation.utils.durationToString
+import com.marotidev.citole.presentation.utils.formatDateInSeconds
 import com.marotidev.citole.presentation.utils.tintedPainter
 import com.materialkolor.ktx.harmonize
 import kotlinx.coroutines.delay
@@ -112,6 +112,7 @@ import kotlin.math.sign
 @Composable
 fun TrackListPage(
     playerViewModel: PlayerViewModel,
+    browseViewModel: BrowseViewModel,
     paddingValues: PaddingValues,
     navController: NavController,
     trackListViewModel: TrackListViewModel = hiltViewModel(),
@@ -123,12 +124,13 @@ fun TrackListPage(
     val listState = rememberLazyListState()
 
     Row(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
     ) {
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .imePadding()
                 .padding(start = 16.dp)
                 .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
             contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp),
@@ -171,7 +173,13 @@ fun TrackListPage(
                     listState = listState,
                     itemCount = filteredTracks.size,
                     labelForIndex = { index ->
-                        filteredTracks[index].title.uppercase().first().toString()
+                        when (browseViewModel.selectedSortChip) {
+                            SortChip.Name -> filteredTracks[index].title.uppercase().first().toString()
+                            SortChip.Album -> filteredTracks[index].albumName.uppercase().first().toString()
+                            SortChip.Artist -> filteredTracks[index].artists.joinToString(", ").uppercase().first().toString()
+                            SortChip.DateAdded -> formatDateInSeconds( filteredTracks[index].dateAdded)
+                        }
+
                     },
                     modifier = Modifier
                         .fillMaxHeight()

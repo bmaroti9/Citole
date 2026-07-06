@@ -28,11 +28,26 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.ceil
 import kotlin.math.min
 
 fun durationToString(duration: Long) : String {
     return "%01d:%02d".format((duration / 1000) / 60, (duration / 1000) % 60)
+}
+
+fun formatDateInSeconds(dateAddedSeconds: Int): String {
+    val millis = dateAddedSeconds.toLong() * 1000L
+    val date = Date(millis)
+
+    val formatter = SimpleDateFormat("d MMM ''yy", Locale.getDefault()).apply {
+        timeZone = TimeZone.getDefault()
+    }
+
+    return formatter.format(date)
 }
 
 fun calculateBorderRadiusForGridItem(index: Int, count: Int, columnCount: Int) : List<Dp> {

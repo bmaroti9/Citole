@@ -20,7 +20,6 @@ package com.marotidev.citole.presentation.utils
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -35,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,12 +44,10 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -57,7 +55,6 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -69,7 +66,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.marotidev.citole.R
 import com.materialkolor.ktx.darken
-import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -87,6 +83,7 @@ fun DraggableScrollbar(
     val thumbHeightPx = with(density) {46.dp.toPx()}
     val verticalPaddingPx = with(density) {12.dp.toPx()}
     val thumbPaddingPx = with(density) {4.dp.toPx()}
+    val labelPaddingPx = with(density) {32.dp.toPx()}
 
     val haptic = LocalHapticFeedback.current
     //val scope = rememberCoroutineScope()
@@ -246,17 +243,17 @@ fun DraggableScrollbar(
                 .align(Alignment.TopEnd)
                 .wrapContentSize(unbounded = true)
                 .graphicsLayer {
-                    translationX = -(thumbWidthPx + 64.dp.toPx())
+                    translationX = -(thumbWidthPx + size.width / 2f + labelPaddingPx)
                     translationY = thumbOffsetY + (thumbHeightPx / 2f) - (size.height / 2f) + verticalPaddingPx
                 }
         ) {
             Text(
                 text = currentLabel,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.inverseSurface, MaterialTheme.shapes.large)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .background(MaterialTheme.colorScheme.inverseSurface, CircleShape)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             )
         }
     }
