@@ -18,8 +18,8 @@ android {
         applicationId = "com.marotidev.citole"
         minSdk = 24
         targetSdk = 36
-        versionCode = 30
-        versionName = "0.2.7"
+        versionCode = 31
+        versionName = "0.2.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -36,7 +36,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

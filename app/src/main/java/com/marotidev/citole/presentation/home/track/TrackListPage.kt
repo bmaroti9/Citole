@@ -18,11 +18,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.track
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -114,14 +122,14 @@ fun TrackListPage(
 
     val listState = rememberLazyListState()
 
-    Box(
+    Row(
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
                 .imePadding()
-                .padding(start = 16.dp, end = 24.dp)
+                .padding(start = 16.dp)
                 .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
             contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 3.dp),
             state = listState
@@ -150,18 +158,28 @@ fun TrackListPage(
             }
         }
 
-        if (filteredTracks.isNotEmpty()) {
-            DraggableScrollbar(
-                listState = listState,
-                itemCount = filteredTracks.size,
-                labelForIndex = { index ->
-                    filteredTracks[index].title.uppercase().first().toString()
-                },
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .fillMaxHeight()
-                    .width(24.dp),
-            )
+        AnimatedContent(
+            targetState = filteredTracks.size > 14,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut() using SizeTransform { _, _ ->
+                    spring(Spring.DampingRatioNoBouncy, Spring.StiffnessLow)
+                }
+            },
+        ) { showScrollbar ->
+            if (showScrollbar) {
+                DraggableScrollbar(
+                    listState = listState,
+                    itemCount = filteredTracks.size,
+                    labelForIndex = { index ->
+                        filteredTracks[index].title.uppercase().first().toString()
+                    },
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(24.dp),
+                )
+            } else {
+                Spacer(modifier = Modifier.width(16.dp))
+            }
         }
     }
 

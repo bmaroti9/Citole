@@ -19,6 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package com.marotidev.citole.presentation.utils
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -37,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,18 +73,27 @@ fun DraggableScrollbar(
     labelForIndex: (Int) -> String,
     modifier: Modifier = Modifier,
 ) {
+
+    val density = LocalDensity.current
+    val thumbWidthPx = with(density) { 6.dp.toPx() }
+    val thumbExpandedWidthPx = with(density) {12.dp.toPx()}
+    val thumbHeightPx = with(density) {46.dp.toPx()}
+    val verticalPaddingPx = with(density) {12.dp.toPx()}
+    val thumbPaddingPx = with(density) {4.dp.toPx()}
+
     val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
 
     var isDragging by remember { mutableStateOf(false) }
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
     var thumbOffsetY by remember { mutableFloatStateOf(0f) }
     var maxScrollableHeightPx by remember { mutableFloatStateOf(0f) }
+    var maxVisibleScrollableCount by remember { mutableFloatStateOf(0f) }
 
-    val density = LocalDensity.current
-    val thumbWidthPx = with(density) { 6.dp.toPx() }
-    val thumbHeightPx = with(density) {46.dp.toPx()}
-    val verticalPaddingPx = with(density) {12.dp.toPx()}
-    val thumbPaddingPx = with(density) {4.dp.toPx()}
+    val thumbAnimatedWidthPx by animateFloatAsState(
+        targetValue = if (isDragging) thumbExpandedWidthPx else thumbWidthPx,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium)
+    )
 
     var currentLabel by remember {mutableStateOf("")}
 
@@ -102,6 +116,7 @@ fun DraggableScrollbar(
                         val totalHeight = avgItemSize * itemsCount
 
                         maxScrollableHeightPx = totalHeight - currentHeightPx + contentPadding
+                        maxVisibleScrollableCount = maxScrollableHeightPx / avgItemSize
 
                         val scrollOffset = listState.firstVisibleItemIndex * avgItemSize + listState.firstVisibleItemScrollOffset
 
@@ -135,12 +150,17 @@ fun DraggableScrollbar(
 
                         thumbOffsetY = (thumbOffsetY + dragAmount.y).coerceIn(0f, maxOffset)
 
-                        val scrollDeltaPx = dragAmount.y / maxOffset * maxScrollableHeightPx
-                        listState.dispatchRawDelta(scrollDeltaPx)
-
                         val fraction = thumbOffsetY / maxOffset
-                        val targetIndex = (fraction * (itemCount - 1)).roundToInt().coerceIn(0, itemCount - 1)
-                        currentLabel = labelForIndex(targetIndex)
+
+                        //val scrollDeltaPx = dragAmount.y / maxOffset * maxScrollableHeightPx
+                        //listState.dispatchRawDelta(scrollDeltaPx)
+
+                        val scrollTargetIndex = (fraction * (maxVisibleScrollableCount)).roundToInt().coerceIn(0, maxVisibleScrollableCount.roundToInt())
+
+                        scope.launch { listState.scrollToItem(scrollTargetIndex) }
+
+                        val labelTargetIndex = (fraction * (itemCount - 1)).roundToInt().coerceIn(0, itemCount - 1)
+                        currentLabel = labelForIndex(labelTargetIndex)
                     }
                 )
             }
@@ -148,8 +168,9 @@ fun DraggableScrollbar(
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawRoundRect(
                 color = thumbColor,
-                topLeft = Offset(size.width - thumbWidthPx - 10.dp.toPx(), thumbOffsetY + verticalPaddingPx),
-                size = Size(thumbWidthPx, thumbHeightPx),
+                topLeft = Offset(size.width - 10.dp.toPx() - thumbAnimatedWidthPx,
+                    thumbOffsetY + verticalPaddingPx),
+                size = Size(thumbAnimatedWidthPx, thumbHeightPx),
                 cornerRadius = CornerRadius(thumbWidthPx / 2)
             )
 
