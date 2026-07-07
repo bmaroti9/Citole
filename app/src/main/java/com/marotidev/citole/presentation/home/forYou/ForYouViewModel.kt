@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.TrackLogRepository
+import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,8 +39,17 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 class ForYouViewModel @Inject constructor(
     audioRepository : AudioRepository,
-    trackLogRepository: TrackLogRepository
+    trackLogRepository: TrackLogRepository,
+    searchQueryStateHolder: SearchQueryStateHolder
 ) : ViewModel() {
+
+    val showUniversalSearch = searchQueryStateHolder.query.map {
+        it != ""
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
     val recentlyAdded = audioRepository.allTracks.map { tracks ->
         tracks.sortedBy { it.dateAdded }.reversed().take(16)

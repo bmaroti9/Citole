@@ -18,12 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.forYou
 
-import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
-import com.marotidev.citole.data.repository.DataStoreRepository
-import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,20 +28,19 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.text.Normalizer
-import java.util.Locale
 import javax.inject.Inject
 
 sealed interface SearchResultGroup {
     val score: Float
 
     data class Tracks(val items: List<ScoredResult<AudioService.TrackData>>) : SearchResultGroup {
-        override val score get() = items.maxOf { it.score }
+        override val score get() = items.maxOfOrNull { it.score } ?: 0f
     }
     data class Albums(val items: List<ScoredResult<AudioService.AlbumData>>) : SearchResultGroup {
-        override val score get() = items.maxOf { it.score }
+        override val score get() = items.maxOfOrNull { it.score } ?: 0f
     }
     data class Artists(val items: List<ScoredResult<AudioService.ArtistData>>) : SearchResultGroup {
-        override val score get() = items.maxOf { it.score }
+        override val score get() = items.maxOfOrNull { it.score } ?: 0f
     }
 }
 
@@ -99,15 +95,42 @@ class UniversalSearchViewModel @Inject constructor(
     ) { query, allTracks, allAlbums, allArtists ->
         listOf(
             SearchResultGroup.Tracks(
-                items = allTracks.map { ScoredResult(it, scoreTargetFromQuery(query, it.name)) }
+                items = allTracks
+                    .map {
+                        ScoredResult(
+                            it,
+                            scoreTargetFromQuery(query, it.title)
+                                + scoreTargetFromQuery(query, it.albumName) * 0.2f
+                                + scoreTargetFromQuery(query, it.artists.joinToString(", ")) * 0.3f
+                        )
+                    }
+                    .filter { it.score > 0f }
             ),
             SearchResultGroup.Albums(
-                items = allAlbums.map { ScoredResult(it, scoreTargetFromQuery(query, it.albumName)) }
+                items = allAlbums
+                    .map {
+                        ScoredResult(
+                            it,
+                            scoreTargetFromQuery(query, it.albumName)
+                                + scoreTargetFromQuery(query, it.ownerArtists.joinToString(", ")) * 0.15f
+                                + scoreTargetFromQuery(query, it.allArtists.joinToString(", ")) * 0.1f
+                        )
+                    }
+                    .filter { it.score > 0f }
             ),
             SearchResultGroup.Artists(
-                items = allArtists.map { ScoredResult(it, scoreTargetFromQuery(query, it.name)) }
+                items = allArtists
+                    .map {
+                        ScoredResult(it,
+                            scoreTargetFromQuery(query, it.name)
+                                + scoreTargetFromQuery(query, it.tracks.joinToString(", ") { track -> track.name }) * 0.1f
+                                + scoreTargetFromQuery(query, it.albums.joinToString(", ") { album -> album.albumName }) * 0.15f
+                                + scoreTargetFromQuery(query, it.allAlbums.joinToString(", ") { album -> album.albumName }) * 0.05f
+                        )
+                    }
+                    .filter { it.score > 0f }
             )
-        ).sortedBy { it.score }
+        ).sortedByDescending { it.score }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

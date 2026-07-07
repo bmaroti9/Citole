@@ -19,11 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.forYou
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,26 +58,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
-import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
-import com.marotidev.citole.presentation.player.PlayerViewModel
-import com.marotidev.citole.presentation.utils.tintedPainter
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import com.marotidev.citole.data.repository.TrackLogRepository
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
+import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.MorphingClipImage
 import com.marotidev.citole.presentation.utils.durationToString
+import com.marotidev.citole.presentation.utils.tintedPainter
 
 @Composable
 fun ForYouListPage(
@@ -83,37 +87,53 @@ fun ForYouListPage(
     forYouViewModel: ForYouViewModel = hiltViewModel()
 ) {
 
+    val showUniversalSearch by forYouViewModel.showUniversalSearch.collectAsStateWithLifecycle()
+
     val recentlyAdded by forYouViewModel.recentlyAdded.collectAsStateWithLifecycle()
     val recentlyPlayed by forYouViewModel.recentlyPlayed.collectAsStateWithLifecycle()
     val mostPlayed by forYouViewModel.mostPlayed.collectAsStateWithLifecycle()
     val lastPodcast by forYouViewModel.lastPodcast.collectAsStateWithLifecycle()
     val lastAudiobook by forYouViewModel.lastAudiobook.collectAsStateWithLifecycle()
 
-    LazyColumn(
-        modifier = Modifier
-            .imePadding()
-            .padding(horizontal = 16.dp)
-            .fillMaxSize()
-            .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
-        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 2.dp)
-    ) {
-        item {
-            TrackCarousel(recentlyAdded, playerViewModel)
-        }
+    AnimatedContent(
+        targetState = showUniversalSearch,
+        transitionSpec = {
+            fadeIn() togetherWith fadeOut() using SizeTransform { _, _ ->
+                spring(Spring.DampingRatioNoBouncy, Spring.StiffnessLow)
+            }
+        },
+    ) { show ->
+        if (show) {
+            UniversalSearchScreen(paddingValues, playerViewModel, navController)
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .imePadding()
+                    .padding(horizontal = 16.dp)
+                    .fillMaxSize()
+                    .clipToBounds(), //supposedly should stop them bleeding under the search bar when animating
+                contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 2.dp)
+            ) {
+                item {
+                    TrackCarousel(recentlyAdded, playerViewModel)
+                }
 
-        item {
-            OfferResumePlayback(forYouViewModel.resumePlaybackAnimationState,lastAudiobook, playerViewModel)
-        }
+                item {
+                    OfferResumePlayback(forYouViewModel.resumePlaybackAnimationState,lastAudiobook, playerViewModel)
+                }
 
-        item {
-            RecentlyPlayedTracks(recentlyPlayed, playerViewModel, navController)
-        }
+                item {
+                    RecentlyPlayedTracks(recentlyPlayed, playerViewModel, navController)
+                }
 
-        item {
-            MostPlayedTracks(mostPlayed, playerViewModel, navController)
-        }
+                item {
+                    MostPlayedTracks(mostPlayed, playerViewModel, navController)
+                }
 
+            }
+        }
     }
+
 }
 
 @Composable

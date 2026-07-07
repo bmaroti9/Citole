@@ -152,7 +152,7 @@ object SettingsShuffleEngineViewDestination
 fun CitoleNavHost(
     playerViewModel: PlayerViewModel,
     appViewModel: AppViewModel = hiltViewModel(),
-    browseViewModel: BrowseViewModel = hiltViewModel()
+    browseViewModel: BrowseViewModel = hiltViewModel(),
 ) {
 
     val focusManager = LocalFocusManager.current
