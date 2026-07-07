@@ -24,11 +24,20 @@ import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.text.Normalizer
 import javax.inject.Inject
+
+private val diacriticsRegex = "\\p{InCombiningDiacriticalMarks}+".toRegex()
+private val nonAlphanumericRegex = "[^a-z0-9\\s]".toRegex()
+private val whitespaceRegex = "\\s+".toRegex()
 
 sealed interface SearchResultGroup {
     val score: Float
@@ -45,11 +54,9 @@ sealed interface SearchResultGroup {
 }
 
 data class ScoredResult<T>(val item: T, val score: Float)
+data class NormalizedItem<T>(val item: T, val normalized: String)
 
-fun scoreTargetFromQuery(query: String, target: String) : Float {
-
-    val cleanQuery = normalizeText(query)
-    val cleanTarget = normalizeText(target)
+fun scoreTargetFromQuery(cleanQuery : String, cleanTarget: String) : Float {
 
     if (cleanQuery.isEmpty() || cleanTarget.isEmpty()) return 0f
 
@@ -59,8 +66,8 @@ fun scoreTargetFromQuery(query: String, target: String) : Float {
 
     if (cleanTarget.contains(cleanQuery)) return 0.7f
 
-    val queryWords = cleanQuery.split("\\s+".toRegex()).filter { it.isNotEmpty() } //regex for multiple whitespaces
-    val targetWords = cleanTarget.split("\\s+".toRegex()).filter { it.isNotEmpty() }
+    val queryWords = cleanQuery.split(whitespaceRegex).filter { it.isNotEmpty() } //regex for multiple whitespaces
+    val targetWords = cleanTarget.split(whitespaceRegex).filter { it.isNotEmpty() }
 
     var matchedWordsCount = 0
     queryWords.forEach { word ->
@@ -76,9 +83,9 @@ fun scoreTargetFromQuery(query: String, target: String) : Float {
 private fun normalizeText(input: String): String {
     val normalized = Normalizer.normalize(input, Normalizer.Form.NFD)
     return normalized
-        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+        .replace(diacriticsRegex, "")
         .lowercase()
-        .replace("[^a-z0-9\\s]".toRegex(), "")
+        .replace(nonAlphanumericRegex, "")
         .trim()
 }
 
@@ -87,51 +94,74 @@ class UniversalSearchViewModel @Inject constructor(
     audioRepository : AudioRepository,
     searchQueryStateHolder: SearchQueryStateHolder,
 ) : ViewModel() {
+
+    var normalizedTrackTitles = audioRepository.allTracks.map {
+        it.map { track -> NormalizedItem(track, normalizeText(track.title)) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    var normalizedAlbumTitles = audioRepository.allAlbums.map {
+        it.map { album -> NormalizedItem(album, normalizeText(album.albumName)) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    var normalizedArtistNames = audioRepository.allArtists.map {
+        it.map { artist -> NormalizedItem(artist, normalizeText(artist.name)) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     var searchResults = combine(
         searchQueryStateHolder.query,
-        audioRepository.allTracks,
-        audioRepository.allAlbums,
-        audioRepository.allArtists,
-    ) { query, allTracks, allAlbums, allArtists ->
+        normalizedTrackTitles,
+        normalizedAlbumTitles,
+        normalizedArtistNames,
+    ) { query, normalizedTracks, normalizedAlbums, normalizedArtists ->
+
+        val cleanQuery = normalizeText(query)
+
         listOf(
             SearchResultGroup.Tracks(
-                items = allTracks
+                items = normalizedTracks
                     .map {
                         ScoredResult(
-                            it,
-                            scoreTargetFromQuery(query, it.title)
-                                + scoreTargetFromQuery(query, it.albumName) * 0.2f
-                                + scoreTargetFromQuery(query, it.artists.joinToString(", ")) * 0.3f
+                            it.item,
+                            scoreTargetFromQuery(cleanQuery, it.normalized)
                         )
                     }
-                    .filter { it.score > 0f }
+                    .filter { it.score > 0.2f }
             ),
             SearchResultGroup.Albums(
-                items = allAlbums
+                items = normalizedAlbums
                     .map {
                         ScoredResult(
-                            it,
-                            scoreTargetFromQuery(query, it.albumName)
-                                + scoreTargetFromQuery(query, it.ownerArtists.joinToString(", ")) * 0.15f
-                                + scoreTargetFromQuery(query, it.allArtists.joinToString(", ")) * 0.1f
+                            it.item,
+                            scoreTargetFromQuery(cleanQuery, it.normalized)
                         )
                     }
-                    .filter { it.score > 0f }
+                    .filter { it.score > 0.2f }
             ),
             SearchResultGroup.Artists(
-                items = allArtists
+                items = normalizedArtists
                     .map {
-                        ScoredResult(it,
-                            scoreTargetFromQuery(query, it.name)
-                                + scoreTargetFromQuery(query, it.tracks.joinToString(", ") { track -> track.name }) * 0.1f
-                                + scoreTargetFromQuery(query, it.albums.joinToString(", ") { album -> album.albumName }) * 0.15f
-                                + scoreTargetFromQuery(query, it.allAlbums.joinToString(", ") { album -> album.albumName }) * 0.05f
+                        ScoredResult(it.item,
+                            scoreTargetFromQuery(cleanQuery, it.normalized)
                         )
                     }
-                    .filter { it.score > 0f }
+                    .filter { it.score > 0.2f }
             )
         ).sortedByDescending { it.score }
-    }.stateIn(
+    }
+    .flowOn(Dispatchers.Default)
+    .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

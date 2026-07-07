@@ -28,9 +28,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -54,6 +56,9 @@ fun UniversalSearchScreen(
     universalSearchViewModel: UniversalSearchViewModel = hiltViewModel()
 ) {
     val searchResults by universalSearchViewModel.searchResults.collectAsStateWithLifecycle()
+    val gridState = rememberLazyGridState()
+
+    LaunchedEffect(searchResults) {gridState.scrollToItem(0)}
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -62,7 +67,8 @@ fun UniversalSearchScreen(
             .padding(horizontal = 16.dp)
             .fillMaxSize()
             .clipToBounds(),
-        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 2.dp)
+        contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 72.dp, top = 2.dp),
+        state = gridState
     ) {
         searchResults.forEach { result ->
             if (result.score > 0f) {
@@ -95,7 +101,7 @@ fun UniversalSearchScreen(
                                 count = result.items.size,
                                 navController = navController
                             ) {
-                                playerViewModel.playQueue(result.items.map { it.item })
+                                playerViewModel.playQueue(listOf(result.items[index].item))
                             }
                         }
                     }
