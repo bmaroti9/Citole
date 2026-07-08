@@ -75,7 +75,7 @@ fun AlbumListPage(
     ) {
         itemsIndexed(
             filteredAlbums,
-            key = { index, album -> album.albumId }
+            key = { _, album -> album.albumId }
         ) { index, album ->
             AlbumItem(
                 album,
@@ -105,7 +105,7 @@ fun AlbumItem(
     count: Int,
     columns: Int = 2,
 ) {
-    val checked = playerViewModel.currentlyPlaying?.albumId == album.albumId
+    val checked = playerViewModel.currentlyPlaying?.track?.albumId == album.albumId
 
     val corners = calculateBorderRadiusForGridItem(index, count, columns)
 

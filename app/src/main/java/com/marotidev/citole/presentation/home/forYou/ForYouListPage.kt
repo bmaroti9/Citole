@@ -92,7 +92,7 @@ fun ForYouListPage(
     val recentlyAdded by forYouViewModel.recentlyAdded.collectAsStateWithLifecycle()
     val recentlyPlayed by forYouViewModel.recentlyPlayed.collectAsStateWithLifecycle()
     val mostPlayed by forYouViewModel.mostPlayed.collectAsStateWithLifecycle()
-    val lastPodcast by forYouViewModel.lastPodcast.collectAsStateWithLifecycle()
+    //val lastPodcast by forYouViewModel.lastPodcast.collectAsStateWithLifecycle()
     val lastAudiobook by forYouViewModel.lastAudiobook.collectAsStateWithLifecycle()
 
     AnimatedContent(
@@ -144,10 +144,7 @@ fun TrackCarousel(tracks: List<AudioService.TrackData>, playerViewModel: PlayerV
 
     Column(
         modifier = Modifier
-            .padding(vertical = 12.dp)
-            .background(MaterialTheme.colorScheme.surface,
-                RoundedCornerShape(34.dp))
-            .padding(12.dp)
+            .padding(vertical = 16.dp)
     ) {
         Text("Recently Added", style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 8.dp, start = 2.dp), color = MaterialTheme.colorScheme.onSurface)
@@ -168,7 +165,7 @@ fun TrackCarousel(tracks: List<AudioService.TrackData>, playerViewModel: PlayerV
             Box(
                 modifier = Modifier
                     .height(205.dp)
-                    .maskClip(RoundedCornerShape(22.dp))
+                    .maskClip(RoundedCornerShape(28.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(
                         onClick = {

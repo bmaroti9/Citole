@@ -34,7 +34,6 @@ import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -84,7 +83,6 @@ import androidx.compose.ui.util.lerp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
-import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.utils.tintedPainter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -174,7 +172,7 @@ fun CustomFloatingToolbar(
                     backProgress = 0f
                     backXDir = 0
                 }
-            } catch (e: CancellationException) {
+            } catch (_: CancellationException) {
                 backProgress = 0f
                 backXDir = 0
             }
@@ -291,8 +289,11 @@ fun CustomFloatingToolbar(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ToolbarCollapsedState(
-    collapsedAlpha : Float, scope: CoroutineScope, state: AnchoredDraggableState<SheetState>,
-    currentlyPlaying: AudioService.TrackData, playerViewModel: PlayerViewModel
+    collapsedAlpha : Float,
+    scope: CoroutineScope,
+    state: AnchoredDraggableState<SheetState>,
+    currentlyPlaying: QueueItem,
+    playerViewModel: PlayerViewModel
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -314,7 +315,7 @@ fun ToolbarCollapsedState(
                 .size(44.dp)
                 .clip(RoundedCornerShape(30.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            model = currentlyPlaying.artworkUri,
+            model = currentlyPlaying.track.artworkUri,
             contentDescription = "Album Art",
             error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
             contentScale = ContentScale.Crop
@@ -323,7 +324,7 @@ fun ToolbarCollapsedState(
             Modifier.weight(1f)
         ) {
             Text(
-                currentlyPlaying.title,
+                currentlyPlaying.track.title,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -334,7 +335,7 @@ fun ToolbarCollapsedState(
                     .basicMarquee(),
             )
             Text(
-                currentlyPlaying.artists.joinToString(separator = ", "),
+                currentlyPlaying.track.artists.joinToString(separator = ", "),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
                 maxLines = 1,
@@ -358,7 +359,7 @@ fun ToolbarExpandedState(
     playerViewModel: PlayerViewModel,
     expandedAlpha: Float,
     fraction: Float,
-    currentlyPlaying: AudioService.TrackData,
+    currentlyPlaying: QueueItem,
     navController: NavController,
     onPlayerClose: () -> Unit
 ) {

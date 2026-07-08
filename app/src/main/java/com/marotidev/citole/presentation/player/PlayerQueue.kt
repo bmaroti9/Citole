@@ -47,6 +47,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,16 +57,14 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.marotidev.citole.data.service.AudioService
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
-import kotlin.math.abs
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.marotidev.citole.R
 import com.marotidev.citole.presentation.home.track.TrackItem
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.abs
 import kotlin.math.sign
 
 
@@ -107,17 +106,17 @@ fun QueueSheet(
             ) {
                 itemsIndexed(
                     playerViewModel.currentQueue,
-                    key = { index, track -> track.id }
-                ) { index, track ->
+                    key = { _, track -> track.id }
+                ) { index, queueItem ->
 
                     ReorderableItem(
                         reorderableLazyListState,
-                        key = track.id,
+                        key = queueItem.id,
                     ) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
 
                         QueueTrackItem (
-                            track,
+                            queueItem,
                             playerViewModel,
                             index = index,
                             modifier = Modifier
@@ -158,7 +157,7 @@ fun QueueSheet(
 
 @Composable
 fun QueueTrackItem(
-    track: AudioService.TrackData,
+    queueItem: QueueItem,
     playerViewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
     dragHandleModifier : Modifier = Modifier,
@@ -183,7 +182,7 @@ fun QueueTrackItem(
         backgroundContent = {
             val draggedPx = try {
                 dismissState.requireOffset()
-            } catch (e: IllegalStateException) {
+            } catch (_: IllegalStateException) {
                 0f
             }
 
@@ -228,7 +227,7 @@ fun QueueTrackItem(
         },
     ) {
         TrackItem(
-            track,
+            queueItem.track,
             playerViewModel,
             index = index,
             count = count,
@@ -241,7 +240,8 @@ fun QueueTrackItem(
                 )
             },
             elevation = elevation,
-            navController = navController
+            navController = navController,
+            checked = playerViewModel.currentlyPlaying?.id == queueItem.id
         ) { onClicked() }
     }
 }

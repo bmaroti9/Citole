@@ -96,12 +96,13 @@ import kotlin.math.sin
 @Composable
 fun PlayerScreen(
     playerViewModel: PlayerViewModel,
-    currentlyPlaying : AudioService.TrackData,
+    currentlyPlaying : QueueItem,
     navController: NavController,
     onPlayerClose: () -> Unit
 ) {
 
     var queueSheetOpen by remember { mutableStateOf(false) }
+    val track = currentlyPlaying.track
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -114,11 +115,11 @@ fun PlayerScreen(
             )
         }
 
-        ThumbnailCard(currentlyPlaying)
+        ThumbnailCard(track)
 
-        TitleAndArtists(currentlyPlaying, navController, onPlayerClose)
+        TitleAndArtists(track, navController, onPlayerClose)
 
-        ExpressiveWavySlider(playerViewModel, currentlyPlaying)
+        ExpressiveWavySlider(playerViewModel, track)
 
         PlayPauseRow(playerViewModel)
 
@@ -131,7 +132,7 @@ fun PlayerScreen(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ThumbnailCard(
-    currentlyPlaying : AudioService.TrackData
+    track : AudioService.TrackData
 ) {
     Card(
         modifier = Modifier
@@ -142,7 +143,7 @@ fun ThumbnailCard(
     ) {
         AsyncImage(
             modifier = Modifier.fillMaxSize(),
-            model = currentlyPlaying.artworkUri,
+            model = track.artworkUri,
             contentDescription = "Album Art",
             error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
             contentScale = ContentScale.Crop
@@ -152,13 +153,13 @@ fun ThumbnailCard(
 
 @Composable
 fun TitleAndArtists(
-    currentlyPlaying : AudioService.TrackData,
+    track : AudioService.TrackData,
     navController: NavController,
     onPlayerClose: () -> Unit,
 ) {
 
     Text(
-        currentlyPlaying.title,
+        track.title,
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onSurface,
         maxLines = 1,
@@ -169,7 +170,7 @@ fun TitleAndArtists(
             .padding(horizontal = 25.dp)
             .clickable(
                 onClick = {
-                    navController.navigate(AlbumViewDestination(albumId = currentlyPlaying.albumId)) {
+                    navController.navigate(AlbumViewDestination(albumId = track.albumId)) {
                         launchSingleTop = true
                     }
                     onPlayerClose()
@@ -182,9 +183,9 @@ fun TitleAndArtists(
     FlowRow(
         modifier = Modifier.padding(horizontal = 25.dp, vertical = 2.dp)
     ) {
-        currentlyPlaying.artists.forEachIndexed { index, artist ->
+        track.artists.forEachIndexed { index, artist ->
             Text(
-                if (index == currentlyPlaying.artists.size - 1) {artist} else {
+                if (index == track.artists.size - 1) {artist} else {
                     "$artist, "
                 },
                 style = MaterialTheme.typography.labelMedium,
@@ -318,7 +319,7 @@ fun CustomWavySlider(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: AudioService.TrackData) {
+fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, track: AudioService.TrackData) {
 
     var sliderDrag by remember { mutableFloatStateOf(0f) }
     val sliderInteractionSource = remember { MutableInteractionSource() }
@@ -335,7 +336,7 @@ fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: Aud
         Text(
             durationToString(
                 if (isDragged) {
-                    (sliderDrag * currentlyPlaying.duration).toLong()
+                    (sliderDrag * track.duration).toLong()
                 } else {
                     playerViewModel.progress
                 }
@@ -349,16 +350,16 @@ fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, currentlyPlaying: Aud
         ) {
             CustomWavySlider(
                 playerViewModel,
-                currentlyPlaying,
+                track,
                 sliderDrag,
-                onSliderDragChanged = { it ->
+                onSliderDragChanged = {
                     sliderDrag = it
                 },
                 sliderInteractionSource
             )
         }
         Spacer(modifier = Modifier.width(10.dp))
-        Text(durationToString(currentlyPlaying.duration), style = timerTextStyle, color = MaterialTheme.colorScheme.onSurface)
+        Text(durationToString(track.duration), style = timerTextStyle, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

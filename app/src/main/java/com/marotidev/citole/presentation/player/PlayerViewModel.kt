@@ -58,6 +58,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
+import java.util.UUID
+
+data class QueueItem(
+    val track: AudioService.TrackData,
+    val isGenerated: Boolean = false,
+    val id: String = UUID.randomUUID().toString(),
+)
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
@@ -69,10 +76,10 @@ class PlayerViewModel @Inject constructor(
     var playing by mutableStateOf(false)
         private set
 
-    var currentQueue = mutableStateListOf<AudioService.TrackData>()
+    var currentQueue = mutableStateListOf<QueueItem>()
         private set
 
-    var currentlyPlaying by mutableStateOf<AudioService.TrackData?>(null)
+    var currentlyPlaying by mutableStateOf<QueueItem?>(null)
     var currentIndex by mutableIntStateOf(0)
 
     private var queueId : Long = 0
@@ -129,7 +136,7 @@ class PlayerViewModel @Inject constructor(
                 currentQueue.addAll(
                     (0 until (player?.mediaItemCount ?: 0)).map { index ->
                         with (audioService) {
-                            player!!.getMediaItemAt(index).toAudioData()
+                            QueueItem(player!!.getMediaItemAt(index).toAudioData(),)
                         }
                     }
                 )
@@ -169,17 +176,19 @@ class PlayerViewModel @Inject constructor(
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 //log the play times
                 currentlyPlaying?.let {
-                    trackLogRepository.updateLogTimeValues(queueId, it.id,
+                    trackLogRepository.updateLogTimeValues(queueId, it.track.id,
                         playbackEndedMs = System.currentTimeMillis(), playbackDurationMs = progress)
                 }
 
                 currentIndex = player?.currentMediaItemIndex ?: 0
                 currentlyPlaying = currentQueue.getOrNull(currentIndex)
+
+                //extend queue when it's running out
             }
         })
 
         viewModelScope.launch {
-            snapshotFlow { currentlyPlaying?.artworkUri }.collect { artworkUri ->
+            snapshotFlow { currentlyPlaying?.track?.artworkUri }.collect { artworkUri ->
                 updateColorFromAlbumArt(artworkUri, application)
             }
         }
@@ -217,7 +226,7 @@ class PlayerViewModel @Inject constructor(
         }
 
         currentQueue.clear()
-        currentQueue.addAll(tracks)
+        currentQueue.addAll(tracks.map { QueueItem(it) })
 
         val mediaItems = tracks.map { with(audioService) {it.toMediaItem()} }
 
@@ -231,14 +240,14 @@ class PlayerViewModel @Inject constructor(
         if (currentQueue.isEmpty()) {
             queueId = System.currentTimeMillis()
 
-            currentQueue += track
+            currentQueue += QueueItem(track)
 
             player?.setMediaItem(mediaItem)
             player?.prepare()
             player?.play()
             progress = 0
         } else {
-            currentQueue.add(index, track)
+            currentQueue.add(index, QueueItem(track))
             player?.addMediaItem(index, mediaItem)
         }
 
@@ -253,8 +262,8 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun reorderInQueue(from: Int, to: Int) {
-        trackLogRepository.updateLogQueueIndex(queueId, currentQueue[from].id, to)
-        trackLogRepository.updateLogQueueIndex(queueId, currentQueue[to].id, from)
+        trackLogRepository.updateLogQueueIndex(queueId, currentQueue[from].track.id, to)
+        trackLogRepository.updateLogQueueIndex(queueId, currentQueue[to].track.id, from)
 
         currentQueue.add(to, currentQueue.removeAt(from))
         player?.moveMediaItem(from, to)
@@ -292,7 +301,7 @@ class PlayerViewModel @Inject constructor(
 
     fun dismissPlayer() {
         currentlyPlaying?.let {
-            trackLogRepository.updateLogTimeValues(queueId, trackId = it.id,
+            trackLogRepository.updateLogTimeValues(queueId, trackId = it.track.id,
                 System.currentTimeMillis(), progress)
         }
 

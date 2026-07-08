@@ -138,7 +138,7 @@ fun TrackListPage(
         ) {
             itemsIndexed(
                 items = filteredTracks,
-                key = { index, track -> track.id }
+                key = { _, track -> track.id }
             ) { index, track ->
                 SwipeableTrackItem (
                     track = track,
@@ -153,8 +153,7 @@ fun TrackListPage(
                     navController = navController
                 ) {
                     scope.launch {
-                        val generatedQueue = trackListViewModel.generateQueueFromSeed(track.id)
-                        playerViewModel.playQueue(generatedQueue)
+                        playerViewModel.playQueue(listOf(track))
                     }
                 }
             }
@@ -253,7 +252,7 @@ fun SwipeableTrackItem(
 
             val draggedPx = try {
                 swipeState.requireOffset()
-            } catch (e: IllegalStateException) {
+            } catch (_: IllegalStateException) {
                 0f
             }
 
@@ -319,6 +318,7 @@ fun SwipeableTrackItem(
             index = index,
             count = count,
             navController = navController,
+            checked = playerViewModel.currentlyPlaying?.track?.id == track.id,
         ) { onClicked() }
     }
 }
@@ -332,13 +332,13 @@ fun TrackItem(
     index: Int,
     count: Int,
     navController: NavController,
+    checked: Boolean,
     elevation: Dp = 0.dp,
     dragHandle: (@Composable () -> Unit)? = null,
     onClicked: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
 
-    val checked = playerViewModel.currentlyPlaying?.id == track.id
     var popupExpanded by remember { mutableStateOf(false) }
 
     SegmentedListItem(

@@ -71,7 +71,7 @@ fun ArtistListPage(
     ) {
         itemsIndexed(
             filteredArtists,
-            key = { index, artist -> artist.name }
+            key = { _, artist -> artist.name }
         ) { index, artist ->
             ArtistItem(
                 artist,
@@ -101,7 +101,7 @@ fun ArtistItem(
     count: Int,
     columns : Int = 2
 ) {
-    val checked = playerViewModel.currentlyPlaying?.artists?.contains(artist.name) ?: false
+    val checked = playerViewModel.currentlyPlaying?.track?.artists?.contains(artist.name) ?: false
 
     val corners = calculateBorderRadiusForGridItem(index, count, columns)
 

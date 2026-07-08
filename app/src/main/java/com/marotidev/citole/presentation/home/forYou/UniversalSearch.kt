@@ -76,7 +76,7 @@ fun UniversalSearchScreen(
                     is SearchResultGroup.Tracks -> {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "tracks_text_key") {
                             Text(
-                                "tracks",
+                                "Tracks",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
@@ -109,7 +109,7 @@ fun UniversalSearchScreen(
                     is SearchResultGroup.Albums -> {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "albums_text_key") {
                             Text(
-                                "albums",
+                                "Albums",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
@@ -146,7 +146,7 @@ fun UniversalSearchScreen(
                     is SearchResultGroup.Artists -> {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "artists_text_key") {
                             Text(
-                                "artists",
+                                "Artists",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
