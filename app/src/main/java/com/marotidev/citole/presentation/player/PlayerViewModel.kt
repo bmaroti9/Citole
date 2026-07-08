@@ -42,6 +42,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
+import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
 import com.marotidev.citole.data.repository.TrackLogRepository
@@ -71,6 +72,7 @@ class PlayerViewModel @Inject constructor(
     private val application: Application,
     private val audioService: AudioService,
     private val trackLogRepository: TrackLogRepository,
+    private val recommendationRepository: RecommendationRepository
 ) : ViewModel() {
 
     var playing by mutableStateOf(false)
@@ -182,8 +184,6 @@ class PlayerViewModel @Inject constructor(
 
                 currentIndex = player?.currentMediaItemIndex ?: 0
                 currentlyPlaying = currentQueue.getOrNull(currentIndex)
-
-                //extend queue when it's running out
             }
         })
 
@@ -297,6 +297,16 @@ class PlayerViewModel @Inject constructor(
     fun skipPrevious() {
         player?.seekToPrevious()
         progress =  0
+    }
+
+    fun extendQueue(count: Int) {
+        viewModelScope.launch {
+            val newTracks = recommendationRepository.extendQueue(currentQueue.map { it.track.id }, count)
+            currentQueue.addAll(newTracks.map { QueueItem(it, isGenerated = true) })
+            newTracks.forEach {
+                player?.addMediaItem(with(audioService) {it.toMediaItem()})
+            }
+        }
     }
 
     fun dismissPlayer() {

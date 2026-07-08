@@ -143,11 +143,10 @@ fun TrackCarousel(tracks: List<AudioService.TrackData>, playerViewModel: PlayerV
     val carouselState = rememberCarouselState { tracks.size }
 
     Column(
-        modifier = Modifier
-            .padding(vertical = 16.dp)
+        modifier = Modifier.padding(bottom = 24.dp)
     ) {
         Text("Recently Added", style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 8.dp, start = 2.dp), color = MaterialTheme.colorScheme.onSurface)
+            modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
 
         HorizontalMultiBrowseCarousel(
             state = carouselState,

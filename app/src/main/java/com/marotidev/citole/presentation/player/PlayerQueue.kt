@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -36,6 +37,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
@@ -44,6 +46,7 @@ import androidx.compose.material3.SwipeToDismissBoxDefaults
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -241,6 +244,20 @@ fun QueueTrackItem(
             },
             elevation = elevation,
             navController = navController,
+            titleBadge = {
+                if (queueItem.isGenerated) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_wand_stars),
+                        contentDescription = "Generated",
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .background(MaterialTheme.colorScheme.tertiaryContainer, MaterialShapes.Flower.toShape())
+                            .padding(3.dp)
+                            .size(12.dp),
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            },
             checked = playerViewModel.currentlyPlaying?.id == queueItem.id
         ) { onClicked() }
     }

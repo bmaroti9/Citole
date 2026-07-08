@@ -57,17 +57,18 @@ class RecommendationRepository @Inject constructor(
             .build()
     }
 
-    suspend fun generateQueueFromSeed(seedId: Long, count: Int) : List<AudioService.TrackData> {
+    suspend fun extendQueue(originalIds: List<Long>, count: Int) : List<AudioService.TrackData> {
         val currentExplorationFactor = explorationFactor.first()
         val currentTrajectoryRange = trajectoryRange.first()
 
         val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
 
-        val picked = mutableListOf(seedId)
+        val queue = originalIds.toMutableList()
+        val picked = mutableListOf<Long>()
 
         for (i in 1..200) {
-            var currentNode = picked
-                .filterIndexed { index, lng ->  (picked.size - 1) * currentTrajectoryRange.first <= index && index <= (picked.size - 1) * currentTrajectoryRange.second}
+            var currentNode = queue
+                .filterIndexed { index, lng ->  (queue.size - 1) * currentTrajectoryRange.first <= index && index <= (queue.size - 1) * currentTrajectoryRange.second}
                 .randomOrNull()
 
             for (j in 1..100) {
@@ -83,14 +84,15 @@ class RecommendationRepository @Inject constructor(
 
                     newNode?.let {
                         currentNode = newNode.key
-                        if (newNode.value / totalWeight * currentExplorationFactor < Random.nextFloat() && it.key !in picked) {
+                        if (newNode.value / totalWeight * currentExplorationFactor < Random.nextFloat() && it.key !in queue) {
                             break
                         }
                     }
                 }
             }
 
-            if (currentNode != null && currentNode !in picked) {
+            if (currentNode != null && currentNode !in queue) {
+                queue.add(currentNode)
                 picked.add(currentNode)
                 if (picked.size == count) {
                     break
