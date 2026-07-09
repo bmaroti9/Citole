@@ -80,9 +80,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
+import com.marotidev.citole.data.state.QueueItem
 import com.marotidev.citole.presentation.utils.tintedPainter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -99,7 +101,8 @@ fun CustomFloatingToolbar(
     playerViewModel: PlayerViewModel,
     navController: NavController
 ) {
-    playerViewModel.currentlyPlaying?.let { playing ->
+    val currentlyPlaying = playerViewModel.currentlyPlaying.collectAsStateWithLifecycle()
+    currentlyPlaying.value?.let { playing ->
 
         val scope = rememberCoroutineScope()
         val density = LocalDensity.current

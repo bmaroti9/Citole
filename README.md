@@ -2,7 +2,7 @@
 
 # Citole
 
-Lightweight Material 3 Expressive Offline Music Player 
+Lightweight Material 3 Expressive Offline Audio Player 
 
 ### Features (currently under construction)
 - play any on-device audio file

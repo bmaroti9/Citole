@@ -27,6 +27,7 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.local.TrackPlayLogDao
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.repository.TrackLogRepository
+import com.marotidev.citole.data.state.PlaybackStateHolder
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.Module
 import dagger.Provides
@@ -60,6 +61,12 @@ class AppModule {
     @Singleton
     fun provideSearchQueryStateHolder() : SearchQueryStateHolder {
         return SearchQueryStateHolder()
+    }
+
+    @Provides
+    @Singleton
+    fun providePlaybackStateHolder() : PlaybackStateHolder {
+        return PlaybackStateHolder()
     }
 
     @Provides

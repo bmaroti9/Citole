@@ -62,8 +62,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.marotidev.citole.R
+import com.marotidev.citole.data.state.QueueItem
 import com.marotidev.citole.presentation.home.track.TrackItem
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -80,6 +82,8 @@ fun QueueSheet(
 ) {
 
     val hapticFeedback = LocalHapticFeedback.current
+
+    val currentQueue = playerViewModel.currentQueue.collectAsStateWithLifecycle()
 
     val sheetState = rememberModalBottomSheetState()
 
@@ -108,7 +112,7 @@ fun QueueSheet(
                 state = lazyListState,
             ) {
                 itemsIndexed(
-                    playerViewModel.currentQueue,
+                    currentQueue.value,
                     key = { _, track -> track.id }
                 ) { index, queueItem ->
 
@@ -145,7 +149,7 @@ fun QueueSheet(
                                 },
                             ),
                             elevation = elevation,
-                            count = playerViewModel.currentQueue.size,
+                            count = currentQueue.value.size,
                             navController = navController
                         ) {
                             playerViewModel.skipInQueue(index)
@@ -170,6 +174,8 @@ fun QueueTrackItem(
     elevation: Dp = 0.dp,
     onClicked: () -> Unit,
 ) {
+    val currentlyPlaying = playerViewModel.currentlyPlaying.collectAsStateWithLifecycle()
+
     val dismissState = rememberSwipeToDismissBoxState(
         SwipeToDismissBoxValue.Settled,
         SwipeToDismissBoxDefaults.positionalThreshold
@@ -258,7 +264,7 @@ fun QueueTrackItem(
                     )
                 }
             },
-            checked = playerViewModel.currentlyPlaying?.id == queueItem.id
+            checked = currentlyPlaying.value?.id == queueItem.id
         ) { onClicked() }
     }
 }

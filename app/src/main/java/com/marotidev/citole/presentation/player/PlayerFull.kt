@@ -85,6 +85,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.data.service.AudioService
+import com.marotidev.citole.data.state.QueueItem
 import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.utils.durationToString

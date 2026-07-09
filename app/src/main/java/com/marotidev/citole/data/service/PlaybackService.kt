@@ -36,11 +36,27 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.media3.common.Player
 import com.marotidev.citole.data.repository.TrackLogRepository
+import com.marotidev.citole.data.state.PlaybackStateHolder
+import com.marotidev.citole.data.state.QueueItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
+
     @Inject lateinit var recommendationRepository: RecommendationRepository
+    @Inject lateinit var trackLogRepository: TrackLogRepository
+    @Inject lateinit var playbackStateHolder: PlaybackStateHolder
+    @Inject lateinit var audioService: AudioService
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     private var mediaSession: MediaSession? = null
+    private var player: Player? = null
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
@@ -60,15 +76,6 @@ class PlaybackService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        val player = ExoPlayer.Builder(this)
-            .setAudioAttributes(audioAttributes, true)
-            .setHandleAudioBecomingNoisy(true) //player pauses when switching playback devices
-            .build()
-
-        mediaSession = MediaSession.Builder(this, player)
-            .setSessionActivity(pendingIntent)
-            .build()
-
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider.Builder(this)
                 .setChannelId("citole_channel")
@@ -76,14 +83,48 @@ class PlaybackService : MediaSessionService() {
                 .also { it.setSmallIcon(R.drawable.ic_citole_inverse) }
         )
 
-        player.addListener(object : Player.Listener {
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                //extend queue when it's running out
-//                if (player.currentMediaItemIndex > player.mediaItemCount - 4) {
-//                    recommendationRepository.extendQueue(10)
-//                }
-            }
-        })
+        player = ExoPlayer.Builder(this)
+            .setAudioAttributes(audioAttributes, true)
+            .setHandleAudioBecomingNoisy(true) //player pauses when switching playback devices
+            .build()
+
+        player?.let {
+            mediaSession = MediaSession.Builder(this, it)
+                .setSessionActivity(pendingIntent)
+                .build()
+
+            it.addListener(object : Player.Listener {
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+
+                    //log the play times
+                    playbackStateHolder.currentlyPlaying.value?.let { currentlyPlaying ->
+                        if (playbackStateHolder.lastKnownDuration.value > 5000) {
+                            trackLogRepository.updateLogTimeValues(playbackStateHolder.queueId.value, currentlyPlaying.track.id,
+                                playbackEndedMs = System.currentTimeMillis(), playbackDurationMs = playbackStateHolder.lastKnownDuration.value)
+                        }
+                    }
+
+                    val index = player?.currentMediaItemIndex ?: 0
+                    playbackStateHolder.currentIndex.value = index
+                    playbackStateHolder.currentlyPlaying.value = playbackStateHolder.playerQueue.value.getOrNull(index)
+
+                    //extend queue if it's running out
+                    if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4) {
+                        serviceScope.launch {
+                            val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
+                            playbackStateHolder.playerQueue.update { queue ->
+                                queue + newTracks.map {track -> QueueItem(track, isGenerated = true) }
+                            }
+                            with(audioService) {
+                                player?.addMediaItems(newTracks.map { track -> track.toMediaItem() })
+                            }
+                            newTracks.forEachIndexed {index, track -> trackLogRepository.addEmptyPlayLog(track, index, playbackStateHolder.queueId.value) }
+                        }
+                    }
+
+                }
+            })
+        }
     }
 
     override fun onDestroy() {
@@ -92,6 +133,7 @@ class PlaybackService : MediaSessionService() {
             release()
             mediaSession = null
         }
+        serviceScope.cancel()
         super.onDestroy()
     }
 

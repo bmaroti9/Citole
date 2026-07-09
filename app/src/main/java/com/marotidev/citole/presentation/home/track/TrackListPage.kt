@@ -210,6 +210,9 @@ fun SwipeableTrackItem(
     val coroutineScope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
 
+    val currentlyPlaying = playerViewModel.currentlyPlaying.collectAsStateWithLifecycle()
+    val currentIndex = playerViewModel.currentIndex.collectAsStateWithLifecycle()
+
     val swipeState =
         rememberSwipeToDismissBoxState(
             initialValue = SwipeToDismissBoxValue.Settled,
@@ -245,7 +248,7 @@ fun SwipeableTrackItem(
 
                 delay(300)
                 if (value == SwipeToDismissBoxValue.StartToEnd) {
-                    playerViewModel.addToQueue(track, playerViewModel.currentIndex + 1)
+                    playerViewModel.addToQueue(track, currentIndex.value + 1)
                 } else {
                     playerViewModel.addToQueue(track)
                 }
@@ -323,7 +326,7 @@ fun SwipeableTrackItem(
             index = index,
             count = count,
             navController = navController,
-            checked = playerViewModel.currentlyPlaying?.track?.id == track.id,
+            checked = currentlyPlaying.value?.track?.id == track.id,
         ) { onClicked() }
     }
 }
@@ -457,6 +460,7 @@ fun TrackOptionsPopup(
 ) {
     val groupInteractionSource = remember { MutableInteractionSource() }
     var artistMenuExpanded by remember { mutableStateOf(false) }
+    val currentIndex = playerViewModel.currentIndex.collectAsStateWithLifecycle()
 
     DropdownMenuPopup(
         expanded = expanded,
@@ -480,7 +484,7 @@ fun TrackOptionsPopup(
                 onClick = {
                     playerViewModel.addToQueue(
                         track,
-                        playerViewModel.currentIndex + 1
+                        currentIndex.value + 1
                     ); onDismiss()
                 }
             )

@@ -105,7 +105,8 @@ fun AlbumItem(
     count: Int,
     columns: Int = 2,
 ) {
-    val checked = playerViewModel.currentlyPlaying?.track?.albumId == album.albumId
+    val currentlyPlaying = playerViewModel.currentlyPlaying.collectAsStateWithLifecycle()
+    val checked = currentlyPlaying.value?.track?.albumId == album.albumId
 
     val corners = calculateBorderRadiusForGridItem(index, count, columns)
 
