@@ -23,11 +23,15 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,6 +48,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxDefaults
 import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.toShape
@@ -56,6 +61,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -71,6 +79,13 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import kotlin.math.abs
 import kotlin.math.sign
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import kotlin.math.PI
+import kotlin.math.sin
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +99,7 @@ fun QueueSheet(
     val hapticFeedback = LocalHapticFeedback.current
 
     val currentQueue = playerViewModel.currentQueue.collectAsStateWithLifecycle()
+    val generatedQueue = playerViewModel.generatedQueue.collectAsStateWithLifecycle()
 
     val sheetState = rememberModalBottomSheetState()
 
@@ -96,6 +112,8 @@ fun QueueSheet(
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         playerViewModel.reorderInQueue(from.index, to.index)
     }
+
+    val wavyColor = MaterialTheme.colorScheme.secondary
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -150,9 +168,85 @@ fun QueueSheet(
                             ),
                             elevation = elevation,
                             count = currentQueue.value.size,
-                            navController = navController
+                            navController = navController,
+                            onDismiss = {playerViewModel.removeFromPlayerQueue(index)}
                         ) {
                             playerViewModel.skipInQueue(index)
+                        }
+                    }
+                }
+                item {
+                    Row(
+                        Modifier.padding(vertical = 24.dp, horizontal = 24.dp)
+                            .fillMaxWidth().height(30.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_wand_stars),
+                            contentDescription = null,
+                            tint = wavyColor,
+                            modifier = Modifier.padding(start = 14.dp).size(20.dp)
+                        )
+                        Text(
+                            "Picked For You",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                            color = wavyColor,
+                            modifier = Modifier.padding(end = 14.dp, start = 6.dp)
+                        )
+                        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
+                    }
+
+                }
+                itemsIndexed(
+                    generatedQueue.value,
+                    key = { _, track -> track.id }
+                ) { index, queueItem ->
+
+                    ReorderableItem(
+                        reorderableLazyListState,
+                        key = queueItem.id,
+                    ) { isDragging ->
+                        val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
+                        //makes it greyscale-ish
+                        val matrix = ColorMatrix().apply { setToSaturation(0.7f) }
+
+                        QueueTrackItem (
+                            queueItem,
+                            playerViewModel,
+                            index = index,
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    alpha = 0.8f
+                                    colorFilter = ColorFilter.colorMatrix(matrix)
+                                }
+                                .longPressDraggableHandle (
+                                    onDragStarted = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    },
+                                    onDragStopped = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                    }
+                                )
+                                .animateItem(
+                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                                ),
+                            dragHandleModifier = Modifier.draggableHandle(
+                                onDragStarted = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                },
+                                onDragStopped = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                },
+                            ),
+                            elevation = elevation,
+                            count = currentQueue.value.size,
+                            navController = navController,
+                            onDismiss = {playerViewModel.removeFromGeneratedQueue(index)}
+                        ) {
+
                         }
                     }
                 }
@@ -172,6 +266,7 @@ fun QueueTrackItem(
     count: Int,
     navController: NavController,
     elevation: Dp = 0.dp,
+    onDismiss: () -> Unit,
     onClicked: () -> Unit,
 ) {
     val currentlyPlaying = playerViewModel.currentlyPlaying.collectAsStateWithLifecycle()
@@ -187,7 +282,7 @@ fun QueueTrackItem(
     SwipeToDismissBox(
         modifier = modifier,
         state = dismissState,
-        onDismiss = {playerViewModel.removeFromQueue(index)},
+        onDismiss = {onDismiss()},
         backgroundContent = {
             val draggedPx = try {
                 dismissState.requireOffset()
@@ -266,5 +361,29 @@ fun QueueTrackItem(
             },
             checked = currentlyPlaying.value?.id == queueItem.id
         ) { onClicked() }
+    }
+}
+
+@Composable
+fun WavyLine(wavyColor: Color, modifier: Modifier = Modifier) {
+    val path = Path()
+    Canvas(
+        modifier
+    ) {
+        path.reset()
+        val waveLength = 22.dp.toPx()
+        var x = 0f
+        while (x <= size.width) {
+            val relativeX = x / waveLength
+            val y = size.height / 2f + sin((relativeX * 2 * PI.toFloat())) * 7f
+
+            if (x == 0f) {
+                path.moveTo(x, y)
+            } else {
+                path.lineTo(x, y)
+            }
+            x += 4f
+        }
+        drawPath(path, wavyColor, style = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round))
     }
 }

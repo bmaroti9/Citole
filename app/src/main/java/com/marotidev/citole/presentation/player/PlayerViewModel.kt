@@ -23,18 +23,14 @@ import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -42,7 +38,6 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
-import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
 import com.marotidev.citole.data.repository.TrackLogRepository
@@ -64,7 +59,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
-import java.util.UUID
 import kotlin.collections.plus
 
 @HiltViewModel
@@ -78,6 +72,7 @@ class PlayerViewModel @Inject constructor(
     val currentlyPlaying = playbackStateHolder.currentlyPlaying
 
     val currentQueue = playbackStateHolder.playerQueue
+    val generatedQueue = playbackStateHolder.generatedQueue
     val currentIndex = playbackStateHolder.currentIndex
 
     var playing by mutableStateOf(false)
@@ -132,17 +127,6 @@ class PlayerViewModel @Inject constructor(
         controllerFuture.addListener(
             {
                 player = controllerFuture.get()
-
-//                val newQueueItems = (0 until (player?.mediaItemCount ?: 0)).map { index ->
-//                    with (audioService) {
-//                        QueueItem(player!!.getMediaItemAt(index).toAudioData(),)
-//                    }
-//                }
-//                playbackStateHolder.playerQueue.update { queue ->
-//                    queue + newQueueItems
-//                }
-//                playbackStateHolder.currentIndex.value = player?.currentMediaItemIndex ?: 0
-//                playbackStateHolder.currentlyPlaying.value = playbackStateHolder.playerQueue.value.getOrNull(playbackStateHolder.currentIndex.value)
 
                 playing = player?.isPlaying ?: false
                 if (playing) {
@@ -254,7 +238,7 @@ class PlayerViewModel @Inject constructor(
         trackLogRepository.addEmptyPlayLog(track, index, playbackStateHolder.queueId.value)
     }
 
-    fun removeFromQueue(index: Int) {
+    fun removeFromPlayerQueue(index: Int) {
         trackLogRepository.deleteLogFromQueue(index, playbackStateHolder.queueId.value)
 
         playbackStateHolder.playerQueue.update { currentQueue ->
@@ -264,6 +248,14 @@ class PlayerViewModel @Inject constructor(
         }
 
         player?.removeMediaItem(index)
+    }
+
+    fun removeFromGeneratedQueue(index: Int) {
+        playbackStateHolder.generatedQueue.update { currentQueue ->
+            currentQueue.toMutableList().apply {
+                removeAt(index)
+            }
+        }
     }
 
     fun reorderInQueue(from: Int, to: Int) {
@@ -318,6 +310,7 @@ class PlayerViewModel @Inject constructor(
         }
 
         playbackStateHolder.playerQueue.update { emptyList() }
+        playbackStateHolder.generatedQueue.update { emptyList() }
         progress = 0
         playbackStateHolder.currentIndex.value = 0
         playbackStateHolder.currentlyPlaying.value = null
