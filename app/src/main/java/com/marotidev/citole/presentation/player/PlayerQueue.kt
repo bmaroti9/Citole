@@ -98,7 +98,7 @@ fun QueueSheet(
 
     val hapticFeedback = LocalHapticFeedback.current
 
-    val currentQueue = playerViewModel.currentQueue.collectAsStateWithLifecycle()
+    val currentQueue = playerViewModel.playerQueue.collectAsStateWithLifecycle()
     val generatedQueue = playerViewModel.generatedQueue.collectAsStateWithLifecycle()
 
     val sheetState = rememberModalBottomSheetState()
@@ -110,7 +110,16 @@ fun QueueSheet(
 
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        playerViewModel.reorderInQueue(from.index, to.index)
+        val boundary = playerViewModel.playerQueue.value.size
+        val fromPlayer = from.index <= boundary
+        val toPlayer = to.index <= boundary
+
+        if (fromPlayer && toPlayer) {
+            playerViewModel.reorderInQueue(from.index, to.index)
+        } else if (!fromPlayer && toPlayer) {
+            playerViewModel.reorderFromGeneratedToPlayerQueue(from.index - boundary - 1, to.index)
+        }
+
     }
 
     val wavyColor = MaterialTheme.colorScheme.secondary
@@ -131,7 +140,7 @@ fun QueueSheet(
             ) {
                 itemsIndexed(
                     currentQueue.value,
-                    key = { _, track -> track.id }
+                    key = { _, queueItem -> queueItem.id }
                 ) { index, queueItem ->
 
                     ReorderableItem(
@@ -175,7 +184,7 @@ fun QueueSheet(
                         }
                     }
                 }
-                item {
+                item(key = "divider") {
                     Row(
                         Modifier.padding(vertical = 24.dp, horizontal = 24.dp)
                             .fillMaxWidth().height(30.dp),
@@ -200,7 +209,7 @@ fun QueueSheet(
                 }
                 itemsIndexed(
                     generatedQueue.value,
-                    key = { _, track -> track.id }
+                    key = { _, queueItem -> queueItem.id },
                 ) { index, queueItem ->
 
                     ReorderableItem(
@@ -246,7 +255,7 @@ fun QueueSheet(
                             navController = navController,
                             onDismiss = {playerViewModel.removeFromGeneratedQueue(index)}
                         ) {
-
+                            playerViewModel.skipToGeneratedInQueue(index)
                         }
                     }
                 }

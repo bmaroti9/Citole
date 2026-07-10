@@ -38,6 +38,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
+import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
 import com.marotidev.citole.data.repository.TrackLogRepository
@@ -58,6 +59,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.collections.map
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.collections.plus
 
@@ -66,12 +68,13 @@ class PlayerViewModel @Inject constructor(
     private val application: Application,
     private val audioService: AudioService,
     private val trackLogRepository: TrackLogRepository,
-    private val playbackStateHolder: PlaybackStateHolder
+    private val playbackStateHolder: PlaybackStateHolder,
+    private val recommendationRepository: RecommendationRepository
 ) : ViewModel() {
 
     val currentlyPlaying = playbackStateHolder.currentlyPlaying
 
-    val currentQueue = playbackStateHolder.playerQueue
+    val playerQueue = playbackStateHolder.playerQueue
     val generatedQueue = playbackStateHolder.generatedQueue
     val currentIndex = playbackStateHolder.currentIndex
 
@@ -213,9 +216,9 @@ class PlayerViewModel @Inject constructor(
         player?.play()
     }
 
-    fun addToQueue(track: AudioService.TrackData, index: Int = playbackStateHolder.playerQueue.value.size) {
+    fun addToQueue(track: AudioService.TrackData, index: Int = playerQueue.value.size) {
         val mediaItem = with(audioService) {track.toMediaItem()}
-        if (playbackStateHolder.playerQueue.value.isEmpty()) {
+        if (playerQueue.value.isEmpty()) {
             playbackStateHolder.queueId.value = System.currentTimeMillis()
 
             playbackStateHolder.playerQueue.update {
@@ -233,6 +236,8 @@ class PlayerViewModel @Inject constructor(
                 }
             }
             player?.addMediaItem(index, mediaItem)
+            
+            bumpQueueLogIndexes(index, 1)
         }
 
         trackLogRepository.addEmptyPlayLog(track, index, playbackStateHolder.queueId.value)
@@ -240,6 +245,7 @@ class PlayerViewModel @Inject constructor(
 
     fun removeFromPlayerQueue(index: Int) {
         trackLogRepository.deleteLogFromQueue(index, playbackStateHolder.queueId.value)
+        bumpQueueLogIndexes(index, -1)
 
         playbackStateHolder.playerQueue.update { currentQueue ->
             currentQueue.toMutableList().apply {
@@ -260,9 +266,9 @@ class PlayerViewModel @Inject constructor(
 
     fun reorderInQueue(from: Int, to: Int) {
         trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
-            playbackStateHolder.playerQueue.value[from].track.id, to)
+            playerQueue.value[from].track.id, to)
         trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
-            playbackStateHolder.playerQueue.value[to].track.id, from)
+            playerQueue.value[to].track.id, from)
 
         playbackStateHolder.playerQueue.update { currentQueue ->
             currentQueue.toMutableList().apply {
@@ -273,9 +279,48 @@ class PlayerViewModel @Inject constructor(
         player?.moveMediaItem(from, to)
     }
 
+    fun reorderFromGeneratedToPlayerQueue(from: Int, to: Int) {
+        trackLogRepository.addEmptyPlayLog(generatedQueue.value[from].track, to, playbackStateHolder.queueId.value)
+        bumpQueueLogIndexes(to, 1)
+
+        playbackStateHolder.playerQueue.update { currentQueue ->
+            currentQueue.toMutableList().apply {
+                val item = QueueItem(generatedQueue.value[from].track, isGenerated = false)
+                add(to, item)
+            }
+        }
+
+        playbackStateHolder.generatedQueue.update { currentQueue ->
+            currentQueue.toMutableList().apply {
+                removeAt(from)
+            }
+        }
+    }
+
     fun skipInQueue(newIndex: Int) {
         player?.seekTo(newIndex, 0L)
         player?.play()
+    }
+
+    fun skipToGeneratedInQueue(index: Int) {
+        playbackStateHolder.playerQueue.update { currentQueue ->
+            currentQueue + QueueItem(playbackStateHolder.generatedQueue.value[index].track, isGenerated = false)
+        }
+        viewModelScope.launch {
+            val newTracks = recommendationRepository.extendQueue(playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
+            playbackStateHolder.generatedQueue.update {
+                newTracks.map {track -> QueueItem(track, isGenerated = true) }
+            }
+        }
+    }
+
+    fun bumpQueueLogIndexes(after: Int, by: Int) {
+        playerQueue.value.forEachIndexed { index, item -> 
+            if (index > after) {
+                trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
+                    item.track.id, index + by)
+            }
+        }
     }
 
     fun togglePlayPause() {
