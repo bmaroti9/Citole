@@ -328,11 +328,21 @@ class PlayerViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val newTracks = recommendationRepository.extendQueue(playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
+
+            player?.removeMediaItems(playerQueue.value.size, playerQueue.value.size + generatedQueue.value.size)
+            with (audioService) {
+                player?.addMediaItem(item.track.toMediaItem())
+            }
+
             playbackStateHolder.generatedQueue.update {
                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
             }
+
+            with (audioService) {
+                player?.addMediaItems(newTracks.map {track -> track.toMediaItem()})
+            }
             delay(500.milliseconds)
-            //generated queue is already in mediaItem queue
+
             player?.seekTo(playerQueue.value.size - 1, 0)
         }
     }
