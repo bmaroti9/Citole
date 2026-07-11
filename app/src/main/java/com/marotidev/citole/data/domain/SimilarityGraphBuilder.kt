@@ -6,7 +6,7 @@ import com.marotidev.citole.data.service.AudioService
 class SimilarityGraphBuilder {
 
     val sharedArtistWeight = 13f
-    val sharedAlbumWeight = 15f
+    val sharedAlbumWeight = 17f
     val sharedQueueWeight = 3f
     val sharedReleaseYearWeight = 0.03f
 

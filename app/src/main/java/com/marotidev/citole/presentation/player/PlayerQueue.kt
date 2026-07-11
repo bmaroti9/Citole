@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +57,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,9 +86,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import com.materialkolor.ktx.darken
+import kotlin.collections.plus
 import kotlin.math.PI
 import kotlin.math.sin
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,34 +98,12 @@ fun QueueSheet(
     playerViewModel: PlayerViewModel,
     navController: NavController
 ) {
-
-    val hapticFeedback = LocalHapticFeedback.current
-
-    val currentQueue = playerViewModel.playerQueue.collectAsStateWithLifecycle()
-    val generatedQueue = playerViewModel.generatedQueue.collectAsStateWithLifecycle()
-
     val sheetState = rememberModalBottomSheetState()
 
     val sheetCornerRadius by animateDpAsState(
         targetValue = if (sheetState.currentValue == SheetValue.Expanded) 0.dp else 32.dp,
         animationSpec = spring(stiffness = Spring.StiffnessMedium)
     )
-
-    val lazyListState = rememberLazyListState()
-    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        val boundary = playerViewModel.playerQueue.value.size
-        val fromPlayer = from.index <= boundary
-        val toPlayer = to.index <= boundary
-
-        if (fromPlayer && toPlayer) {
-            playerViewModel.reorderInQueue(from.index, to.index)
-        } else if (!fromPlayer && toPlayer) {
-            playerViewModel.reorderFromGeneratedToPlayerQueue(from.index - boundary - 1, to.index)
-        }
-
-    }
-
-    val wavyColor = MaterialTheme.colorScheme.secondary
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -131,139 +112,107 @@ fun QueueSheet(
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = sheetCornerRadius, topEnd = sheetCornerRadius)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = lazyListState,
-            ) {
-                itemsIndexed(
-                    currentQueue.value,
-                    key = { _, queueItem -> queueItem.id }
-                ) { index, queueItem ->
+        ReorderableQueueList(playerViewModel, navController)
+    }
+}
 
-                    ReorderableItem(
-                        reorderableLazyListState,
-                        key = queueItem.id,
-                    ) { isDragging ->
-                        val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
+@Composable
+fun ReorderableQueueList(
+    playerViewModel: PlayerViewModel,
+    navController: NavController
+) {
+    val currentQueue = playerViewModel.playerQueue.collectAsStateWithLifecycle()
+    val generatedQueue = playerViewModel.generatedQueue.collectAsStateWithLifecycle()
 
-                        QueueTrackItem (
-                            queueItem,
-                            playerViewModel,
-                            index = index,
-                            modifier = Modifier
-                                .longPressDraggableHandle (
-                                    onDragStarted = {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                    },
-                                    onDragStopped = {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                    }
-                                )
-                                .animateItem(
-                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                                ),
-                            dragHandleModifier = Modifier.draggableHandle(
-                                onDragStarted = {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                },
-                                onDragStopped = {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                },
-                            ),
-                            elevation = elevation,
-                            count = currentQueue.value.size,
-                            navController = navController,
-                            onDismiss = {playerViewModel.removeFromPlayerQueue(index)}
-                        ) {
-                            playerViewModel.skipInQueue(index)
-                        }
-                    }
+    var items by remember { mutableStateOf<List<Any>>(emptyList()) }
+
+    val lazyListState = rememberLazyListState()
+    var enableDivider by remember { mutableStateOf(false) }
+
+    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        items = items.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+        }
+        val dividerIndex = items.indexOf("DIVIDER")
+        enableDivider = from.index > dividerIndex + 1
+    }
+
+    LaunchedEffect(currentQueue.value, generatedQueue.value, reorderableState.isAnyItemDragging) {
+        if (!reorderableState.isAnyItemDragging) {
+            items = currentQueue.value +
+                    "DIVIDER" +
+                    generatedQueue.value
+        }
+    }
+
+    val currentDividerIndex = items.indexOf("DIVIDER")
+
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    ) {
+        itemsIndexed(
+            items = items,
+            key = { _, item -> if (item == "DIVIDER") "DIVIDER" else (item as QueueItem).id }
+        ) { index, item ->
+
+            if (item == "DIVIDER") {
+                ReorderableItem(
+                    state = reorderableState,
+                    key = "DIVIDER",
+                    enabled = enableDivider
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        thickness = 2.dp,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
-                item(key = "divider") {
+            } else {
+                item as QueueItem
+
+                val isAboveDivider = index < currentDividerIndex
+
+                ReorderableItem(
+                    state = reorderableState,
+                    key = item.id,
+                    enabled = isAboveDivider
+                ) { isDragging ->
+
+                    val containerColor = if (isAboveDivider) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    }
+
+                    val modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(if (isDragging) containerColor.darken(1.2f) else containerColor)
+                        .padding(16.dp)
                     Row(
-                        Modifier.padding(vertical = 24.dp, horizontal = 24.dp)
-                            .fillMaxWidth().height(30.dp),
+                        modifier = modifier.longPressDraggableHandle(
+                            onDragStarted = {
+                                enableDivider = !isAboveDivider
+                            },
+                            onDragStopped = {
+                                if (isAboveDivider) {
+                                    playerViewModel.playerQueueItemReorder(item, items)
+                                } else {
+                                    playerViewModel.generatedQueueToPlayerQueue(item, items)
+                                }
+                                enableDivider = false
+                            }
+                        ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_wand_stars),
-                            contentDescription = null,
-                            tint = wavyColor,
-                            modifier = Modifier.padding(start = 14.dp).size(20.dp)
-                        )
-                        Text(
-                            "Picked For You",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                            color = wavyColor,
-                            modifier = Modifier.padding(end = 14.dp, start = 6.dp)
-                        )
-                        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
-                    }
-
-                }
-                itemsIndexed(
-                    generatedQueue.value,
-                    key = { _, queueItem -> queueItem.id },
-                ) { index, queueItem ->
-
-                    ReorderableItem(
-                        reorderableLazyListState,
-                        key = queueItem.id,
-                    ) { isDragging ->
-                        val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
-                        //makes it greyscale-ish
-                        val matrix = ColorMatrix().apply { setToSaturation(0.7f) }
-
-                        QueueTrackItem (
-                            queueItem,
-                            playerViewModel,
-                            index = index,
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    alpha = 0.8f
-                                    colorFilter = ColorFilter.colorMatrix(matrix)
-                                }
-                                .longPressDraggableHandle (
-                                    onDragStarted = {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                    },
-                                    onDragStopped = {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                    }
-                                )
-                                .animateItem(
-                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                                ),
-                            dragHandleModifier = Modifier.draggableHandle(
-                                onDragStarted = {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                },
-                                onDragStopped = {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
-                                },
-                            ),
-                            elevation = elevation,
-                            count = currentQueue.value.size,
-                            navController = navController,
-                            onDismiss = {playerViewModel.removeFromGeneratedQueue(index)}
-                        ) {
-                            playerViewModel.skipToGeneratedInQueue(index)
-                        }
+                        Text(item.track.title)
                     }
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun QueueTrackItem(

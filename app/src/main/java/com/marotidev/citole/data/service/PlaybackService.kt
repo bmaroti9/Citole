@@ -112,13 +112,9 @@ class PlaybackService : MediaSessionService() {
                     if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4) {
                         serviceScope.launch {
                             val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
-                            playbackStateHolder.generatedQueue.update { queue ->
-                                queue + newTracks.map {track -> QueueItem(track, isGenerated = true) }
+                            playbackStateHolder.generatedQueue.update {
+                                newTracks.map {track -> QueueItem(track, isGenerated = true) }
                             }
-//                            with(audioService) {
-//                                player?.addMediaItems(newTracks.map { track -> track.toMediaItem() })
-//                            }
-//                            newTracks.forEachIndexed {index, track -> trackLogRepository.addEmptyPlayLog(track, index, playbackStateHolder.queueId.value) }
                         }
                     }
 
