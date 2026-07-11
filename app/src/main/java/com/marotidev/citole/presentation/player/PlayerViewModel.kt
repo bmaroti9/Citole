@@ -256,6 +256,8 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun removeFromGeneratedQueue(item: QueueItem) {
+        val from = generatedQueue.value.indexOf(item)
+        player?.removeMediaItem(from + playerQueue.value.size)
         playbackStateHolder.generatedQueue.update { currentQueue ->
             currentQueue.toMutableList().apply {
                 remove(item)
@@ -281,12 +283,12 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun generatedQueueToPlayerQueue(item: QueueItem, items: List<Any>) {
+        val from = generatedQueue.value.indexOf(item)
         val to = items.indexOf(item)
-        if (to == -1 || to > playerQueue.value.size) return
+        if (from == -1 || to == -1 || to > playerQueue.value.size) return
 
-        with (audioService) {
-            player?.addMediaItem(to, item.track.toMediaItem())
-        }
+        player?.moveMediaItem(from + playerQueue.value.size, to)
+
         trackLogRepository.addEmptyPlayLog(item.track, to, playbackStateHolder.queueId.value)
 
         playbackStateHolder.playerQueue.update { currentQueue ->
@@ -330,10 +332,8 @@ class PlayerViewModel @Inject constructor(
                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
             }
             delay(500.milliseconds)
-            with (audioService) {
-                player?.addMediaItem(item.track.toMediaItem())
-                player?.seekTo(playerQueue.value.size - 1, 0)
-            }
+            //generated queue is already in mediaItem queue
+            player?.seekTo(playerQueue.value.size - 1, 0)
         }
     }
 
