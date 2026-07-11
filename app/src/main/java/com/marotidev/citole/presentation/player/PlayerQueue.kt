@@ -25,6 +25,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -121,6 +122,8 @@ fun ReorderableQueueList(
     playerViewModel: PlayerViewModel,
     navController: NavController
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+
     val currentQueue = playerViewModel.playerQueue.collectAsStateWithLifecycle()
     val generatedQueue = playerViewModel.generatedQueue.collectAsStateWithLifecycle()
 
@@ -139,6 +142,7 @@ fun ReorderableQueueList(
 
     LaunchedEffect(currentQueue.value, generatedQueue.value, reorderableState.isAnyItemDragging) {
         if (!reorderableState.isAnyItemDragging) {
+            println("REFRESHED")
             items = currentQueue.value +
                     "DIVIDER" +
                     generatedQueue.value
@@ -149,7 +153,7 @@ fun ReorderableQueueList(
 
     LazyColumn(
         state = lazyListState,
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier.fillMaxSize().padding(16.dp),
     ) {
         itemsIndexed(
             items = items,
@@ -162,11 +166,7 @@ fun ReorderableQueueList(
                     key = "DIVIDER",
                     enabled = enableDivider
                 ) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        thickness = 2.dp,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    WavyDivider()
                 }
             } else {
                 item as QueueItem
@@ -179,34 +179,68 @@ fun ReorderableQueueList(
                     enabled = isAboveDivider
                 ) { isDragging ->
 
-                    val containerColor = if (isAboveDivider) {
-                        MaterialTheme.colorScheme.primaryContainer
+                    val elevation by animateDpAsState(if (isDragging) 3.dp else 0.dp)
+
+                    val transparentConditionalModifier = if (isAboveDivider) {
+                        Modifier
                     } else {
-                        MaterialTheme.colorScheme.surfaceContainerHigh
+                        //makes it greyscale-ish
+                        val matrix = ColorMatrix().apply { setToSaturation(0.65f) }
+                        Modifier.graphicsLayer {
+                            alpha = 0.85f
+                            colorFilter = ColorFilter.colorMatrix(matrix)
+                        }
                     }
 
-                    val modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .background(if (isDragging) containerColor.darken(1.2f) else containerColor)
-                        .padding(16.dp)
-                    Row(
-                        modifier = modifier.longPressDraggableHandle(
+                    QueueTrackItem (
+                        item,
+                        playerViewModel,
+                        index = index,
+                        modifier = transparentConditionalModifier
+                            .longPressDraggableHandle (
+                                onDragStarted = {
+                                    val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
+                                    enableDivider = !isAboveNow
+                                },
+                                onDragStopped = {
+                                    playerViewModel.decideReorderType(item, items)
+                                    enableDivider = false
+                                }
+                            )
+                            .animateItem(
+                                fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                                fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                                placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                            ),
+                        dragHandleModifier = Modifier.draggableHandle(
                             onDragStarted = {
-                                enableDivider = !isAboveDivider
+                                val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
+                                enableDivider = !isAboveNow
                             },
                             onDragStopped = {
-                                if (isAboveDivider) {
-                                    playerViewModel.playerQueueItemReorder(item, items)
-                                } else {
-                                    playerViewModel.generatedQueueToPlayerQueue(item, items)
-                                }
+                                playerViewModel.decideReorderType(item, items)
                                 enableDivider = false
                             }
                         ),
-                        verticalAlignment = Alignment.CenterVertically
+                        elevation = elevation,
+                        count = currentQueue.value.size,
+                        navController = navController,
+                        onDismiss = {
+                            val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
+                            if (isAboveNow) {
+                                playerViewModel.removeFromPlayerQueue(index)
+                            } else {
+                                playerViewModel.removeFromGeneratedQueue(item)
+                            }
+
+                        }
                     ) {
-                        Text(item.track.title)
+                        val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
+                        if (isAboveNow) {
+                            playerViewModel.skipInQueue(index)
+                        } else {
+                            playerViewModel.skipToGeneratedInQueue(item)
+                        }
                     }
                 }
             }
@@ -319,6 +353,30 @@ fun QueueTrackItem(
             },
             checked = currentlyPlaying.value?.id == queueItem.id
         ) { onClicked() }
+    }
+}
+
+@Composable
+fun WavyDivider() {
+    Row(
+        Modifier.padding(vertical = 24.dp, horizontal = 24.dp)
+            .fillMaxWidth().height(30.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
+        Icon(
+            painter = painterResource(id = R.drawable.ic_wand_stars),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.padding(start = 14.dp).size(20.dp)
+        )
+        Text(
+            "Picked For You",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.padding(end = 14.dp, start = 6.dp)
+        )
+        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
     }
 }
 

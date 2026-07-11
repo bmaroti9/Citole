@@ -245,112 +245,23 @@ class PlayerViewModel @Inject constructor(
 
     fun removeFromPlayerQueue(index: Int) {
         trackLogRepository.deleteLogFromQueue(index, playbackStateHolder.queueId.value)
-        syncQueueLogIndexes()
 
         playbackStateHolder.playerQueue.update { currentQueue ->
             currentQueue.toMutableList().apply {
                 removeAt(index)
             }
         }
+
+        syncQueueLogIndexes()
 
         player?.removeMediaItem(index)
     }
 
-    fun removeFromGeneratedQueue(index: Int) {
+    fun removeFromGeneratedQueue(item: QueueItem) {
         playbackStateHolder.generatedQueue.update { currentQueue ->
             currentQueue.toMutableList().apply {
-                removeAt(index)
+                remove(item)
             }
-        }
-    }
-
-    fun reorderInQueue(from: Int, to: Int) {
-        trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
-            playerQueue.value[from].track.id, to)
-        trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
-            playerQueue.value[to].track.id, from)
-
-        playbackStateHolder.playerQueue.update { currentQueue ->
-            currentQueue.toMutableList().apply {
-                val item = removeAt(from)
-                add(to, item)
-            }
-        }
-        player?.moveMediaItem(from, to)
-    }
-
-    fun reorderFromGeneratedToPlayerQueue(from: Int, to: Int) {
-        trackLogRepository.addEmptyPlayLog(generatedQueue.value[from].track, to, playbackStateHolder.queueId.value)
-        //bumpQueueLogIndexes(to, 1)
-
-        playbackStateHolder.playerQueue.update { currentQueue ->
-            currentQueue.toMutableList().apply {
-                val item = QueueItem(generatedQueue.value[from].track, isGenerated = false)
-                add(to, item)
-            }
-        }
-
-        playbackStateHolder.generatedQueue.update { currentQueue ->
-            currentQueue.toMutableList().apply {
-                removeAt(from)
-            }
-        }
-    }
-
-    fun updateQueuesAfterDrag(
-        finalPlayerList: List<QueueItem>,
-        finalGeneratedList: List<QueueItem>
-    ) {
-        if (finalGeneratedList == generatedQueue.value) {
-            println("player queue reorder")
-            //reorder happened in the player queue
-            val indexes = mutableListOf<Int>()
-            finalPlayerList.forEachIndexed { index, item ->
-                if (playerQueue.value[index] != item) {
-                    indexes += index
-                }
-            }
-            if (indexes.size == 2) {
-                trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
-                    playerQueue.value[indexes[0]].track.id, indexes[1])
-                trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
-                    playerQueue.value[indexes[1]].track.id, indexes[0])
-
-                player?.moveMediaItem(indexes[0], indexes[1])
-
-                playbackStateHolder.playerQueue.value = finalPlayerList
-            }
-        } else {
-            println("generated queue promotion")
-            //a generated track got promoted
-
-            var removed = 0
-            for ((index, element) in finalGeneratedList.withIndex()) {
-                if (generatedQueue.value[index] != element) {
-                    removed = index
-                    break
-                }
-            }
-
-            var added = 0
-            for ((index, element) in playerQueue.value.withIndex()) {
-                if (element != finalPlayerList[index]) {
-                    added = index
-                    break
-                }
-            }
-
-            println("$removed, $added")
-
-            trackLogRepository.addEmptyPlayLog(generatedQueue.value[removed].track, added, playbackStateHolder.queueId.value)
-            //bumpQueueLogIndexes(added, 1)
-
-            with (audioService) {
-                player?.addMediaItem(added, finalPlayerList[added].track.toMediaItem())
-            }
-
-            playbackStateHolder.playerQueue.value = finalPlayerList
-            playbackStateHolder.generatedQueue.value = finalGeneratedList
         }
     }
 
@@ -382,7 +293,7 @@ class PlayerViewModel @Inject constructor(
 
         playbackStateHolder.playerQueue.update { currentQueue ->
             currentQueue.toMutableList().apply {
-                add(to, item)
+                add(to, item.copy(isGenerated = false))
             }
         }
 
@@ -395,19 +306,35 @@ class PlayerViewModel @Inject constructor(
         syncQueueLogIndexes()
     }
 
+    fun decideReorderType(item: QueueItem, items: List<Any>) {
+        if (item in generatedQueue.value) {
+            generatedQueueToPlayerQueue(item, items)
+        } else {
+            playerQueueItemReorder(item, items)
+        }
+    }
+
     fun skipInQueue(newIndex: Int) {
         player?.seekTo(newIndex, 0L)
         player?.play()
     }
 
-    fun skipToGeneratedInQueue(index: Int) {
+    fun skipToGeneratedInQueue(item: QueueItem) {
         playbackStateHolder.playerQueue.update { currentQueue ->
-            currentQueue + QueueItem(playbackStateHolder.generatedQueue.value[index].track, isGenerated = false)
+            currentQueue + item.copy(isGenerated = false)
+        }
+        playbackStateHolder.generatedQueue.update { currentQueue ->
+            currentQueue.filterNot { it.id == item.id }
         }
         viewModelScope.launch {
             val newTracks = recommendationRepository.extendQueue(playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
             playbackStateHolder.generatedQueue.update {
                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
+            }
+            delay(300.milliseconds)
+            with (audioService) {
+                player?.addMediaItem(item.track.toMediaItem())
+                player?.seekTo(playerQueue.value.size - 1, 0)
             }
         }
     }
