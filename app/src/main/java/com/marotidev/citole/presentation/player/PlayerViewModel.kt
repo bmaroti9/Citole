@@ -320,6 +320,10 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun skipToGeneratedInQueue(item: QueueItem) {
+        player?.removeMediaItems(playerQueue.value.size, playerQueue.value.size + generatedQueue.value.size)
+        with (audioService) {
+            player?.addMediaItem(item.track.toMediaItem())
+        }
         playbackStateHolder.playerQueue.update { currentQueue ->
             currentQueue + item.copy(isGenerated = false)
         }
@@ -328,11 +332,6 @@ class PlayerViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val newTracks = recommendationRepository.extendQueue(playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
-
-            player?.removeMediaItems(playerQueue.value.size, playerQueue.value.size + generatedQueue.value.size)
-            with (audioService) {
-                player?.addMediaItem(item.track.toMediaItem())
-            }
 
             playbackStateHolder.generatedQueue.update {
                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
