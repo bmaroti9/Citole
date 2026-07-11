@@ -24,6 +24,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
@@ -32,18 +33,18 @@ import androidx.media3.session.MediaSessionService
 import com.marotidev.citole.MainActivity
 import com.marotidev.citole.R
 import com.marotidev.citole.data.repository.RecommendationRepository
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
-import androidx.media3.common.Player
 import com.marotidev.citole.data.repository.TrackLogRepository
 import com.marotidev.citole.data.state.PlaybackStateHolder
 import com.marotidev.citole.data.state.QueueItem
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.internal.toLongOrDefault
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
@@ -94,39 +95,18 @@ class PlaybackService : MediaSessionService() {
                 .build()
 
             it.addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_ENDED) {
-                        serviceScope.launch {
-                            val generated = playbackStateHolder.generatedQueue.value
-                            if (generated.isNotEmpty()) {
-                                playbackStateHolder.playerQueue.update {queue -> queue + generated }
-                                playbackStateHolder.generatedQueue.update { emptyList() }
-
-                                with(audioService) {
-                                    player?.addMediaItems(generated.map { it.track.toMediaItem() })
-                                }
-
-                                val newStartIndex = playbackStateHolder.playerQueue.value.size - generated.size
-                                player?.seekTo(newStartIndex, 0L)
-                                player?.prepare()
-                                player?.play()
-                            }
-                        }
-                    }
-                }
-
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-
-                    //log the play times
-                    playbackStateHolder.currentlyPlaying.value?.let { currentlyPlaying ->
-                        if (playbackStateHolder.lastKnownDuration.value > 5000) {
-                            trackLogRepository.updateLogTimeValues(playbackStateHolder.queueId.value, currentlyPlaying.track.id,
-                                playbackEndedMs = System.currentTimeMillis(), playbackDurationMs = playbackStateHolder.lastKnownDuration.value)
-                        }
-                    }
-
                     val index = player?.currentMediaItemIndex ?: 0
                     playbackStateHolder.currentIndex.value = index
+                    if (index >= playbackStateHolder.playerQueue.value.size) {
+                        //entered generated tracks
+                        trackLogRepository.addInitialEmptyQueueLog(
+                            playbackStateHolder.queueId.value,
+                            playbackStateHolder.generatedQueue.value.map {item -> item.track }
+                        )
+                        playbackStateHolder.playerQueue.update {queue -> queue + playbackStateHolder.generatedQueue.value }
+                        playbackStateHolder.generatedQueue.update { emptyList() }
+                    }
                     playbackStateHolder.currentlyPlaying.value = playbackStateHolder.playerQueue.value.getOrNull(index)
 
                     //extend queue if it's running out
@@ -137,6 +117,38 @@ class PlaybackService : MediaSessionService() {
                             playbackStateHolder.generatedQueue.update {
                                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
                             }
+                            with (audioService) {
+                                player?.addMediaItems(newTracks.map {track -> track.toMediaItem()})
+                            }
+                        }
+                    }
+                }
+
+                override fun onPositionDiscontinuity(
+                    oldPosition: Player.PositionInfo,
+                    newPosition: Player.PositionInfo,
+                    @Player.DiscontinuityReason reason: Int
+                ) {
+                    super.onPositionDiscontinuity(oldPosition, newPosition, reason)
+                    val trackChanged = oldPosition.mediaItemIndex != newPosition.mediaItemIndex
+
+                    if (trackChanged) {
+                        val finishedTrack = oldPosition.mediaItem ?: return
+                        val finalPositionMs = oldPosition.positionMs
+
+                        trackLogRepository.updateLogTimeValues(playbackStateHolder.queueId.value,
+                            finishedTrack.mediaId.toLongOrDefault(0),
+                            playbackEndedMs = System.currentTimeMillis(), playbackDurationMs = finalPositionMs)
+                    }
+                }
+
+                override fun onPlaybackStateChanged(@Player.State playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+
+                    if (playbackState == Player.STATE_ENDED) {
+                        playbackStateHolder.currentlyPlaying.value?.let {
+                            trackLogRepository.updateLogTimeValues(playbackStateHolder.queueId.value, trackId = it.track.id,
+                                System.currentTimeMillis(), player?.duration ?: 0)
                         }
                     }
                 }

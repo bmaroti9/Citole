@@ -82,6 +82,7 @@ class TrackLogRepository @Inject constructor(
     fun updateLogTimeValues(queueId: Long, trackId: Long, playbackEndedMs: Long, playbackDurationMs: Long) {
         serviceScope.launch {
             trackPlayLogDao.updateLogTimeValues(queueId, trackId, playbackEndedMs, playbackDurationMs)
+            println("$trackId, $playbackDurationMs")
         }
     }
 

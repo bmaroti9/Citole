@@ -1,6 +1,5 @@
 package com.marotidev.citole.data.state
 
-import androidx.compose.runtime.mutableStateListOf
 import com.marotidev.citole.data.service.AudioService
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
@@ -19,6 +18,4 @@ class PlaybackStateHolder {
 
     val currentIndex = MutableStateFlow(0)
     val currentlyPlaying = MutableStateFlow<QueueItem?>(null)
-
-    val lastKnownDuration = MutableStateFlow<Long>(0)
 }

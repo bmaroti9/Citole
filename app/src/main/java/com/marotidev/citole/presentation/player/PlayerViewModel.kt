@@ -144,6 +144,13 @@ class PlayerViewModel @Inject constructor(
 
     private fun setupListeners() {
         player?.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                when (playbackState) {
+                    Player.STATE_ENDED -> {
+                        stopProgressUpdate()
+                    }
+                }
+            }
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 if (playWhenReady) {
                     startProgressUpdate()
@@ -177,7 +184,6 @@ class PlayerViewModel @Inject constructor(
         progressJob = viewModelScope.launch {
             while (NonCancellable.isActive) {
                 progress = player?.currentPosition ?: 0
-                playbackStateHolder.lastKnownDuration.value = progress
                 delay(500.milliseconds)
             }
         }
@@ -323,7 +329,7 @@ class PlayerViewModel @Inject constructor(
             playbackStateHolder.generatedQueue.update {
                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
             }
-            delay(300.milliseconds)
+            delay(500.milliseconds)
             with (audioService) {
                 player?.addMediaItem(item.track.toMediaItem())
                 player?.seekTo(playerQueue.value.size - 1, 0)

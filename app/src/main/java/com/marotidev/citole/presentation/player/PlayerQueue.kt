@@ -25,9 +25,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,7 +39,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -66,11 +63,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,16 +82,9 @@ import com.marotidev.citole.data.state.QueueItem
 import com.marotidev.citole.presentation.home.track.TrackItem
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sign
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
-import com.materialkolor.ktx.darken
-import kotlin.collections.plus
-import kotlin.math.PI
 import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,9 +181,9 @@ fun ReorderableQueueList(
                         Modifier
                     } else {
                         //makes it greyscale-ish
-                        val matrix = ColorMatrix().apply { setToSaturation(0.65f) }
+                        val matrix = ColorMatrix().apply { setToSaturation(0.75f) }
                         Modifier.graphicsLayer {
-                            alpha = 0.85f
+                            alpha = 0.75f
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         }
                     }
@@ -237,7 +232,6 @@ fun ReorderableQueueList(
                             } else {
                                 playerViewModel.removeFromGeneratedQueue(item)
                             }
-
                         }
                     ) {
                         val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
@@ -376,7 +370,7 @@ fun WavyDivider() {
             modifier = Modifier.padding(start = 14.dp).size(20.dp)
         )
         Text(
-            "Picked For You",
+            "Up Next",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
             color = MaterialTheme.colorScheme.secondary,
             modifier = Modifier.padding(end = 14.dp, start = 6.dp)
