@@ -144,14 +144,6 @@ class PlayerViewModel @Inject constructor(
 
     private fun setupListeners() {
         player?.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_ENDED -> {
-                        stopProgressUpdate()
-                    }
-                }
-            }
-
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 if (playWhenReady) {
                     startProgressUpdate()

@@ -94,6 +94,27 @@ class PlaybackService : MediaSessionService() {
                 .build()
 
             it.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        serviceScope.launch {
+                            val generated = playbackStateHolder.generatedQueue.value
+                            if (generated.isNotEmpty()) {
+                                playbackStateHolder.playerQueue.update {queue -> queue + generated }
+                                playbackStateHolder.generatedQueue.update { emptyList() }
+
+                                with(audioService) {
+                                    player?.addMediaItems(generated.map { it.track.toMediaItem() })
+                                }
+
+                                val newStartIndex = playbackStateHolder.playerQueue.value.size - generated.size
+                                player?.seekTo(newStartIndex, 0L)
+                                player?.prepare()
+                                player?.play()
+                            }
+                        }
+                    }
+                }
+
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
 
                     //log the play times
@@ -109,7 +130,8 @@ class PlaybackService : MediaSessionService() {
                     playbackStateHolder.currentlyPlaying.value = playbackStateHolder.playerQueue.value.getOrNull(index)
 
                     //extend queue if it's running out
-                    if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4) {
+                    if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4
+                        && playbackStateHolder.generatedQueue.value.isEmpty()) {
                         serviceScope.launch {
                             val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
                             playbackStateHolder.generatedQueue.update {
@@ -117,7 +139,6 @@ class PlaybackService : MediaSessionService() {
                             }
                         }
                     }
-
                 }
             })
         }

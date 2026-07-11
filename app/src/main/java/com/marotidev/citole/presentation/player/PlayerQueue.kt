@@ -160,6 +160,7 @@ fun ReorderableQueueList(
             key = { _, item -> if (item == "DIVIDER") "DIVIDER" else (item as QueueItem).id }
         ) { index, item ->
 
+            if (index == items.size - 1 && item == "DIVIDER") return@itemsIndexed
             if (item == "DIVIDER") {
                 ReorderableItem(
                     state = reorderableState,
@@ -199,10 +200,12 @@ fun ReorderableQueueList(
                         modifier = transparentConditionalModifier
                             .longPressDraggableHandle (
                                 onDragStarted = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                                     val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
                                     enableDivider = !isAboveNow
                                 },
                                 onDragStopped = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                     playerViewModel.decideReorderType(item, items)
                                     enableDivider = false
                                 }
@@ -214,10 +217,12 @@ fun ReorderableQueueList(
                             ),
                         dragHandleModifier = Modifier.draggableHandle(
                             onDragStarted = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                                 val isAboveNow = items.indexOf(item) < items.indexOf("DIVIDER")
                                 enableDivider = !isAboveNow
                             },
                             onDragStopped = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
                                 playerViewModel.decideReorderType(item, items)
                                 enableDivider = false
                             }
