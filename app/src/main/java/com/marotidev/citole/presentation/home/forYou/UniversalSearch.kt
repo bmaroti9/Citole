@@ -29,8 +29,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,6 +44,7 @@ import com.marotidev.citole.presentation.home.album.AlbumItem
 import com.marotidev.citole.presentation.home.artist.ArtistItem
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.SectionTitle
 
 
 @Composable
@@ -75,17 +74,13 @@ fun UniversalSearchScreen(
                 when (result) {
                     is SearchResultGroup.Tracks -> {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "tracks_text_key") {
-                            Text(
+                            SectionTitle(
                                 "Tracks",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .padding(top = 24.dp, bottom = 12.dp, start = 8.dp)
-                                    .animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                                        fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                                        placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                                    ),
+                                Modifier.animateItem(
+                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                                )
                             )
                         }
 
@@ -108,17 +103,13 @@ fun UniversalSearchScreen(
 
                     is SearchResultGroup.Albums -> {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "albums_text_key") {
-                            Text(
+                            SectionTitle(
                                 "Albums",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .padding(top = 24.dp, bottom = 12.dp, start = 8.dp)
-                                    .animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                                        fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                                        placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                                    ),
+                                Modifier.animateItem(
+                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                                )
                             )
                         }
 
@@ -145,17 +136,13 @@ fun UniversalSearchScreen(
 
                     is SearchResultGroup.Artists -> {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "artists_text_key") {
-                            Text(
+                            SectionTitle(
                                 "Artists",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .padding(top = 24.dp, bottom = 12.dp, start = 8.dp)
-                                    .animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
-                                        fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
-                                        placementSpec = spring(stiffness = Spring.StiffnessMedium)
-                                    ),
+                                Modifier.animateItem(
+                                    fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                                    placementSpec = spring(stiffness = Spring.StiffnessMedium)
+                                )
                             )
                         }
 

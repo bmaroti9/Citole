@@ -76,6 +76,7 @@ import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.MorphingClipImage
+import com.marotidev.citole.presentation.utils.SectionTitle
 import com.marotidev.citole.presentation.utils.durationToString
 import com.marotidev.citole.presentation.utils.tintedPainter
 
@@ -145,8 +146,7 @@ fun TrackCarousel(tracks: List<AudioService.TrackData>, playerViewModel: PlayerV
     Column(
         modifier = Modifier.padding(bottom = 24.dp)
     ) {
-        Text("Recently Added", style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+        SectionTitle("Recently Added")
 
         HorizontalMultiBrowseCarousel(
             state = carouselState,
@@ -318,8 +318,7 @@ fun RecentlyPlayedTracks(
     navController: NavController
 ) {
     Column() {
-        Text("Recently Played", style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+        SectionTitle("Recently Played")
         recentlyPlayed.forEachIndexed { index, track ->
             SwipeableTrackItem (
                 track = track,
@@ -341,8 +340,7 @@ fun MostPlayedTracks(
     navController: NavController
 ) {
     Column() {
-        Text("Most Played", style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(top = 24.dp, bottom = 12.dp, start = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+        SectionTitle("Most Played")
         mostPlayed.forEachIndexed { index, track ->
             SwipeableTrackItem (
                 track = track,

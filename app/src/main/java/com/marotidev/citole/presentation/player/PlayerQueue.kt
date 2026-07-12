@@ -346,7 +346,7 @@ fun QueueTrackItem(
                             .background(MaterialTheme.colorScheme.tertiaryContainer, MaterialShapes.Flower.toShape())
                             .padding(3.dp)
                             .size(12.dp),
-                        tint = MaterialTheme.colorScheme.tertiary
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
             },
