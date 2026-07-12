@@ -18,14 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.presentation.home.album
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -37,17 +37,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +57,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -76,9 +71,9 @@ import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
-import com.marotidev.citole.presentation.home.artist.ArtistItem
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.SectionTitle
 import com.marotidev.citole.presentation.utils.tintedPainter
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -103,7 +98,7 @@ fun AlbumDetailScreen(
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
 
     val density = LocalDensity.current
-    val expandedHeight = 420.dp + statusBarTopDp
+    val expandedHeight = 360.dp + statusBarTopDp
     val collapsedHeight = 64.dp + statusBarTopDp
 
     val expandedHeightPx = with(density) { expandedHeight.toPx() }
@@ -123,13 +118,13 @@ fun AlbumDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(expandedHeight + with(density) { scrollBehavior.state.heightOffset.toDp() })
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
             ) {
 
                 Column(
@@ -152,7 +147,7 @@ fun AlbumDetailScreen(
                     )
                     Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
                     FlowRow(
-                        modifier = Modifier.padding(top = 3.dp, bottom = 40.dp),
+                        modifier = Modifier.padding(top = 3.dp, bottom = 10.dp),
                     ) {
                         album.ownerArtists.forEachIndexed { index, artist ->
                             Text(
@@ -202,7 +197,7 @@ fun AlbumDetailScreen(
                         pressedShape = MaterialTheme.shapes.medium
                     ),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.secondary
                     ),
                     modifier = Modifier
@@ -223,102 +218,55 @@ fun AlbumDetailScreen(
             contentPadding = innerPadding
         ) {
             item {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
-                        .padding(12.dp)
-                        .clipToBounds()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 12.dp, start = 2.dp)
-                    ) {
-                        Text("Tracks", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(
-                            onClick = {
-                                playerViewModel.playQueue(album.tracks, 0)
-                            },
-                            contentPadding = PaddingValues(horizontal = 15.dp, vertical = 10.dp),
-                            shapes = ButtonDefaults.shapes(
-                                shape = CircleShape,
-                                pressedShape = MaterialTheme.shapes.medium
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_play),
-                                contentDescription = "Play",
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Play", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.width(3.dp))
-                        }
-                        FilledTonalIconButton(
-                            onClick = {
-                                playerViewModel.playQueue(album.tracks.shuffled(), 0)
-                            },
-                            shapes = IconButtonDefaults.shapes(
-                                shape = CircleShape,
-                                pressedShape = MaterialTheme.shapes.medium
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_shuffle),
-                                contentDescription = "Shuffle",
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
+                SectionTitle("Tracks")
+            }
 
-                    album.tracks.forEachIndexed { index, track ->
-                        SwipeableTrackItem(
-                            track = track,
-                            playerViewModel = playerViewModel,
-                            index = index,
-                            count = album.tracks.count(),
-                            navController = navController
-                        ) {
-                            playerViewModel.playQueue(album.tracks, index)
-                        }
-                    }
+            itemsIndexed(
+                items = album.tracks,
+                key = { _, track -> track.id }
+            ) { index, track ->
+                SwipeableTrackItem(
+                    track = track,
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
+                        fadeOutSpec = spring(stiffness = Spring.StiffnessMedium),
+                    ),
+                    playerViewModel = playerViewModel,
+                    index = index,
+                    count = album.tracks.size,
+                    navController = navController
+                ) {
+                    playerViewModel.playQueue(album.tracks, index)
                 }
             }
+
             item {
                 if (similarAlbums.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 12.dp)
-                            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(28.dp))
-                            .padding(12.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        ) {
-                            Text("Similar Albums", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 4.dp))
-                        }
+                    SectionTitle("Similar Albums")
+                }
+            }
 
-                        LazyRow {
-                            itemsIndexed(
-                                similarAlbums,
-                                key = { index, album -> album.albumId }
-                            ) { index, album ->
-                                AlbumItem(
-                                    album = album,
-                                    playerViewModel = playerViewModel,
-                                    onClicked = {
-                                        navController.navigate(AlbumViewDestination(album.albumId))
-                                    },
-                                    index = index,
-                                    count = similarAlbums.size,
-                                    columns = similarAlbums.size,
-                                    modifier = Modifier.size(155.dp, 220.dp)
-                                )
-                            }
-                        }
+            item {
+                LazyRow {
+                    itemsIndexed(
+                        similarAlbums,
+                        key = { _, album -> album.albumName }
+                    ) { index, album ->
+                        AlbumItem(
+                            album = album,
+                            playerViewModel = playerViewModel,
+                            onClicked = {
+                                navController.navigate(AlbumViewDestination(album.albumId))
+                            },
+                            index = index,
+                            count = similarAlbums.size,
+                            columns = similarAlbums.size,
+                            modifier = Modifier.size(155.dp, 220.dp)
+                        )
                     }
                 }
             }
+
             item {
                 Spacer(modifier = Modifier.height(72.dp))
             }
