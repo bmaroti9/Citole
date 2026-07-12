@@ -374,7 +374,6 @@ fun ToolbarExpandedState(
                 alpha = expandedAlpha
                 translationY = fraction * 50f
             }
-            .padding(24.dp)
         ) {
             PlayerScreen(playerViewModel, currentlyPlaying, navController, onPlayerClose)
         }

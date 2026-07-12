@@ -27,6 +27,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,13 +41,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
@@ -54,7 +59,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -71,6 +78,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -90,6 +98,7 @@ import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
 import com.marotidev.citole.presentation.utils.durationToString
 import com.marotidev.citole.presentation.utils.tintedPainter
+import com.materialkolor.ktx.darken
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -106,7 +115,8 @@ fun PlayerScreen(
     val track = currentlyPlaying.track
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp).systemBarsPadding(),
     ) {
         if (queueSheetOpen) {
             QueueSheet(
@@ -116,29 +126,82 @@ fun PlayerScreen(
             )
         }
 
+        StatusBar(onPlayerClose)
+
+        Spacer(Modifier.weight(0.25f))
+
         ThumbnailCard(track)
+
+        Spacer(Modifier.weight(0.4f))
 
         TitleAndArtists(track, navController, onPlayerClose)
 
+        Spacer(Modifier.weight(0.3f))
+
         ExpressiveWavySlider(playerViewModel, track)
+
+        Spacer(Modifier.weight(0.4f))
 
         PlayPauseRow(playerViewModel)
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.weight(1.1f))
 
         PlayerBottomBar({queueSheetOpen = true})
+    }
+}
+
+@Composable
+fun StatusBar(onPlayerClose: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        FilledTonalIconButton (
+            onClick = { onPlayerClose() },
+            shapes = IconButtonDefaults.shapes(
+                shape = CircleShape,
+                pressedShape = MaterialTheme.shapes.medium
+            ),
+            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.darken(1.2f)
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_keyboard_down),
+                contentDescription = "Search",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Text("Now Playing", style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onTertiaryContainer)
+        FilledTonalIconButton (
+            onClick = {  },
+            shapes = IconButtonDefaults.shapes(
+                shape = CircleShape,
+                pressedShape = MaterialTheme.shapes.medium
+            ),
+            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.darken(1.2f)
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_more_vert),
+                contentDescription = "Search",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ThumbnailCard(
-    track : AudioService.TrackData
+    track : AudioService.TrackData,
 ) {
     Card(
         modifier = Modifier
-            .padding(start = 40.dp, end = 40.dp, bottom = 30.dp, top = 80.dp)
-            .fillMaxWidth()
+            .fillMaxWidth(0.8f)
             .aspectRatio(1f),
         shape = MaterialTheme.shapes.extraLarge
     ) {
@@ -331,7 +394,7 @@ fun ExpressiveWavySlider(playerViewModel: PlayerViewModel, track: AudioService.T
     )
 
     Row(
-        modifier = Modifier.padding(horizontal = 25.dp, vertical = 24.dp),
+        modifier = Modifier.padding(horizontal = 25.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -384,7 +447,7 @@ fun PlayPauseRow(
                 ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
             },
             horizontalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.CenterHorizontally),
-            modifier = Modifier.align(Alignment.Center).padding(top = 10.dp, bottom = 20.dp).width(250.dp)
+            modifier = Modifier.align(Alignment.Center).width(250.dp)
         ) {
             customItem(
                 buttonGroupContent = {
@@ -509,12 +572,29 @@ fun PlayPauseRow(
 @Composable
 fun PlayerBottomBar(onOpenDialog: () -> Unit) {
     Row (
-        modifier = Modifier.padding(horizontal = 5.dp)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround
     ) {
+        FilledTonalButton(
+            onClick = {},
+            modifier = Modifier.padding(vertical = 10.dp),
+            contentPadding = PaddingValues(vertical = 16.dp, horizontal = 20.dp),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.onSecondary
+            )
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_speaker),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.size(6.dp))
+            Text("Device", style = MaterialTheme.typography.labelLarge)
+        }
         FilledTonalButton(
             onClick = {onOpenDialog()},
             modifier = Modifier.padding(vertical = 10.dp),
-            contentPadding = PaddingValues(vertical = 18.dp, horizontal = 18.dp),
+            contentPadding = PaddingValues(vertical = 16.dp, horizontal = 20.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.onSecondary
             )
