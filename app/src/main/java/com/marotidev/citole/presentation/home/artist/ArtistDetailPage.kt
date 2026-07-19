@@ -20,6 +20,7 @@ package com.marotidev.citole.presentation.home.artist
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -132,6 +133,7 @@ fun ArtistDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(expandedHeight + with(density) { scrollBehavior.state.heightOffset.toDp() })
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
             ) {
 
                 Column(
@@ -152,7 +154,7 @@ fun ArtistDetailScreen(
                         )
                     }
                     Text(artist.name, style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(top = 25.dp, bottom = 10.dp))
+                        modifier = Modifier.padding(top = 15.dp, bottom = 10.dp))
                 }
 
                 Box(

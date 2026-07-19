@@ -18,4 +18,6 @@ class PlaybackStateHolder {
 
     val currentIndex = MutableStateFlow(0)
     val currentlyPlaying = MutableStateFlow<QueueItem?>(null)
+
+    val queueSnapshotAtRegeneration = MutableStateFlow<List<Long>>(emptyList())
 }

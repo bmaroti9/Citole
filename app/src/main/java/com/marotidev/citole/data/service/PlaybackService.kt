@@ -59,6 +59,26 @@ class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var player: Player? = null
 
+    fun checkExtendQueue() {
+        val currentIds = playbackStateHolder.playerQueue.value.map { it.track.id }
+        if (currentIds == playbackStateHolder.queueSnapshotAtRegeneration.value) return
+
+        serviceScope.launch {
+            val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
+
+            player?.removeMediaItems(playbackStateHolder.playerQueue.value.size,
+                playbackStateHolder.playerQueue.value.size + playbackStateHolder.generatedQueue.value.size)
+            with (audioService) {
+                player?.addMediaItems(newTracks.map {track -> track.toMediaItem()})
+            }
+
+            playbackStateHolder.generatedQueue.update {
+                newTracks.map {track -> QueueItem(track, isGenerated = false) }
+            }
+            playbackStateHolder.queueSnapshotAtRegeneration.value = currentIds
+        }
+    }
+
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
@@ -106,22 +126,16 @@ class PlaybackService : MediaSessionService() {
                         )
                         playbackStateHolder.playerQueue.update {queue -> queue + playbackStateHolder.generatedQueue.value }
                         playbackStateHolder.generatedQueue.update { emptyList() }
+
+                        playbackStateHolder.queueSnapshotAtRegeneration.value = playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }
                     }
+
+                    if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4) {
+                        checkExtendQueue()
+                    }
+
                     playbackStateHolder.currentlyPlaying.value = playbackStateHolder.playerQueue.value.getOrNull(index)
 
-                    //extend queue if it's running out
-                    if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4
-                        && playbackStateHolder.generatedQueue.value.isEmpty()) {
-                        serviceScope.launch {
-                            val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
-                            playbackStateHolder.generatedQueue.update {
-                                newTracks.map {track -> QueueItem(track, isGenerated = true) }
-                            }
-                            with (audioService) {
-                                player?.addMediaItems(newTracks.map {track -> track.toMediaItem()})
-                            }
-                        }
-                    }
                 }
 
                 override fun onPositionDiscontinuity(

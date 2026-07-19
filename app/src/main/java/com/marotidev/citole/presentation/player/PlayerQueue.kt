@@ -183,7 +183,7 @@ fun ReorderableQueueList(
                         //makes it greyscale-ish
                         val matrix = ColorMatrix().apply { setToSaturation(0.75f) }
                         Modifier.graphicsLayer {
-                            alpha = 0.75f
+                            alpha = 0.7f
                             colorFilter = ColorFilter.colorMatrix(matrix)
                         }
                     }

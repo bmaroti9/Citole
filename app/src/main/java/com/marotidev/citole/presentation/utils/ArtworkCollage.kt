@@ -38,12 +38,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.marotidev.citole.R
 import kotlin.math.abs
 import kotlin.math.cos
@@ -96,7 +94,7 @@ fun ArtworkCollage(hash: Int, artworkUris: List<Uri?>) {
     if (artworkUris.isEmpty()) return
     val count = artworkUris.size
 
-    val seed = Random(hash)
+    val seed = Random(hash + 9) //3
 
     val shapeList = listOf(
         MaterialShapes.Circle.toShape(),
