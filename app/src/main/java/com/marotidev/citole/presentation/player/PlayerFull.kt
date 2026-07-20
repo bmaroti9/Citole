@@ -87,6 +87,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.Player
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.marotidev.citole.R
@@ -148,10 +149,12 @@ fun PlayerScreen(
 
         Spacer(Modifier.weight(1.1f))
 
-        PlayerBottomBar({
+        PlayerBottomBar(
+            playerViewModel
+        ) {
             playerViewModel.checkExtendQueue()
             queueSheetOpen = true
-        })
+        }
 
         Spacer(Modifier.weight(0.4f))
 
@@ -578,10 +581,20 @@ fun PlayPauseRow(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun PlayerBottomBar(onOpenDialog: () -> Unit) {
+fun PlayerBottomBar(
+    playerViewModel: PlayerViewModel,
+    onOpenDialog: () -> Unit
+) {
+
+    val repeatIcon = when (playerViewModel.repeatMode) {
+        Player.REPEAT_MODE_OFF -> R.drawable.ic_repeat
+        Player.REPEAT_MODE_ONE -> R.drawable.ic_repeat_one
+        else -> R.drawable.ic_repeat
+    }
+
     Row (
         modifier = Modifier
-            .fillMaxWidth(0.8f)
+            .fillMaxWidth(0.81f)
             .height(70.dp)
             .background(MaterialTheme.colorScheme.primaryContainer.darken(1.2f), CircleShape)
             .padding(8.dp),
@@ -600,14 +613,14 @@ fun PlayerBottomBar(onOpenDialog: () -> Unit) {
         }
         ToggleButton(
             modifier = Modifier.fillMaxHeight().weight(1f),
-            checked = false,
-            onCheckedChange = {  },
+            checked = playerViewModel.repeatMode != Player.REPEAT_MODE_OFF,
+            onCheckedChange = { playerViewModel.toggleRepeat() },
             shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
-            colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                checkedContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer)
         ) {
-            Icon(painterResource(R.drawable.ic_repeat), contentDescription = null, modifier = Modifier.size(21.dp))
+            Icon(painterResource(repeatIcon), contentDescription = null, modifier = Modifier.size(21.dp))
         }
         ToggleButton(
             modifier = Modifier.fillMaxHeight().weight(1f),

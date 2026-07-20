@@ -23,6 +23,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -81,10 +82,11 @@ class PlayerViewModel @Inject constructor(
     var playing by mutableStateOf(false)
         private set
 
-
     var progress by mutableLongStateOf(0L)
 
     private var player : MediaController? = null
+
+    var repeatMode by mutableIntStateOf(Player.REPEAT_MODE_OFF)
 
     private var progressJob: Job? = null
 
@@ -151,6 +153,11 @@ class PlayerViewModel @Inject constructor(
                     }
                 }
             }
+
+            override fun onRepeatModeChanged(mode: Int) {
+                repeatMode = mode
+            }
+
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
                 if (playWhenReady) {
                     startProgressUpdate()
@@ -371,6 +378,14 @@ class PlayerViewModel @Inject constructor(
         playerQueue.value.forEachIndexed { index, item ->
             trackLogRepository.updateLogQueueIndex(playbackStateHolder.queueId.value,
                 item.track.id, index)
+        }
+    }
+
+    fun toggleRepeat()  {
+        player?.repeatMode = when (player?.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
+            Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
+            else -> Player.REPEAT_MODE_OFF
         }
     }
 

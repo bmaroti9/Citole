@@ -94,7 +94,7 @@ fun ArtworkCollage(hash: Int, artworkUris: List<Uri?>) {
     if (artworkUris.isEmpty()) return
     val count = artworkUris.size
 
-    val seed = Random(hash + 9) //3
+    val seed = Random(hash)
 
     val shapeList = listOf(
         MaterialShapes.Circle.toShape(),
