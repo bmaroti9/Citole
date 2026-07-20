@@ -353,7 +353,7 @@ class PlayerViewModel @Inject constructor(
         if (currentIds == playbackStateHolder.queueSnapshotAtRegeneration.value) return
 
         viewModelScope.launch {
-            val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
+            val newTracks = recommendationRepository.extendQueue(currentIds, 12)
 
             player?.removeMediaItems(playerQueue.value.size, playerQueue.value.size + generatedQueue.value.size)
             with (audioService) {

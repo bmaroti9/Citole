@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.PriorityQueue
 import javax.inject.Inject
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 class RecommendationRepository @Inject constructor(
@@ -38,8 +39,8 @@ class RecommendationRepository @Inject constructor(
         0.1f + it * 4f
     }
 
-    val trajectoryRange = dataStoreRepository.shuffleQueueTrajectory.map {
-        Pair(((it - 0.5f) * 2f).coerceIn(0f, 1f), (it * 2f).coerceIn(0f, 1f))
+    val trajectoryLookBackLimit = dataStoreRepository.shuffleQueueTrajectory.map {
+        ((1f - it) * 10).roundToInt().coerceAtLeast(1)
     }
 
     private var similarityGraph : Flow<Map<Long, Map<Long, Float>>> = combine(
@@ -59,7 +60,7 @@ class RecommendationRepository @Inject constructor(
 
     suspend fun extendQueue(originalIds: List<Long>, count: Int) : List<AudioService.TrackData> {
         val currentExplorationFactor = explorationFactor.first()
-        val currentTrajectoryRange = trajectoryRange.first()
+        val currentTrajectoryLookBackLimit = trajectoryLookBackLimit.first()
 
         val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
 
@@ -67,8 +68,10 @@ class RecommendationRepository @Inject constructor(
         val picked = mutableListOf<Long>()
 
         for (i in 1..200) {
+            val lowerBound = queue.size - 1 - currentTrajectoryLookBackLimit
+
             var currentNode = queue
-                .filterIndexed { index, lng ->  (queue.size - 1) * currentTrajectoryRange.first <= index && index <= (queue.size - 1) * currentTrajectoryRange.second}
+                .filterIndexed { index, _ -> index >= lowerBound }
                 .randomOrNull()
 
             for (j in 1..100) {

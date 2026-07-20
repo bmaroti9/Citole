@@ -64,7 +64,7 @@ class PlaybackService : MediaSessionService() {
         if (currentIds == playbackStateHolder.queueSnapshotAtRegeneration.value) return
 
         serviceScope.launch {
-            val newTracks = recommendationRepository.extendQueue(playbackStateHolder.playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
+            val newTracks = recommendationRepository.extendQueue(currentIds, 12)
 
             player?.removeMediaItems(playbackStateHolder.playerQueue.value.size,
                 playbackStateHolder.playerQueue.value.size + playbackStateHolder.generatedQueue.value.size)
