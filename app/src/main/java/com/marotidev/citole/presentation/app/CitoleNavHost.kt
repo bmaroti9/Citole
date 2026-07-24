@@ -139,7 +139,7 @@ data class ArtistViewDestination(
 
 @Serializable
 data class PlaylistViewDestination(
-    val playlistName: String,
+    val playlistId: Int,
 )
 
 

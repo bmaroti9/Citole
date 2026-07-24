@@ -34,11 +34,6 @@ class TrackLogRepository @Inject constructor(
     private val trackPlayLogDao: TrackPlayLogDao,
 ) {
 
-    data class TrackWithPlaybackState(
-        val track: AudioService.TrackData,
-        val playbackDurationMs: Long
-    )
-
     data class QueueWithPlaybackState(
         val tracks: List<AudioService.TrackData>,
         val queueIndex: Int,

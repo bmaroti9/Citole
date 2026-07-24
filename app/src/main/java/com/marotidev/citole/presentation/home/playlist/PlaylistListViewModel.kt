@@ -1,9 +1,29 @@
+/*
+Copyright (C) <2026>  <Balint Maroti>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+*/
+
+
 package com.marotidev.citole.presentation.home.playlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
+import com.marotidev.citole.data.repository.PlaylistRepository
 import com.marotidev.citole.data.service.AudioService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,15 +40,20 @@ data class PlaylistItem(
 @HiltViewModel
 class PlaylistListViewModel @Inject constructor(
     audioRepository : AudioRepository,
-    dataStoreRepository: DataStoreRepository,
+    playlistRepository: PlaylistRepository
 ) : ViewModel() {
 
     val allPlaylists = combine(
-        dataStoreRepository.favoriteTrackIds,
+        playlistRepository.allPlaylists,
         audioRepository.allTracks
-    ) { favoriteIds, allTracks ->
-        val favoriteTracks = allTracks.filter { it.id in favoriteIds }
-        listOf(PlaylistItem("Favorites", favoriteTracks))
+    ) { allPlaylists, allTracks ->
+        allPlaylists.map { playlistGroup ->
+            val playlistTracks = playlistRepository.getTracksFromPlaylist(playlistGroup.id)
+            PlaylistItem(
+                name = playlistGroup.name,
+                tracks = playlistTracks.mapNotNull { track -> allTracks.find { it.id == track.trackId } }
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

@@ -46,8 +46,6 @@ class DataStoreRepository @Inject constructor(
         val CHIP_SORT_REVERSED = booleanPreferencesKey("chip_sort_reversed")
         val SHUFFLE_DISCOVERY_RADIUS = floatPreferencesKey("shuffle_discovery_radius")
         val SHUFFLE_QUEUE_TRAJECTORY = floatPreferencesKey("shuffle_queue_trajectory")
-
-        val FAVORITE_TRACK_IDS = stringSetPreferencesKey("favorite_track_ids")
     }
 
     suspend fun saveChipShowSongs(to: Boolean) {
@@ -98,18 +96,6 @@ class DataStoreRepository @Inject constructor(
         }
     }
 
-    suspend fun toggleFavorite(id: Long) {
-        val trackId = id.toString()
-        application.dataStore.edit { preferences ->
-            val current = preferences[FAVORITE_TRACK_IDS] ?: emptySet()
-            preferences[FAVORITE_TRACK_IDS] = if (current.contains(trackId)) {
-                current - trackId
-            } else {
-                current + trackId
-            }
-        }
-    }
-
     val chipShowSongs: Flow<Boolean> = application.dataStore.data
         .map { preferences -> preferences[CHIP_SHOW_SONGS] ?: true}
 
@@ -135,9 +121,5 @@ class DataStoreRepository @Inject constructor(
 
     val shuffleQueueTrajectory: Flow<Float> = application.dataStore.data.map { preferences ->
         preferences[SHUFFLE_QUEUE_TRAJECTORY] ?: 0.7f
-    }
-
-    val favoriteTrackIds: Flow<List<Long>> = application.dataStore.data.map { preferences ->
-        preferences[FAVORITE_TRACK_IDS]?.mapNotNull { it.toLongOrNull() } ?: emptyList()
     }
 }

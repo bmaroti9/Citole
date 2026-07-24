@@ -37,6 +37,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import androidx.room.RoomDatabase
 import com.marotidev.citole.data.local.MIGRATION_1_2
+import com.marotidev.citole.data.local.PlaylistDao
+import com.marotidev.citole.data.repository.PlaylistRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -102,6 +104,18 @@ class AppModule {
     @Singleton
     fun provideTrackLogRepository(trackPlayLogDao: TrackPlayLogDao) : TrackLogRepository {
         return TrackLogRepository(trackPlayLogDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providePlaylistDap(database: AppDatabase): PlaylistDao {
+        return database.playlistDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePlaylistRepository(playlistDao: PlaylistDao) : PlaylistRepository {
+        return PlaylistRepository(playlistDao)
     }
 
     @Provides

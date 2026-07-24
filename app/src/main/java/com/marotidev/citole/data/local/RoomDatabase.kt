@@ -112,7 +112,7 @@ interface PlaylistDao {
     suspend fun getAllPlaylistGroups(): List<PlaylistGroup>
 
     @Query("SELECT * FROM playlisttrack WHERE playlist_id = :playlistId")
-    suspend fun getTracksFromPlaylist(playlistId: Long): List<PlaylistTrack>
+    suspend fun getTracksFromPlaylist(playlistId: Int): List<PlaylistTrack>
 
     @Insert
     suspend fun insertAll(playlistTracks: List<PlaylistTrack>)
@@ -130,16 +130,16 @@ abstract class AppDatabase : RoomDatabase() {
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `${'$'}{PlaylistGroup}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)
-        """.trimIndent())
+            CREATE TABLE IF NOT EXISTS `PlaylistGroup` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)
+        """)
 
         db.execSQL("""
-            CREATE TABLE IF NOT EXISTS `${'$'}{TABLE_NAME}` (`track_id` INTEGER NOT NULL, `playlist_id` INTEGER NOT NULL, `playlist_index` INTEGER NOT NULL, `date_added` INTEGER NOT NULL, PRIMARY KEY(`playlist_id`, `track_id`), FOREIGN KEY(`playlist_id`) REFERENCES `PlaylistGroup`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )
-        """.trimIndent())
+            CREATE TABLE IF NOT EXISTS `PlaylistTrack` (`track_id` INTEGER NOT NULL, `playlist_id` INTEGER NOT NULL, `playlist_index` INTEGER NOT NULL, `date_added` INTEGER NOT NULL, PRIMARY KEY(`playlist_id`, `track_id`), FOREIGN KEY(`playlist_id`) REFERENCES `PlaylistGroup`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )
+        """)
 
         db.execSQL("""
             INSERT INTO `PlaylistGroup` (`name`) VALUES ('Favorites')
-        """.trimIndent())
+        """)
     }
 }
 

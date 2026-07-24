@@ -83,26 +83,6 @@ class ForYouViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    val lastPodcast = combine(
-        trackLogRepository.lastPodcast,
-        audioRepository.allTracks
-    ) { lastPodcast, tracks ->
-        val track = tracks.findLast { it.id == lastPodcast?.trackId }
-        println(lastPodcast?.trackId)
-        if (track == null || lastPodcast == null) {
-            null
-        } else {
-            TrackLogRepository.TrackWithPlaybackState(
-                track,
-                lastPodcast.playbackDurationMs
-            )
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
     val lastAudiobook = combine(
         trackLogRepository.lastAudiobook,
         trackLogRepository.lastAudiobookQueue,

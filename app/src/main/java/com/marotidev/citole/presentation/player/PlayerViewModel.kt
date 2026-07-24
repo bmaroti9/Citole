@@ -40,6 +40,7 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
 import com.marotidev.citole.data.repository.DataStoreRepository
+import com.marotidev.citole.data.repository.PlaylistRepository
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
@@ -75,7 +76,7 @@ class PlayerViewModel @Inject constructor(
     private val trackLogRepository: TrackLogRepository,
     private val playbackStateHolder: PlaybackStateHolder,
     private val recommendationRepository: RecommendationRepository,
-    private val dataStoreRepository: DataStoreRepository
+    private val playlistRepository: PlaylistRepository
 ) : ViewModel() {
 
     val currentlyPlaying = playbackStateHolder.currentlyPlaying
@@ -93,11 +94,9 @@ class PlayerViewModel @Inject constructor(
 
     var repeatMode by mutableIntStateOf(Player.REPEAT_MODE_OFF)
 
-    var isFavorite = combine(
-        dataStoreRepository.favoriteTrackIds,
-        currentlyPlaying
-    ) { favoriteTrackIds, playingNow ->
-        playingNow?.track?.id in favoriteTrackIds
+    var isFavorite = currentlyPlaying.map { playing ->
+        val ids = playlistRepository.getTracksFromPlaylist(1).map { it.trackId }
+        playing?.track?.id in ids
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -415,7 +414,7 @@ class PlayerViewModel @Inject constructor(
     fun toggleFavorite()  {
         currentlyPlaying.value?.track?.let {
             viewModelScope.launch {
-                dataStoreRepository.toggleFavorite(it.id)
+
             }
         }
     }
