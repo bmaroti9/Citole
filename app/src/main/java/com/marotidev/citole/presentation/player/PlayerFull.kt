@@ -87,6 +87,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -586,11 +587,15 @@ fun PlayerBottomBar(
     onOpenDialog: () -> Unit
 ) {
 
+    val haptic = LocalHapticFeedback.current
+
     val repeatIcon = when (playerViewModel.repeatMode) {
         Player.REPEAT_MODE_OFF -> R.drawable.ic_repeat
         Player.REPEAT_MODE_ONE -> R.drawable.ic_repeat_one
         else -> R.drawable.ic_repeat
     }
+
+    val isFavorite = playerViewModel.isFavorite.collectAsStateWithLifecycle()
 
     Row (
         modifier = Modifier
@@ -602,11 +607,14 @@ fun PlayerBottomBar(
     ) {
         ToggleButton(
             modifier = Modifier.fillMaxHeight().weight(1f),
-            checked = false,
-            onCheckedChange = {  },
+            checked = isFavorite.value,
+            onCheckedChange = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                playerViewModel.toggleFavorite()
+            },
             shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
-            colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                checkedContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer)
         ) {
             Icon(painterResource(R.drawable.ic_favorite), contentDescription = null, modifier = Modifier.size(21.dp))
@@ -614,7 +622,10 @@ fun PlayerBottomBar(
         ToggleButton(
             modifier = Modifier.fillMaxHeight().weight(1f),
             checked = playerViewModel.repeatMode != Player.REPEAT_MODE_OFF,
-            onCheckedChange = { playerViewModel.toggleRepeat() },
+            onCheckedChange = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                playerViewModel.toggleRepeat()
+            },
             shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
             colors = ToggleButtonDefaults.toggleButtonColors(checkedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 checkedContentColor = MaterialTheme.colorScheme.onTertiaryContainer,

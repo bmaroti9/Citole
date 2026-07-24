@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.local
 
+import androidx.room.AutoMigration
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -26,8 +27,9 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
-import androidx.room.Update
-import com.marotidev.citole.data.service.AudioService
+import androidx.room.ForeignKey
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Entity
 data class TrackPlayLog(
@@ -79,8 +81,65 @@ interface TrackPlayLogDao {
     suspend fun insertAll(trackPlayLogs: List<TrackPlayLog>)
 }
 
-@Database(entities = [TrackPlayLog::class], version = 1)
+@Entity
+data class PlaylistGroup(
+    @PrimaryKey(autoGenerate = true) val id : Int = 0,
+    @ColumnInfo(name = "name") val name : String,
+)
+
+@Entity(
+    primaryKeys = ["playlist_id", "track_id"], //these two combined are the key
+    foreignKeys = [ForeignKey( //deletes this when the playlist is deleted
+        entity = PlaylistGroup::class,
+        parentColumns = ["id"],
+        childColumns = ["playlist_id"],
+        onDelete = ForeignKey.CASCADE
+    )]
+)
+data class PlaylistTrack(
+    @ColumnInfo(name = "track_id") val trackId: Long,
+    @ColumnInfo(name = "playlist_id") val playlistId: Int,
+    @ColumnInfo(name = "playlist_index") val playlistIndex: Int,
+    @ColumnInfo(name = "date_added") val dateAdded: Long = System.currentTimeMillis()
+)
+
+@Dao
+interface PlaylistDao {
+    @Query("SELECT * FROM playlisttrack")
+    suspend fun getAllPlaylistTracks(): List<PlaylistTrack>
+
+    @Query("SELECT * FROM playlistgroup")
+    suspend fun getAllPlaylistGroups(): List<PlaylistGroup>
+
+    @Query("SELECT * FROM playlisttrack WHERE playlist_id = :playlistId")
+    suspend fun getTracksFromPlaylist(playlistId: Long): List<PlaylistTrack>
+
+    @Insert
+    suspend fun insertAll(playlistTracks: List<PlaylistTrack>)
+}
+
+@Database(
+    entities = [TrackPlayLog::class, PlaylistGroup::class, PlaylistTrack::class],
+    version = 2,
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackPlayLogDao(): TrackPlayLogDao
+    abstract fun playlistDao(): PlaylistDao
+}
+
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `${'$'}{PlaylistGroup}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `${'$'}{TABLE_NAME}` (`track_id` INTEGER NOT NULL, `playlist_id` INTEGER NOT NULL, `playlist_index` INTEGER NOT NULL, `date_added` INTEGER NOT NULL, PRIMARY KEY(`playlist_id`, `track_id`), FOREIGN KEY(`playlist_id`) REFERENCES `PlaylistGroup`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )
+        """.trimIndent())
+
+        db.execSQL("""
+            INSERT INTO `PlaylistGroup` (`name`) VALUES ('Favorites')
+        """.trimIndent())
+    }
 }
 

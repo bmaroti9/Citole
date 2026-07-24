@@ -91,7 +91,7 @@ fun tintedPainter(id: Int, color: Color): Painter {
 
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    Text(text, style = MaterialTheme.typography.labelLarge,
+    Text(text, style = MaterialTheme.typography.labelMedium,
         modifier = modifier.padding(top = 32.dp, bottom = 12.dp, start = 8.dp),
         color = MaterialTheme.colorScheme.onSurface)
 }

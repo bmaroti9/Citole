@@ -39,6 +39,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
+import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
 import com.marotidev.citole.data.service.PlaybackService
@@ -52,10 +53,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -70,7 +74,8 @@ class PlayerViewModel @Inject constructor(
     private val audioService: AudioService,
     private val trackLogRepository: TrackLogRepository,
     private val playbackStateHolder: PlaybackStateHolder,
-    private val recommendationRepository: RecommendationRepository
+    private val recommendationRepository: RecommendationRepository,
+    private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
 
     val currentlyPlaying = playbackStateHolder.currentlyPlaying
@@ -88,9 +93,21 @@ class PlayerViewModel @Inject constructor(
 
     var repeatMode by mutableIntStateOf(Player.REPEAT_MODE_OFF)
 
+    var isFavorite = combine(
+        dataStoreRepository.favoriteTrackIds,
+        currentlyPlaying
+    ) { favoriteTrackIds, playingNow ->
+        playingNow?.track?.id in favoriteTrackIds
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
     private var progressJob: Job? = null
 
     private var systemPrimaryColor = Color.Cyan
+
     private val _themeColor = MutableStateFlow(Color.Gray)
     val themeColor: StateFlow<Color> = _themeColor.asStateFlow()
 
@@ -327,29 +344,35 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun skipToGeneratedInQueue(item: QueueItem) {
-        player?.removeMediaItems(playerQueue.value.size, playerQueue.value.size + generatedQueue.value.size)
-        with (audioService) {
-            player?.addMediaItem(item.track.toMediaItem())
-        }
-        playbackStateHolder.playerQueue.update { currentQueue ->
-            currentQueue + item.copy(isGenerated = false)
-        }
-        playbackStateHolder.generatedQueue.update { currentQueue ->
-            currentQueue.filterNot { it.id == item.id }
-        }
         viewModelScope.launch {
+            //move it to the player queue
+
+            playbackStateHolder.generatedQueue.update { currentQueue ->
+                currentQueue.filterNot { it.id == item.id }
+            }
+            playbackStateHolder.playerQueue.update { currentQueue ->
+                currentQueue + item.copy(isGenerated = false)
+            }
+
+            //add the selected track and skip to it
+            with (audioService) {
+                player?.addMediaItem(item.track.toMediaItem())
+            }
+            player?.seekTo(playerQueue.value.size - 1, 0)
+
+            delay(1000.milliseconds)
+
+            //remake the generated queue
             val newTracks = recommendationRepository.extendQueue(playerQueue.value.map {queueItem -> queueItem.track.id }, 12)
 
             playbackStateHolder.generatedQueue.update {
                 newTracks.map {track -> QueueItem(track, isGenerated = true) }
             }
 
+            player?.removeMediaItems(playerQueue.value.size, playerQueue.value.size + generatedQueue.value.size)
             with (audioService) {
                 player?.addMediaItems(newTracks.map {track -> track.toMediaItem()})
             }
-            delay(500.milliseconds)
-
-            player?.seekTo(playerQueue.value.size - 1, 0)
         }
     }
 
@@ -386,6 +409,14 @@ class PlayerViewModel @Inject constructor(
             Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
             Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
             else -> Player.REPEAT_MODE_OFF
+        }
+    }
+
+    fun toggleFavorite()  {
+        currentlyPlaying.value?.track?.let {
+            viewModelScope.launch {
+                dataStoreRepository.toggleFavorite(it.id)
+            }
         }
     }
 

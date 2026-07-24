@@ -72,6 +72,8 @@ import com.marotidev.citole.presentation.home.album.AlbumListPage
 import com.marotidev.citole.presentation.home.artist.ArtistDetailScreen
 import com.marotidev.citole.presentation.home.artist.ArtistListPage
 import com.marotidev.citole.presentation.home.forYou.ForYouListPage
+import com.marotidev.citole.presentation.home.playlist.PlaylistDetailScreen
+import com.marotidev.citole.presentation.home.playlist.PlaylistListPage
 import com.marotidev.citole.presentation.home.track.TrackListPage
 import com.marotidev.citole.presentation.onboard.OnboardScreen
 import com.marotidev.citole.presentation.player.CustomFloatingToolbar
@@ -89,6 +91,7 @@ enum class Page {
     Tracks,
     Albums,
     Artists,
+    Playlists
 }
 
 @Composable
@@ -117,7 +120,7 @@ fun CustomNavigationDrawerItem(
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 6.dp, end = 4.dp))
+            modifier = Modifier.padding(start = 8.dp, end = 4.dp))
     }
 }
 
@@ -133,6 +136,12 @@ data class AlbumViewDestination(
 data class ArtistViewDestination(
     val artistName: String,
 )
+
+@Serializable
+data class PlaylistViewDestination(
+    val playlistName: String,
+)
+
 
 @Serializable
 object OnboardViewDestination
@@ -218,6 +227,18 @@ fun CitoleNavHost(
                     iconId = R.drawable.ic_person,
                     text = "Artists"
                 )
+                CustomNavigationDrawerItem(
+                    selected = selectedPage == Page.Playlists,
+                    onSelected =  {
+                        selectedPage = Page.Playlists
+                        scope.launch {
+                            delay(200.milliseconds)
+                            drawerState.close()
+                        }
+                    },
+                    iconId = R.drawable.ic_playlist_play,
+                    text = "Playlists"
+                )
 
                 CustomNavigationDrawerItem(
                     selected = false,
@@ -278,6 +299,7 @@ fun CitoleNavHost(
                                 Page.Tracks -> TrackListPage(playerViewModel, browseViewModel, paddingValues, navController)
                                 Page.Albums -> AlbumListPage(playerViewModel, paddingValues, navController)
                                 Page.Artists -> ArtistListPage(playerViewModel, paddingValues, navController)
+                                Page.Playlists -> PlaylistListPage(playerViewModel, paddingValues, navController)
                             }
                         }
                     }
@@ -289,6 +311,10 @@ fun CitoleNavHost(
 
                 composable <ArtistViewDestination> {
                     ArtistDetailScreen(playerViewModel, navController)
+                }
+
+                composable <PlaylistViewDestination> {
+                    PlaylistDetailScreen(playerViewModel, navController)
                 }
 
                 composable <OnboardViewDestination> {

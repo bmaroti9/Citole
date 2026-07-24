@@ -358,24 +358,24 @@ fun QueueTrackItem(
 @Composable
 fun WavyDivider() {
     Row(
-        Modifier.padding(vertical = 24.dp, horizontal = 24.dp)
+        Modifier.padding(horizontal = 24.dp, vertical = 38.dp)
             .fillMaxWidth().height(30.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
+        WavyLine(MaterialTheme.colorScheme.onSurface, modifier = Modifier.fillMaxHeight().weight(1f))
         Icon(
             painter = painterResource(id = R.drawable.ic_wand_stars),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(start = 14.dp).size(20.dp)
+            tint = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.padding(start = 18.dp).size(18.dp)
         )
         Text(
             "Up Next",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(end = 14.dp, start = 6.dp)
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Black),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(end = 18.dp, start = 10.dp)
         )
-        WavyLine(MaterialTheme.colorScheme.secondary, modifier = Modifier.fillMaxHeight().weight(1f))
+        WavyLine(MaterialTheme.colorScheme.onSurface, modifier = Modifier.fillMaxHeight().weight(1f))
     }
 }
 
@@ -390,7 +390,7 @@ fun WavyLine(wavyColor: Color, modifier: Modifier = Modifier) {
         var x = 0f
         while (x <= size.width) {
             val relativeX = x / waveLength
-            val y = size.height / 2f + sin((relativeX * 2 * PI.toFloat())) * 7f
+            val y = size.height / 2f + sin((relativeX * 2 * PI.toFloat())) * 5f
 
             if (x == 0f) {
                 path.moveTo(x, y)
@@ -399,6 +399,6 @@ fun WavyLine(wavyColor: Color, modifier: Modifier = Modifier) {
             }
             x += 4f
         }
-        drawPath(path, wavyColor, style = Stroke(2.5.dp.toPx(), cap = StrokeCap.Round))
+        drawPath(path, wavyColor, style = Stroke(2.2.dp.toPx(), cap = StrokeCap.Round))
     }
 }

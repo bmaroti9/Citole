@@ -6,9 +6,8 @@ import com.marotidev.citole.data.service.AudioService
 class SimilarityGraphBuilder {
 
     val sharedArtistWeight = 13f
-    val sharedAlbumWeight = 17f
+    val sharedAlbumWeight = 20f
     val sharedQueueWeight = 3f
-    val sharedReleaseYearWeight = 0.03f
 
     //a map of the trackIds with the weight of the connection
     private val edges = mutableMapOf<Long, MutableMap<Long, Float>>()

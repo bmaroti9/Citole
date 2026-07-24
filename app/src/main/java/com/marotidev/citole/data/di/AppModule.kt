@@ -20,6 +20,7 @@ package com.marotidev.citole.data.di
 
 import android.app.Application
 import androidx.room.Room
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.local.AppDatabase
@@ -34,6 +35,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import androidx.room.RoomDatabase
+import com.marotidev.citole.data.local.MIGRATION_1_2
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -76,7 +79,17 @@ class AppModule {
             app,
             AppDatabase::class.java,
             "app-database"
-        ).build()
+        )
+        .addMigrations(MIGRATION_1_2)
+        .addCallback(object : RoomDatabase.Callback() {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+                db.execSQL(
+                    "INSERT INTO `PlaylistGroup` (`name`) VALUES ('Favorites')"
+                )
+            }
+        })
+        .build()
     }
 
     @Provides
