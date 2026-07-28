@@ -31,8 +31,12 @@ class PlaylistRepository @Inject constructor(
     var allPlaylistGroups: Flow<List<PlaylistGroup>> = playlistDao.getAllPlaylistGroups()
     var allPlaylistTracks: Flow<List<PlaylistTrack>> = playlistDao.getAllPlaylistTracks()
 
-    fun getTracksFromPlaylist(id: Int) : Flow<List<PlaylistTrack>>{
-        return playlistDao.getTracksFromPlaylist(id)
+    fun getPlaylistTracksFromId(id: Int) : Flow<List<PlaylistTrack>>{
+        return playlistDao.getPlaylistTracksFromId(id)
+    }
+
+    fun getPlaylistGroupFromId(id: Int) : Flow<PlaylistGroup>{
+        return playlistDao.getPlaylistGroupFromId(id)
     }
 
     suspend fun removeFromPlaylist(trackId: Long, queueId: Int) {

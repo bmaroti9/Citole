@@ -29,7 +29,6 @@ import com.marotidev.citole.presentation.app.PlaylistViewDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -41,14 +40,20 @@ class PlaylistDetailViewModel @Inject constructor(
 ) : ViewModel() {
     private val playlistId = savedStateHandle.toRoute<PlaylistViewDestination>().playlistId
 
-    val playlistItems = combine(
+    val playlistGroup = playlistRepository.getPlaylistGroupFromId(playlistId).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    val tracks = combine(
         audioRepository.allTracks,
-        playlistRepository.getTracksFromPlaylist(playlistId)
+        playlistRepository.getPlaylistTracksFromId(playlistId)
     ) { allTracks, playlistTracks ->
         playlistTracks.mapNotNull { track -> allTracks.find { it.id == track.trackId }}
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
+        initialValue = emptyList()
     )
 }

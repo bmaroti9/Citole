@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.local
 
-import androidx.room.AutoMigration
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -113,7 +112,10 @@ interface PlaylistDao {
     fun getAllPlaylistGroups(): Flow<List<PlaylistGroup>>
 
     @Query("SELECT * FROM playlisttrack WHERE playlist_id = :playlistId")
-    fun getTracksFromPlaylist(playlistId: Int): Flow<List<PlaylistTrack>>
+    fun getPlaylistTracksFromId(playlistId: Int): Flow<List<PlaylistTrack>>
+
+    @Query("SELECT * FROM playlistgroup WHERE id = :playlistId")
+    fun getPlaylistGroupFromId(playlistId: Int): Flow<PlaylistGroup>
 
     @Query("DELETE FROM playlisttrack WHERE track_id = :trackId AND playlist_id = :playlistId")
     suspend fun deletePlaylistTrack(trackId: Long, playlistId: Int)

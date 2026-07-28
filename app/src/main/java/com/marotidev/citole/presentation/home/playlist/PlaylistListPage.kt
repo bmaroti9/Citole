@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.marotidev.citole.presentation.app.ArtistViewDestination
+import com.marotidev.citole.presentation.app.PlaylistViewDestination
 import com.marotidev.citole.presentation.player.PlayerViewModel
 import com.marotidev.citole.presentation.utils.ArtworkCollage
 import com.marotidev.citole.presentation.utils.calculateBorderRadiusForGridItem
@@ -77,6 +79,7 @@ fun PlaylistListPage(
                 playlist,
                 playerViewModel,
                 onClicked = {
+                    navController.navigate(PlaylistViewDestination(playlist.id))
                 },
                 modifier = Modifier.animateItem(
                     fadeInSpec = spring(stiffness = Spring.StiffnessMedium),
@@ -135,7 +138,7 @@ fun PlaylistListItem(
                 modifier = Modifier.padding(bottom = 14.dp, start = 12.dp, end = 12.dp).align(Alignment.CenterHorizontally)
             ) {
                 ArtworkCollage(
-                    hash = playlist.name.hashCode(),
+                    hash = playlist.id,
                     artworkUris = playlist.tracks.map { it.artworkUri}.distinct()
                 )
             }

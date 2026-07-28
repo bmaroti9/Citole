@@ -72,10 +72,10 @@ import coil.compose.AsyncImage
 import com.marotidev.citole.R
 import com.marotidev.citole.presentation.app.AlbumViewDestination
 import com.marotidev.citole.presentation.app.ArtistViewDestination
-import com.marotidev.citole.presentation.home.album.AlbumDetailViewModel
 import com.marotidev.citole.presentation.home.album.AlbumItem
 import com.marotidev.citole.presentation.home.track.SwipeableTrackItem
 import com.marotidev.citole.presentation.player.PlayerViewModel
+import com.marotidev.citole.presentation.utils.ArtworkCollage
 import com.marotidev.citole.presentation.utils.SectionTitle
 import com.marotidev.citole.presentation.utils.tintedPainter
 
@@ -84,18 +84,19 @@ import com.marotidev.citole.presentation.utils.tintedPainter
 fun PlaylistDetailScreen(
     playerViewModel: PlayerViewModel,
     navController: NavController,
-    albumDetailViewModel: AlbumDetailViewModel = hiltViewModel()
+    playlistDetailViewModel: PlaylistDetailViewModel = hiltViewModel()
 ) {
-    val albumState by albumDetailViewModel.album.collectAsStateWithLifecycle()
-    val similarAlbums by albumDetailViewModel.similarAlbums.collectAsStateWithLifecycle()
+    val playlistGroupState by playlistDetailViewModel.playlistGroup.collectAsStateWithLifecycle()
+    val tracks by playlistDetailViewModel.tracks.collectAsStateWithLifecycle()
 
-    val album = albumState ?: return Box(modifier = Modifier.fillMaxSize()) {
-        Text(
-            "Album not found",
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.align(Alignment.Center)
-        )
-    }
+    val playlistGroup = playlistGroupState ?:
+        return Box(modifier = Modifier.fillMaxSize()) {
+            Text(
+                "Artist not found",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
 
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
     val statusBarTopDp = statusBarPadding.calculateTopPadding()
@@ -136,44 +137,19 @@ fun PlaylistDetailScreen(
                         .graphicsLayer(alpha = (1f - collapsedFraction * 1.9f).coerceIn(0f, 1f)),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AsyncImage(
-                        model = album.artworkUri,
-                        contentDescription = "Album Art",
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(top = collapsedHeight + 20.dp, bottom = 25.dp)
+                            .padding(top = collapsedHeight + 10.dp)
                             .aspectRatio(1f)
-                            .clip(RoundedCornerShape(26.dp * (1f - collapsedFraction)))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        error = tintedPainter(R.drawable.ic_citole_black, MaterialTheme.colorScheme.outline),
-                        contentScale = ContentScale.Crop
-                    )
-                    Text(album.albumName, style = MaterialTheme.typography.headlineSmall,)
-                    FlowRow(
-                        modifier = Modifier.padding(top = 3.dp, bottom = 10.dp),
                     ) {
-                        album.ownerArtists.forEachIndexed { index, artist ->
-                            Text(
-                                if (index == album.ownerArtists.size - 1) {artist} else {
-                                    "$artist, "
-                                },
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.secondary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .clickable(
-                                        onClick = {
-                                            navController.navigate(ArtistViewDestination(artistName = artist)) {
-                                                launchSingleTop = true
-                                            }
-                                        },
-                                        indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }
-                                    ),
-                            )
-                        }
+                        ArtworkCollage(
+                            hash = playlistGroup.id,
+                            artworkUris = tracks.map { it.artworkUri }.distinct()
+                        )
                     }
+                    Text(playlistGroup.name, style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(top = 15.dp, bottom = 10.dp))
                 }
 
                 Box(
@@ -184,7 +160,7 @@ fun PlaylistDetailScreen(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
-                        text = album.albumName,
+                        text = playlistGroup.name,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.graphicsLayer {
@@ -225,7 +201,7 @@ fun PlaylistDetailScreen(
             }
 
             itemsIndexed(
-                items = album.tracks,
+                items = tracks,
                 key = { _, track -> track.id }
             ) { index, track ->
                 SwipeableTrackItem(
@@ -236,37 +212,10 @@ fun PlaylistDetailScreen(
                     ),
                     playerViewModel = playerViewModel,
                     index = index,
-                    count = album.tracks.size,
+                    count = tracks.size,
                     navController = navController
                 ) {
-                    playerViewModel.playQueue(album.tracks, index)
-                }
-            }
-
-            item {
-                if (similarAlbums.isNotEmpty()) {
-                    SectionTitle("Similar Albums")
-                }
-            }
-
-            item {
-                LazyRow {
-                    itemsIndexed(
-                        similarAlbums,
-                        key = { _, album -> album.albumName }
-                    ) { index, album ->
-                        AlbumItem(
-                            album = album,
-                            playerViewModel = playerViewModel,
-                            onClicked = {
-                                navController.navigate(AlbumViewDestination(album.albumId))
-                            },
-                            index = index,
-                            count = similarAlbums.size,
-                            columns = similarAlbums.size,
-                            modifier = Modifier.size(155.dp, 220.dp)
-                        )
-                    }
+                    playerViewModel.playQueue(tracks, index)
                 }
             }
 

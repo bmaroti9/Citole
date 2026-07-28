@@ -40,7 +40,6 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
 import com.marotidev.citole.data.local.PlaylistTrack
-import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.repository.PlaylistRepository
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.service.AudioService
@@ -97,7 +96,7 @@ class PlayerViewModel @Inject constructor(
     var repeatMode by mutableIntStateOf(Player.REPEAT_MODE_OFF)
 
     var isFavorite = combine(
-        playlistRepository.getTracksFromPlaylist(1),
+        playlistRepository.getPlaylistTracksFromId(1),
         currentlyPlaying
     ) { favoriteTracks, playing ->
         val ids = favoriteTracks.map { it.trackId }
@@ -419,7 +418,7 @@ class PlayerViewModel @Inject constructor(
     fun toggleFavorite()  {
         currentlyPlaying.value?.track?.let { playing ->
             viewModelScope.launch {
-                val ids = playlistRepository.getTracksFromPlaylist(1).first().map { it.trackId }
+                val ids = playlistRepository.getPlaylistTracksFromId(1).first().map { it.trackId }
                 if (playing.id in ids) {
                     playlistRepository.removeFromPlaylist(playing.id, 1)
                 } else {

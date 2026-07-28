@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 data class PlaylistItem(
+    val id: Int,
     val name : String,
     val tracks: List<AudioService.TrackData>,
 )
@@ -53,6 +54,7 @@ class PlaylistListViewModel @Inject constructor(
         allPlaylistGroups.map { playlistGroup ->
             val playlistTracks = groupedPlaylistTracks[playlistGroup.id]?.sortedBy { it.playlistIndex } ?: emptyList()
             PlaylistItem(
+                id = playlistGroup.id,
                 name = playlistGroup.name,
                 tracks = playlistTracks.mapNotNull { track -> allTracks.find { it.id == track.trackId } }
             )
