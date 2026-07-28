@@ -2,6 +2,7 @@ package com.marotidev.citole.data.domain
 
 import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.service.AudioService
+import kotlin.math.sqrt
 
 class SimilarityGraphBuilder {
 
@@ -51,6 +52,21 @@ class SimilarityGraphBuilder {
                     }
                 }
             }
+        }
+    }
+
+    fun flattenByArtistSize(artists: List<AudioService.ArtistData>) {
+        val normalizationMap = mutableMapOf<Long, Float>()
+        artists.forEach { artist ->
+            val normalizeFactor = 1 / sqrt(artist.tracks.size * 1f)
+            artist.tracks.forEach {
+                normalizationMap[it.id] = normalizeFactor
+            }
+        }
+
+        edges.forEach { (trackId, neighbors) ->
+            val factor = normalizationMap[trackId] ?: 1f
+            neighbors.replaceAll { _, weight -> weight *  factor}
         }
     }
 

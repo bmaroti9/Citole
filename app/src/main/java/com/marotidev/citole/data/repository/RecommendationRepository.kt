@@ -54,6 +54,7 @@ class RecommendationRepository @Inject constructor(
                 connectBySharedArtist(artists)
                 connectBySharedAlbum(albums)
                 connectBySharedQueueLog(allLogs, tracks)
+                flattenByArtistSize(artists)
             }
             .build()
     }
