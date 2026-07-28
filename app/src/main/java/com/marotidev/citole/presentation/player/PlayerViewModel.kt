@@ -39,6 +39,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.common.util.concurrent.MoreExecutors
+import com.marotidev.citole.data.local.PlaylistTrack
 import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.repository.PlaylistRepository
 import com.marotidev.citole.data.repository.RecommendationRepository
@@ -412,9 +413,16 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun toggleFavorite()  {
-        currentlyPlaying.value?.track?.let {
+        currentlyPlaying.value?.track?.let { playing ->
             viewModelScope.launch {
-
+                val ids = playlistRepository.getTracksFromPlaylist(1).map { it.trackId }
+                if (playing.id in ids) {
+                    playlistRepository.removeFromPlaylist(playing.id, 1)
+                } else {
+                    playlistRepository.addToPlaylist(
+                        PlaylistTrack(playing.id, 1, ids.size)
+                    )
+                }
             }
         }
     }

@@ -45,4 +45,12 @@ class PlaylistRepository @Inject constructor(
     suspend fun getTracksFromPlaylist(id: Int) : List<PlaylistTrack>{
         return playlistDao.getTracksFromPlaylist(id)
     }
+
+    suspend fun removeFromPlaylist(trackId: Long, queueId: Int) {
+        playlistDao.deletePlaylistTrack(trackId, queueId)
+    }
+
+    suspend fun addToPlaylist(playlistTrack: PlaylistTrack) {
+        playlistDao.insertAll(listOf(playlistTrack))
+    }
 }
