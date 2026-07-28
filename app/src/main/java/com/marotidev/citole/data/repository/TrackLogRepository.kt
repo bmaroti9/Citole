@@ -25,7 +25,10 @@ import com.marotidev.citole.data.service.AudioService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.days
@@ -41,23 +44,18 @@ class TrackLogRepository @Inject constructor(
         val queueId: Long
     )
 
-    var allLogs: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+    val allLogs: Flow<List<TrackPlayLog>> = trackPlayLogDao.getAllPlayedLogs()
 
-    var mostPlayedRecentTracks : MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+    val mostPlayedRecentTracks : Flow<List<TrackPlayLog>> = trackPlayLogDao.getMostPlayedFromDate(
+        System.currentTimeMillis().minus(7.days.inWholeMilliseconds), AudioService.AudioType.Song.ordinal)
 
-    var lastPodcast: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
+    val lastAudiobook: Flow<TrackPlayLog?> = trackPlayLogDao.getLastByType(AudioService.AudioType.Audiobook.ordinal)
 
-    var lastAudiobook: MutableStateFlow<TrackPlayLog?> = MutableStateFlow(null)
-    var lastAudiobookQueue: MutableStateFlow<List<TrackPlayLog>> = MutableStateFlow(emptyList())
+    val lastAudiobookQueue : Flow<List<TrackPlayLog>?> = lastAudiobook.map {
+        it?.let { trackPlayLogDao.getAllByQueueId(it.queueId) }
+    }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    suspend fun fetchLastAudiobookQueue() {
-        lastAudiobook.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Audiobook.ordinal)
-        lastAudiobook.value?.let {
-            lastAudiobookQueue.value = trackPlayLogDao.getAllByQueueId(it.queueId)
-        }
-    }
 
     fun addInitialEmptyQueueLog(queueId: Long, tracks: List<AudioService.TrackData>) {
         serviceScope.launch {
@@ -112,15 +110,5 @@ class TrackLogRepository @Inject constructor(
         trackPlayLogDao.detachLogFromQueue(index, queueId, System.currentTimeMillis())
         trackPlayLogDao.deleteLogFromQueue(index, queueId)
         trackPlayLogDao.decreaseIndexAfter(index, queueId)
-    }
-
-    fun fetchLogs() {
-        serviceScope.launch {
-            allLogs.value = trackPlayLogDao.getAllPlayedLogs().reversed()
-            lastPodcast.value = trackPlayLogDao.getLastByType(AudioService.AudioType.Podcast.ordinal)
-            mostPlayedRecentTracks.value = trackPlayLogDao.getMostPlayedFromDate(
-                System.currentTimeMillis().minus(7.days.inWholeMilliseconds), AudioService.AudioType.Song.ordinal)
-            fetchLastAudiobookQueue()
-        }
     }
 }

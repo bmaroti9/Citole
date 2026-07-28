@@ -28,7 +28,9 @@ import com.marotidev.citole.data.repository.TrackLogRepository
 import com.marotidev.citole.data.state.SearchQueryStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -83,20 +85,20 @@ class ForYouViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    val lastAudiobook = combine(
+    val lastAudiobook : StateFlow<TrackLogRepository.QueueWithPlaybackState?> = combine(
         trackLogRepository.lastAudiobook,
         trackLogRepository.lastAudiobookQueue,
         audioRepository.allTracks
-    ) { lastAudioBook, lastAudiobookQueue, allTracks ->
-        lastAudioBook?.let {
+    ) { lastAudiobook, lastAudiobookQueue, allTracks ->
+        if (lastAudiobook != null && lastAudiobookQueue != null) {
             val tracks = lastAudiobookQueue.mapNotNull { log -> allTracks.find { track -> track.id == log.trackId } }
             TrackLogRepository.QueueWithPlaybackState(
                 tracks = tracks,
-                queueIndex = it.queueIndex.coerceIn(0, tracks.size - 1),
-                playbackDurationMs = it.playbackDurationMs,
-                queueId = it.queueId
+                queueIndex = lastAudiobook.queueIndex.coerceIn(0, tracks.size - 1),
+                playbackDurationMs = lastAudiobook.playbackDurationMs,
+                queueId = lastAudiobook.queueId
             )
-        }
+        } else {null}
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

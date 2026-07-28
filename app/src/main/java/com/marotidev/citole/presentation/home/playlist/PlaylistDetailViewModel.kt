@@ -25,10 +25,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.marotidev.citole.data.repository.AudioRepository
 import com.marotidev.citole.data.repository.PlaylistRepository
-import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.presentation.app.PlaylistViewDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -41,8 +41,10 @@ class PlaylistDetailViewModel @Inject constructor(
 ) : ViewModel() {
     private val playlistId = savedStateHandle.toRoute<PlaylistViewDestination>().playlistId
 
-    val playlistItems = audioRepository.allTracks.map { allTracks ->
-        val playlistTracks = playlistRepository.getTracksFromPlaylist(playlistId)
+    val playlistItems = combine(
+        audioRepository.allTracks,
+        playlistRepository.getTracksFromPlaylist(playlistId)
+    ) { allTracks, playlistTracks ->
         playlistTracks.mapNotNull { track -> allTracks.find { it.id == track.trackId }}
     }.stateIn(
         scope = viewModelScope,

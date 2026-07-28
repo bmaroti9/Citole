@@ -33,8 +33,6 @@ class AppViewModel @Inject constructor(
 ) : ViewModel() {
     val startDestination = if (audioRepository.checkHasAudioPermission()) {
         audioRepository.fetchOrUpdateTracks()
-        trackLogRepository.fetchLogs()
-        playlistRepository.fetchAllPlaylists()
         LibraryViewDestination
     } else {
         OnboardViewDestination

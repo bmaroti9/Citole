@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -95,8 +96,11 @@ class PlayerViewModel @Inject constructor(
 
     var repeatMode by mutableIntStateOf(Player.REPEAT_MODE_OFF)
 
-    var isFavorite = currentlyPlaying.map { playing ->
-        val ids = playlistRepository.getTracksFromPlaylist(1).map { it.trackId }
+    var isFavorite = combine(
+        playlistRepository.getTracksFromPlaylist(1),
+        currentlyPlaying
+    ) { favoriteTracks, playing ->
+        val ids = favoriteTracks.map { it.trackId }
         playing?.track?.id in ids
     }.stateIn(
         scope = viewModelScope,
@@ -415,7 +419,7 @@ class PlayerViewModel @Inject constructor(
     fun toggleFavorite()  {
         currentlyPlaying.value?.track?.let { playing ->
             viewModelScope.launch {
-                val ids = playlistRepository.getTracksFromPlaylist(1).map { it.trackId }
+                val ids = playlistRepository.getTracksFromPlaylist(1).first().map { it.trackId }
                 if (playing.id in ids) {
                     playlistRepository.removeFromPlaylist(playing.id, 1)
                 } else {

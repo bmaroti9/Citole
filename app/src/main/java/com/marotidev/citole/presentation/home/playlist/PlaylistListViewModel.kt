@@ -22,14 +22,13 @@ package com.marotidev.citole.presentation.home.playlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marotidev.citole.data.repository.AudioRepository
-import com.marotidev.citole.data.repository.DataStoreRepository
 import com.marotidev.citole.data.repository.PlaylistRepository
 import com.marotidev.citole.data.service.AudioService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-import java.util.UUID
 import javax.inject.Inject
 
 data class PlaylistItem(
@@ -44,11 +43,15 @@ class PlaylistListViewModel @Inject constructor(
 ) : ViewModel() {
 
     val allPlaylists = combine(
-        playlistRepository.allPlaylists,
+        playlistRepository.allPlaylistGroups,
+        playlistRepository.allPlaylistTracks,
         audioRepository.allTracks
-    ) { allPlaylists, allTracks ->
-        allPlaylists.map { playlistGroup ->
-            val playlistTracks = playlistRepository.getTracksFromPlaylist(playlistGroup.id)
+    ) { allPlaylistGroups, allPlaylistTracks, allTracks ->
+
+        val groupedPlaylistTracks = allPlaylistTracks.groupBy { it.playlistId }
+
+        allPlaylistGroups.map { playlistGroup ->
+            val playlistTracks = groupedPlaylistTracks[playlistGroup.id]?.sortedBy { it.playlistIndex } ?: emptyList()
             PlaylistItem(
                 name = playlistGroup.name,
                 tracks = playlistTracks.mapNotNull { track -> allTracks.find { it.id == track.trackId } }

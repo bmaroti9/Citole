@@ -21,28 +21,17 @@ package com.marotidev.citole.data.repository
 import com.marotidev.citole.data.local.PlaylistDao
 import com.marotidev.citole.data.local.PlaylistGroup
 import com.marotidev.citole.data.local.PlaylistTrack
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class PlaylistRepository @Inject constructor(
     private val playlistDao: PlaylistDao
 ) {
 
-    var allPlaylists: MutableStateFlow<List<PlaylistGroup>> = MutableStateFlow(emptyList())
+    var allPlaylistGroups: Flow<List<PlaylistGroup>> = playlistDao.getAllPlaylistGroups()
+    var allPlaylistTracks: Flow<List<PlaylistTrack>> = playlistDao.getAllPlaylistTracks()
 
-    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    fun fetchAllPlaylists() {
-        serviceScope.launch {
-            allPlaylists.value = playlistDao.getAllPlaylistGroups()
-        }
-    }
-
-    suspend fun getTracksFromPlaylist(id: Int) : List<PlaylistTrack>{
+    fun getTracksFromPlaylist(id: Int) : Flow<List<PlaylistTrack>>{
         return playlistDao.getTracksFromPlaylist(id)
     }
 

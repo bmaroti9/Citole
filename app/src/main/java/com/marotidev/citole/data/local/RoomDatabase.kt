@@ -30,6 +30,7 @@ import androidx.room.RoomDatabase
 import androidx.room.ForeignKey
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.flow.Flow
 
 @Entity
 data class TrackPlayLog(
@@ -47,20 +48,20 @@ data class TrackPlayLog(
 
 @Dao
 interface TrackPlayLogDao {
-    @Query("SELECT * FROM trackplaylog WHERE playback_duration_ms > 5000")
-    suspend fun getAllPlayedLogs(): List<TrackPlayLog>
+    @Query("SELECT * FROM trackplaylog WHERE playback_duration_ms > 5000 ORDER BY playback_ended_ms DESC")
+    fun getAllPlayedLogs(): Flow<List<TrackPlayLog>>
 
     @Query("SELECT * FROM trackplaylog WHERE queue_id = :queueId GROUP BY queue_index")
     suspend fun getAllByQueueId(queueId: Long) : List<TrackPlayLog>
 
     @Query("SELECT * FROM trackplaylog WHERE playback_ended_ms > :lastDate AND track_type == :type GROUP BY track_id ORDER BY SUM(playback_duration_ms) DESC LIMIT 10")
-    suspend fun getMostPlayedFromDate(lastDate: Long, type: Int) : List<TrackPlayLog>
+    fun getMostPlayedFromDate(lastDate: Long, type: Int) : Flow<List<TrackPlayLog>>
 
     @Query("SELECT * FROM trackplaylog WHERE track_id = :trackId ORDER BY playback_ended_ms DESC LIMIT 1")
     suspend fun getLastProgress(trackId: Long): TrackPlayLog
 
     @Query("SELECT * FROM trackplaylog WHERE track_type = :type ORDER BY playback_ended_ms DESC LIMIT 1")
-    suspend fun getLastByType(type: Int): TrackPlayLog?
+    fun getLastByType(type: Int): Flow<TrackPlayLog?>
 
     @Query("UPDATE trackplaylog SET playback_ended_ms = :playbackEndedMs, playback_duration_ms = :playbackDurationMs WHERE track_id = :trackId AND queue_id = :queueId")
     suspend fun updateLogTimeValues(queueId: Long, trackId: Long, playbackEndedMs: Long, playbackDurationMs: Long)
@@ -106,13 +107,13 @@ data class PlaylistTrack(
 @Dao
 interface PlaylistDao {
     @Query("SELECT * FROM playlisttrack")
-    suspend fun getAllPlaylistTracks(): List<PlaylistTrack>
+    fun getAllPlaylistTracks(): Flow<List<PlaylistTrack>>
 
     @Query("SELECT * FROM playlistgroup")
-    suspend fun getAllPlaylistGroups(): List<PlaylistGroup>
+    fun getAllPlaylistGroups(): Flow<List<PlaylistGroup>>
 
     @Query("SELECT * FROM playlisttrack WHERE playlist_id = :playlistId")
-    suspend fun getTracksFromPlaylist(playlistId: Int): List<PlaylistTrack>
+    fun getTracksFromPlaylist(playlistId: Int): Flow<List<PlaylistTrack>>
 
     @Query("DELETE FROM playlisttrack WHERE track_id = :trackId AND playlist_id = :playlistId")
     suspend fun deletePlaylistTrack(trackId: Long, playlistId: Int)
