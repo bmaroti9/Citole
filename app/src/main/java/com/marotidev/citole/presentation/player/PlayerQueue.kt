@@ -366,14 +366,14 @@ fun WavyDivider() {
         Icon(
             painter = painterResource(id = R.drawable.ic_wand_stars),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.tertiary,
-            modifier = Modifier.padding(start = 18.dp).size(18.dp)
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(start = 14.dp).size(18.dp)
         )
         Text(
             "Up Next",
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Black),
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(end = 18.dp, start = 10.dp)
+            modifier = Modifier.padding(end = 14.dp, start = 8.dp)
         )
         WavyLine(MaterialTheme.colorScheme.onSurface, modifier = Modifier.fillMaxHeight().weight(1f))
     }
