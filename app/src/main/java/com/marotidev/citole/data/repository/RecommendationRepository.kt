@@ -95,7 +95,7 @@ class RecommendationRepository @Inject constructor(
 
                     newNode?.let {
                         currentNode = newNode.key
-                        if (newNode.value / totalWeight * currentExplorationFactor < Random.nextFloat() && it.key !in queue) {
+                        if (getWeightedEdgeWeight(newNode, graph) / totalWeight * currentExplorationFactor < Random.nextFloat() && it.key !in queue) {
                             break
                         }
                     }

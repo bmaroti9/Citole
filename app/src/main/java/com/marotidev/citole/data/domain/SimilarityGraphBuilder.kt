@@ -3,6 +3,7 @@ package com.marotidev.citole.data.domain
 import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.service.AudioService
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.sqrt
 
 data class SimilarityGraph(
@@ -69,7 +70,7 @@ class SimilarityGraphBuilder {
 
         edges.forEach { (trackId, _) ->
             val factor = normalizationMap[trackId] ?: 1f
-            nodes[trackId] = (nodes[trackId] ?: 0.15f) * factor
+            nodes[trackId] = (nodes[trackId] ?: 0.04f) * factor
         }
     }
 
@@ -82,15 +83,17 @@ class SimilarityGraphBuilder {
             val duration = trackDurationMap[log.trackId] ?: return@forEach
 
             val ageInDays = (System.currentTimeMillis() - log.playbackEndedMs) / 86400000f
-            val recencyWeight = exp(-ageInDays / 14f)
+            val recencyWeight = 0.1f + exp(-ageInDays / 14f) * 0.9f
             val completionRate = (log.playbackDurationMs * 1f / duration).coerceIn(0f, 1f)
 
             playbackSums.merge(log.trackId, recencyWeight * completionRate, Float::plus)
         }
 
-        val maxScore = playbackSums.values.maxOrNull() ?: 1f
-        playbackSums.forEach { (id, sum) ->
-            nodes[id] = sum / maxScore
+        val smoothSums = playbackSums.mapValues { ln(1.0 + it.value).toFloat() }
+        val maxScore = smoothSums.values.maxOrNull() ?: 1f
+
+        smoothSums.forEach { (id, score) ->
+            nodes[id] = (score / maxScore).coerceAtLeast(0.05f)
         }
     }
 
