@@ -148,7 +148,7 @@ fun SettingsMainScreen(
                 },
                 leadingContent = {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_graph),
+                        painter = painterResource(id = R.drawable.ic_wand_stars),
                         contentDescription = "Engine",
                         modifier = Modifier.background(shuffleEngineIconContainer, CircleShape).padding(10.dp),
                         tint = shuffleEngineIconContent
