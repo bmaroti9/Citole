@@ -69,23 +69,30 @@ class SimilarityGraphBuilder {
 
         edges.forEach { (trackId, _) ->
             val factor = normalizationMap[trackId] ?: 1f
-            nodes[trackId] = factor
+            nodes[trackId] = (nodes[trackId] ?: 0.2f) * factor
         }
     }
 
     fun weighNodesByLogs(allLogs: List<TrackPlayLog>, tracks: List<AudioService.TrackData>) {
+        val trackDurationMap = tracks.associate { it.id to it.duration }
+
+        val playbackDurationSums = mutableMapOf<Long, Float>()
+        val recencyWeightSums = mutableMapOf<Long, Float>()
+
         allLogs.forEach { log ->
+            val duration = trackDurationMap[log.trackId] ?: return@forEach
+
             val ageInDays = (System.currentTimeMillis() - log.playbackEndedMs) / 86400000f
             val recencyWeight = exp(-ageInDays / 30f)
+            val completionRate = (log.playbackDurationMs * 1f / duration).coerceIn(0f, 1f)
 
-            val totalDuration = tracks.find { it.id == log.trackId }?.duration
-            val completionRate = totalDuration?.let {
-                log.playbackDurationMs * 1.4f / it - 0.4f
-            } ?: 0.3f
+            playbackDurationSums.merge(log.trackId, recencyWeight * completionRate, Float::plus)
+            playbackDurationSums.merge(log.trackId, recencyWeight, Float::plus)
+        }
 
-            val score = recencyWeight * completionRate
-
-            nodes.merge(log.trackId, score, Float::plus)
+        playbackDurationSums.forEach { (id, sum) ->
+            val recencySum = recencyWeightSums[id] ?: return@forEach
+            nodes[id] = sum / recencySum
         }
     }
 

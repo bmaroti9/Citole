@@ -56,14 +56,14 @@ class RecommendationRepository @Inject constructor(
                 connectBySharedAlbum(albums)
                 connectBySharedQueueLog(allLogs)
 
-                flattenByArtistSize(artists)
                 weighNodesByLogs(allLogs, tracks)
+                flattenByArtistSize(artists)
             }
             .build()
     }
 
     fun getWeightedEdgeWeight(entry: Map.Entry<Long, Float>, graph: SimilarityGraph): Float {
-        return entry.value * (graph.nodes[entry.key] ?: 0.3f)
+        return entry.value * (graph.nodes[entry.key] ?: 0.5f)
     }
 
     suspend fun extendQueue(originalIds: List<Long>, count: Int) : List<AudioService.TrackData> {
