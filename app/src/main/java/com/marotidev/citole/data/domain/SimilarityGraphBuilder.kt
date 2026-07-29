@@ -2,7 +2,13 @@ package com.marotidev.citole.data.domain
 
 import com.marotidev.citole.data.local.TrackPlayLog
 import com.marotidev.citole.data.service.AudioService
+import kotlin.math.exp
 import kotlin.math.sqrt
+
+data class SimilarityGraph(
+    val edges : Map<Long, Map<Long, Float>>,
+    val nodes : Map<Long, Float>
+)
 
 class SimilarityGraphBuilder {
 
@@ -12,6 +18,7 @@ class SimilarityGraphBuilder {
 
     //a map of the trackIds with the weight of the connection
     private val edges = mutableMapOf<Long, MutableMap<Long, Float>>()
+    private val nodes = mutableMapOf<Long, Float>()
 
     fun addEdge(id1: Long, id2: Long, weight: Float) {
         if (id1 == id2) return
@@ -39,16 +46,12 @@ class SimilarityGraphBuilder {
         }
     }
 
-    fun connectBySharedQueueLog(allLogs: List<TrackPlayLog>, tracks: List<AudioService.TrackData>) {
-        allLogs.groupBy { it.queueId }.forEach { (id, logs) ->
+    fun connectBySharedQueueLog(allLogs: List<TrackPlayLog>) {
+        allLogs.groupBy { it.queueId }.forEach { (_, logs) ->
             logs.forEach { a ->
-                val totalDuration = tracks.find { it.id == a.trackId }?.duration
-                val durationMultiplier = totalDuration?.let {
-                    a.playbackDurationMs / it
-                } ?: 0
                 logs.forEach { b ->
                     if (a.trackType == b.trackType) {
-                        addEdge(a.trackId, b.trackId, sharedQueueWeight * durationMultiplier)
+                        addEdge(a.trackId, b.trackId, sharedQueueWeight)
                     }
                 }
             }
@@ -64,11 +67,27 @@ class SimilarityGraphBuilder {
             }
         }
 
-        edges.forEach { (trackId, neighbors) ->
+        edges.forEach { (trackId, _) ->
             val factor = normalizationMap[trackId] ?: 1f
-            neighbors.replaceAll { _, weight -> weight *  factor}
+            nodes[trackId] = factor
         }
     }
 
-    fun build() = edges
+    fun weighNodesByLogs(allLogs: List<TrackPlayLog>, tracks: List<AudioService.TrackData>) {
+        allLogs.forEach { log ->
+            val ageInDays = (System.currentTimeMillis() - log.playbackEndedMs) / 86400000f
+            val recencyWeight = exp(-ageInDays / 30f)
+
+            val totalDuration = tracks.find { it.id == log.trackId }?.duration
+            val completionRate = totalDuration?.let {
+                log.playbackDurationMs * 1.4f / it - 0.4f
+            } ?: 0.3f
+
+            val score = recencyWeight * completionRate
+
+            nodes.merge(log.trackId, score, Float::plus)
+        }
+    }
+
+    fun build() = SimilarityGraph(edges, nodes)
 }

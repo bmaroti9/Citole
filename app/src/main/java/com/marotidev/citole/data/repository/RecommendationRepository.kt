@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package com.marotidev.citole.data.repository
 
+import com.marotidev.citole.data.domain.SimilarityGraph
 import com.marotidev.citole.data.domain.SimilarityGraphBuilder
 import com.marotidev.citole.data.service.AudioService
 import kotlinx.coroutines.flow.Flow
@@ -43,7 +44,7 @@ class RecommendationRepository @Inject constructor(
         ((1f - it) * 10).roundToInt().coerceAtLeast(1)
     }
 
-    private var similarityGraph : Flow<Map<Long, Map<Long, Float>>> = combine(
+    private var similarityGraph : Flow<SimilarityGraph> = combine(
         audioRepository.allTracks,
         audioRepository.allAlbums,
         audioRepository.allArtists,
@@ -53,17 +54,23 @@ class RecommendationRepository @Inject constructor(
             .apply {
                 connectBySharedArtist(artists)
                 connectBySharedAlbum(albums)
-                connectBySharedQueueLog(allLogs, tracks)
+                connectBySharedQueueLog(allLogs)
+
                 flattenByArtistSize(artists)
+                weighNodesByLogs(allLogs, tracks)
             }
             .build()
+    }
+
+    fun getWeightedEdgeWeight(entry: Map.Entry<Long, Float>, graph: SimilarityGraph): Float {
+        return entry.value * (graph.nodes[entry.key] ?: 0.3f)
     }
 
     suspend fun extendQueue(originalIds: List<Long>, count: Int) : List<AudioService.TrackData> {
         val currentExplorationFactor = explorationFactor.first()
         val currentTrajectoryLookBackLimit = trajectoryLookBackLimit.first()
 
-        val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
+        val graph : SimilarityGraph = similarityGraph.first()
 
         val queue = originalIds.toMutableList()
         val picked = mutableListOf<Long>()
@@ -76,13 +83,13 @@ class RecommendationRepository @Inject constructor(
                 .randomOrNull()
 
             for (j in 1..100) {
-                graph[currentNode]?.let { node ->
-                    val totalWeight = node.values.sumOf { it.toDouble() }.toFloat()
+                graph.edges[currentNode]?.let { node ->
+                    val totalWeight = node.entries.sumOf {getWeightedEdgeWeight(it, graph).toDouble()}.toFloat()
                     val r = Random.nextFloat() * totalWeight
 
                     var sum = 0f
                     val newNode = node.entries.firstOrNull { entry ->
-                        sum += entry.value
+                        sum += getWeightedEdgeWeight(entry, graph)
                         sum >= r
                     }
 
@@ -162,9 +169,10 @@ class RecommendationRepository @Inject constructor(
     }
 
     suspend fun findMaxWeightsFromStartingIds(ids: List<Pair<Long, Float>>) : Map<Long, Float> {
-        //sort of reverse Dijkstra where we are looking for the largest weights
+        //travels the graph around the given ids and finds the "shortest" way to get to them using reverse Dijkstra,
+        // and adds them to the max weights map if they are above a certain lowest weight
 
-        val graph : Map<Long, Map<Long, Float>> = similarityGraph.first()
+        val graph : SimilarityGraph = similarityGraph.first()
 
         val pq = PriorityQueue<Pair<Long, Float>> {a, b -> b.second.compareTo(a.second)}
         pq.addAll(ids)
@@ -178,11 +186,11 @@ class RecommendationRepository @Inject constructor(
 
             if (top.second < 0.05f || top.second != maxWeights[top.first]) continue
 
-            graph[top.first]?.let { node ->
-                val totalWeight = node.values.sumOf { it.toDouble() }.toFloat()
+            graph.edges[top.first]?.let { node ->
+                val totalWeight = node.entries.sumOf {getWeightedEdgeWeight(it, graph).toDouble()}.toFloat()
 
                 node.entries.forEach { n ->
-                    val newWeight = n.value / totalWeight * top.second
+                    val newWeight = getWeightedEdgeWeight(n, graph) / totalWeight * top.second
 
                     if (newWeight > (maxWeights[n.key] ?: 0f)) {
                         pq.add(Pair(n.key, newWeight))
