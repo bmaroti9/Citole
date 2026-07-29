@@ -35,7 +35,6 @@ import com.marotidev.citole.R
 import com.marotidev.citole.data.repository.RecommendationRepository
 import com.marotidev.citole.data.repository.TrackLogRepository
 import com.marotidev.citole.data.state.PlaybackStateHolder
-import com.marotidev.citole.data.state.QueueItem
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,26 +57,6 @@ class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private var player: Player? = null
-
-    fun checkExtendQueue() {
-        val currentIds = playbackStateHolder.playerQueue.value.map { it.track.id }
-        if (currentIds == playbackStateHolder.queueSnapshotAtRegeneration.value) return
-
-        serviceScope.launch {
-            val newTracks = recommendationRepository.extendQueue(currentIds, 12)
-
-            player?.removeMediaItems(playbackStateHolder.playerQueue.value.size,
-                playbackStateHolder.playerQueue.value.size + playbackStateHolder.generatedQueue.value.size)
-            with (audioService) {
-                player?.addMediaItems(newTracks.map {track -> track.toMediaItem()})
-            }
-
-            playbackStateHolder.generatedQueue.update {
-                newTracks.map {track -> QueueItem(track, isGenerated = false) }
-            }
-            playbackStateHolder.queueSnapshotAtRegeneration.value = currentIds
-        }
-    }
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
@@ -131,7 +110,9 @@ class PlaybackService : MediaSessionService() {
                     }
 
                     if (playbackStateHolder.currentIndex.value > playbackStateHolder.playerQueue.value.size - 4) {
-                        checkExtendQueue()
+                        serviceScope.launch {
+                            playbackStateHolder.checkExtendQueue(recommendationRepository, player, audioService, force = true)
+                        }
                     }
 
                     playbackStateHolder.currentlyPlaying.value = playbackStateHolder.playerQueue.value.getOrNull(index)
